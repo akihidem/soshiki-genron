@@ -1,0 +1,77 @@
+{
+  "claim": "容量 κ が上がるほど最適粒度 g* は小さく（粗く）なる＝AIの高容量は粗い分解を最適化する。",
+  "falsifier": "κ を上げても g* が下がらない／c_comm を上げても g* が下がらない、なら本モデル下で F1 の含意は偽。",
+  "g_star_vs_c_comm": [
+    {
+      "c_comm": 0.05,
+      "g_star": 10
+    },
+    {
+      "c_comm": 0.2,
+      "g_star": 10
+    },
+    {
+      "c_comm": 0.5,
+      "g_star": 10
+    },
+    {
+      "c_comm": 1.0,
+      "g_star": 10
+    },
+    {
+      "c_comm": 3.0,
+      "g_star": 9
+    },
+    {
+      "c_comm": 8.0,
+      "g_star": 4
+    }
+  ],
+  "g_star_vs_capacity": [
+    {
+      "g_star": 50,
+      "kappa": 2.0,
+      "piece_size": 2.0
+    },
+    {
+      "g_star": 20,
+      "kappa": 5.0,
+      "piece_size": 5.0
+    },
+    {
+      "g_star": 10,
+      "kappa": 10.0,
+      "piece_size": 10.0
+    },
+    {
+      "g_star": 5,
+      "kappa": 20.0,
+      "piece_size": 20.0
+    },
+    {
+      "g_star": 2,
+      "kappa": 50.0,
+      "piece_size": 50.0
+    },
+    {
+      "g_star": 1,
+      "kappa": 100.0,
+      "piece_size": 100.0
+    }
+  ],
+  "optimum_at_default": {
+    "covers_capacity": true,
+    "g_star": 10,
+    "min_pieces_for_capacity": 10,
+    "piece_size": 10.0,
+    "total": 1.8
+  },
+  "params": {
+    "c_comm": 0.1,
+    "density": 0.4,
+    "g_max": 60,
+    "kappa": 10.0,
+    "overload_cost": 1.0,
+    "work": 100.0
+  }
+}
