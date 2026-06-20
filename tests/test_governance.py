@@ -53,6 +53,15 @@ class GovernanceModelTests(unittest.TestCase):
         # the thesis "governance is load-bearing" survives: some stakes -> m*>0
         self.assertGreater(optimal_membrane(dataclasses.replace(self.p, stakes=10.0))["m_star"], 0.0)
 
+    def test_imperfect_oversight_lowers_optimal_membrane(self):
+        ms = [optimal_membrane(dataclasses.replace(self.p, oversight_error=oe))["m_star"]
+              for oe in (0.0, 0.3, 0.6, 0.9)]
+        self.assertEqual(ms, sorted(ms, reverse=True))   # worse oversight -> thinner membrane
+        self.assertGreater(ms[0], ms[-1])
+
+    def test_default_oversight_is_perfect_for_backward_compat(self):
+        self.assertEqual(self.p.oversight_error, 0.0)
+
     def test_run_is_deterministic(self):
         self.assertEqual(run(), run())
 

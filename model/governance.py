@@ -34,12 +34,17 @@ class GovParams:
     c_mem: float = 0.5         # efficiency tax per unit membrane per decision
     beta: float = 3.0          # oversight reach (saturating efficacy of the membrane)
     stakes: float = 10.0       # cost if a high-stakes error ships unchecked
+    oversight_error: float = 0.0   # fraction of error-prone decisions human oversight
+                                   # ITSELF misses regardless of m (0 = perfect oversight)
 
 
 def total_loss(p: GovParams, m: float) -> dict:
     m = max(0.0, min(1.0, m))
     efficiency = p.c_mem * m * p.n
-    residual = p.p_bad * p.n * p.stakes * math.exp(-p.beta * m)
+    # oversight catches a saturating fraction of error-prone decisions, but is
+    # itself imperfect: its ceiling is (1 - oversight_error).
+    caught = (1.0 - p.oversight_error) * (1.0 - math.exp(-p.beta * m))
+    residual = p.p_bad * p.n * p.stakes * (1.0 - caught)
     return {"m": round(m, 4), "efficiency": round(efficiency, 4),
             "residual_error": round(residual, 4),
             "total": round(efficiency + residual, 4)}
@@ -47,8 +52,9 @@ def total_loss(p: GovParams, m: float) -> dict:
 
 def optimal_membrane(p: GovParams) -> dict:
     """Analytic minimizer of total_loss over m∈[0,1], plus its regime."""
-    drive = p.beta * p.p_bad * p.stakes / p.c_mem
-    if drive <= 1.0:
+    reliability = 1.0 - p.oversight_error
+    drive = p.beta * p.p_bad * p.stakes * reliability / p.c_mem
+    if reliability <= 0.0 or drive <= 1.0:
         m_star, regime = 0.0, "no_membrane"        # pure efficiency wins
     else:
         raw = math.log(drive) / p.beta
@@ -63,8 +69,9 @@ def optimal_membrane(p: GovParams) -> dict:
 
 def stakes_thresholds(p: GovParams) -> dict:
     """The two stakes values that bound the interior (thin-membrane) regime."""
-    lo = p.c_mem / (p.beta * p.p_bad)                       # below: m*=0
-    hi = math.exp(p.beta) * p.c_mem / (p.beta * p.p_bad)    # above: m*=1
+    reliability = max(1e-9, 1.0 - p.oversight_error)
+    lo = p.c_mem / (p.beta * p.p_bad * reliability)                       # below: m*=0
+    hi = math.exp(p.beta) * p.c_mem / (p.beta * p.p_bad * reliability)    # above: m*=1
     return {"membrane_starts_paying_at_stakes": round(lo, 4),
             "membrane_saturates_at_stakes": round(hi, 4)}
 
@@ -95,6 +102,15 @@ def run(p: GovParams | None = None) -> dict:
         pb = dataclasses.replace(p, beta=b)
         beta_sens.append({"beta": b, **stakes_thresholds(pb),
                           "m_star_at_default_stakes": optimal_membrane(pb)["m_star"]})
+    # sensitivity: imperfect oversight (the membrane's benefit caps as oversight errs)
+    oversight_sens = []
+    for oe in (0.0, 0.3, 0.6, 0.9):
+        pe = dataclasses.replace(p, oversight_error=oe)
+        oversight_sens.append({
+            "oversight_error": oe,
+            "m_star_at_default_stakes": optimal_membrane(pe)["m_star"],
+            "membrane_starts_paying_at_stakes": stakes_thresholds(pe)["membrane_starts_paying_at_stakes"],
+        })
     return {
         "params": dataclasses.asdict(p),
         "thresholds": stakes_thresholds(p),
@@ -102,6 +118,7 @@ def run(p: GovParams | None = None) -> dict:
         "m_star_vs_stakes": sweep,
         "loss_curve_over_m": curve,
         "sensitivity_oversight_reach": beta_sens,
+        "sensitivity_oversight_error": oversight_sens,
         "falsifier": "任意の stakes>0 で m*=0 のままなら『統治は荷重部材』は本モデル下で偽。",
     }
 
@@ -147,6 +164,18 @@ def _md(r: dict) -> str:
                  f"{s['membrane_saturates_at_stakes']} | {s['m_star_at_default_stakes']} |")
     L.append("")
     L.append("→ 監督が効くほど（β大）薄い膜で足り、低 stakes でも膜が割に合う。監督が無力なら膜は死荷重。")
+    L.append("")
+    L.append("## 感度 — 人間監督の不確かさ oversight_error")
+    L.append("監督自身も誤る（捕捉に上限 1−oversight_error）。誤判定が増えると膜の便益が頭打ち → m\\* は下がる:")
+    L.append("")
+    L.append("| oversight_error | 既定 stakes での m\\* | 膜が割に合う stakes |")
+    L.append("|---|---|---|")
+    for s in r["sensitivity_oversight_error"]:
+        L.append(f"| {s['oversight_error']} | {s['m_star_at_default_stakes']} | "
+                 f"{s['membrane_starts_paying_at_stakes']} |")
+    L.append("")
+    L.append("→ 監督が当てにならないほど膜は薄くて済む／やがて割に合わなくなる。"
+             "**「人間統治膜が荷重部材」なのは、監督がある程度信頼できる限りでの条件付き主張**であることが明示された。")
     L.append("")
     L.append("## 反証手段・妥当性")
     L.append(f"- 反証: {r['falsifier']}")

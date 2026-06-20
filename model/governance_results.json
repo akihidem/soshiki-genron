@@ -145,9 +145,32 @@
     "beta": 3.0,
     "c_mem": 0.5,
     "n": 12,
+    "oversight_error": 0.0,
     "p_bad": 0.15,
     "stakes": 10.0
   },
+  "sensitivity_oversight_error": [
+    {
+      "m_star_at_default_stakes": 0.7324,
+      "membrane_starts_paying_at_stakes": 1.1111,
+      "oversight_error": 0.0
+    },
+    {
+      "m_star_at_default_stakes": 0.6135,
+      "membrane_starts_paying_at_stakes": 1.5873,
+      "oversight_error": 0.3
+    },
+    {
+      "m_star_at_default_stakes": 0.427,
+      "membrane_starts_paying_at_stakes": 2.7778,
+      "oversight_error": 0.6
+    },
+    {
+      "m_star_at_default_stakes": 0.0,
+      "membrane_starts_paying_at_stakes": 11.1111,
+      "oversight_error": 0.9
+    }
+  ],
   "sensitivity_oversight_reach": [
     {
       "beta": 1.0,
