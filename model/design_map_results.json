@@ -1,0 +1,92 @@
+{
+  "assumption": "構造選択と膜の厚みは分離可能と仮定（第一近似）。",
+  "c_comm_regimes": {
+    "AI≈0.1": 0.1,
+    "deep-AI≈0.03": 0.03,
+    "human≈3.0": 3.0,
+    "transition≈1.0": 1.0
+  },
+  "density": 0.4,
+  "grid": [
+    {
+      "cells": {
+        "AI≈0.1": {
+          "membrane_m_star": 0.0,
+          "membrane_regime": "no_membrane",
+          "structure": "flat"
+        },
+        "deep-AI≈0.03": {
+          "membrane_m_star": 0.0,
+          "membrane_regime": "no_membrane",
+          "structure": "flat"
+        },
+        "human≈3.0": {
+          "membrane_m_star": 0.0,
+          "membrane_regime": "no_membrane",
+          "structure": "hierarchy"
+        },
+        "transition≈1.0": {
+          "membrane_m_star": 0.0,
+          "membrane_regime": "no_membrane",
+          "structure": "market"
+        }
+      },
+      "stakes": "low≈0.8"
+    },
+    {
+      "cells": {
+        "AI≈0.1": {
+          "membrane_m_star": 0.658,
+          "membrane_regime": "partial_membrane",
+          "structure": "flat"
+        },
+        "deep-AI≈0.03": {
+          "membrane_m_star": 0.658,
+          "membrane_regime": "partial_membrane",
+          "structure": "flat"
+        },
+        "human≈3.0": {
+          "membrane_m_star": 0.658,
+          "membrane_regime": "partial_membrane",
+          "structure": "hierarchy"
+        },
+        "transition≈1.0": {
+          "membrane_m_star": 0.658,
+          "membrane_regime": "partial_membrane",
+          "structure": "market"
+        }
+      },
+      "stakes": "mid≈8"
+    },
+    {
+      "cells": {
+        "AI≈0.1": {
+          "membrane_m_star": 1.0,
+          "membrane_regime": "full_membrane",
+          "structure": "flat"
+        },
+        "deep-AI≈0.03": {
+          "membrane_m_star": 1.0,
+          "membrane_regime": "full_membrane",
+          "structure": "flat"
+        },
+        "human≈3.0": {
+          "membrane_m_star": 1.0,
+          "membrane_regime": "full_membrane",
+          "structure": "hierarchy"
+        },
+        "transition≈1.0": {
+          "membrane_m_star": 1.0,
+          "membrane_regime": "full_membrane",
+          "structure": "market"
+        }
+      },
+      "stakes": "high≈40"
+    }
+  ],
+  "stakes_levels": {
+    "high≈40": 40.0,
+    "low≈0.8": 0.8,
+    "mid≈8": 8.0
+  }
+}
