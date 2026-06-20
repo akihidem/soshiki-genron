@@ -1,0 +1,155 @@
+{
+  "c_regimes": {
+    "AI≈0.1": 0.1,
+    "human≈3.0": 3.0,
+    "transition≈1.0": 1.0
+  },
+  "density": 0.4,
+  "finding": "結合最適が分離最適と食い違うセルの数。>0 なら design_map の分離可能性は偽＝統治しやすさが構造選択に効く。",
+  "gov_factor": {
+    "flat": 1.0,
+    "hierarchy": 0.7,
+    "market": 1.5
+  },
+  "grid": [
+    {
+      "cells": {
+        "AI≈0.1": {
+          "c_comm": 0.1,
+          "joint": {
+            "membrane_m": 0.0,
+            "structure": "flat"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 0.0,
+            "structure": "flat"
+          },
+          "stakes": 0.8
+        },
+        "human≈3.0": {
+          "c_comm": 3.0,
+          "joint": {
+            "membrane_m": 0.0094,
+            "structure": "hierarchy"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 0.0,
+            "structure": "hierarchy"
+          },
+          "stakes": 0.8
+        },
+        "transition≈1.0": {
+          "c_comm": 1.0,
+          "joint": {
+            "membrane_m": 0.0,
+            "structure": "market"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 0.0,
+            "structure": "market"
+          },
+          "stakes": 0.8
+        }
+      },
+      "stakes": "low≈0.8"
+    },
+    {
+      "cells": {
+        "AI≈0.1": {
+          "c_comm": 0.1,
+          "joint": {
+            "membrane_m": 0.658,
+            "structure": "flat"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 0.658,
+            "structure": "flat"
+          },
+          "stakes": 8.0
+        },
+        "human≈3.0": {
+          "c_comm": 3.0,
+          "joint": {
+            "membrane_m": 0.7769,
+            "structure": "hierarchy"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 0.658,
+            "structure": "hierarchy"
+          },
+          "stakes": 8.0
+        },
+        "transition≈1.0": {
+          "c_comm": 1.0,
+          "joint": {
+            "membrane_m": 0.5229,
+            "structure": "market"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 0.658,
+            "structure": "market"
+          },
+          "stakes": 8.0
+        }
+      },
+      "stakes": "mid≈8"
+    },
+    {
+      "cells": {
+        "AI≈0.1": {
+          "c_comm": 0.1,
+          "joint": {
+            "membrane_m": 1.0,
+            "structure": "flat"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 1.0,
+            "structure": "flat"
+          },
+          "stakes": 40.0
+        },
+        "human≈3.0": {
+          "c_comm": 3.0,
+          "joint": {
+            "membrane_m": 1.0,
+            "structure": "hierarchy"
+          },
+          "separability_holds": true,
+          "separable": {
+            "membrane_m": 1.0,
+            "structure": "hierarchy"
+          },
+          "stakes": 40.0
+        },
+        "transition≈1.0": {
+          "c_comm": 1.0,
+          "joint": {
+            "membrane_m": 1.0,
+            "structure": "hierarchy"
+          },
+          "separability_holds": false,
+          "separable": {
+            "membrane_m": 1.0,
+            "structure": "market"
+          },
+          "stakes": 40.0
+        }
+      },
+      "stakes": "high≈40"
+    }
+  ],
+  "n_cells": 9,
+  "separability_breaks": 1,
+  "stakes_levels": {
+    "high≈40": 40.0,
+    "low≈0.8": 0.8,
+    "mid≈8": 8.0
+  }
+}

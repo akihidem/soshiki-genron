@@ -15,5 +15,5 @@
 - 左上（人間域・低 stakes）= 階層で膜不要、という*人間組織の既定*に一致（モデルの sanity check）。
 
 ## 妥当性
-- 構造選択と膜の厚みは分離可能と仮定（第一近似）。 実際は相互作用がありうる（市場は監督点が分散し膜を張りにくい等）→ 次の計測で検証。
+- 構造選択と膜の厚みは分離可能と仮定（第一近似）。 実際は相互作用がありうる（市場は監督点が分散し膜を張りにくい等）→ **検証済み（[`JOINT.md`](JOINT.md)）: 高 stakes で分離が破れる（市場→階層、1/9 セル）**。
 - 各軸の限界は [`first-measurement.md`](../docs/first-measurement.md) / [`second-measurement.md`](../docs/second-measurement.md) を参照。
