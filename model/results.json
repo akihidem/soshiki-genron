@@ -1,0 +1,367 @@
+{
+  "crossovers": {
+    "flat_hierarchy": 1.12245,
+    "flat_market": 0.2,
+    "hierarchy_market": 1.35897
+  },
+  "headline": {
+    "flat_vs_hierarchy_crossover_c_comm": 1.12245,
+    "interpretation": "同条件で c_comm がこの値より高いと hierarchy が flat を上回り、低いと flat が上回る。3構造すべての勝敗は密度依存で相図参照（高 c_comm=階層 / 中=平ら / 極低=市場）。tehai の A/B（1点観測で flat 有利）を曲線へ一般化し、交差点を測った。"
+  },
+  "isolate_coordination_only": {
+    "flat_vs_hierarchy_crossover_c_comm": 0.5102,
+    "note": "same_error=True で検証軸を中立化し、純粋な調整コストだけの交差点。"
+  },
+  "params": {
+    "density": 0.4,
+    "escape_cost": 8.0,
+    "hier_routing": 0.1,
+    "market_match_gain": 0.3,
+    "market_rounds": 2,
+    "mgr_overhead": 2.0,
+    "n": 12,
+    "p_defect": 0.1,
+    "rework_cost": 2.0,
+    "same_error": false,
+    "span": 4,
+    "txn_overhead": 0.1
+  },
+  "phase_2d": {
+    "c_values": [
+      5.0,
+      3.67918,
+      2.70727,
+      1.99211,
+      1.46587,
+      1.07864,
+      0.7937,
+      0.58403,
+      0.42975,
+      0.31623,
+      0.23269,
+      0.17122,
+      0.12599,
+      0.09271,
+      0.06822,
+      0.0502,
+      0.03694,
+      0.02718,
+      0.02
+    ],
+    "rows": [
+      {
+        "density": 0.2,
+        "row": [
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat"
+        ]
+      },
+      {
+        "density": 0.4,
+        "row": [
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat",
+          "flat"
+        ]
+      },
+      {
+        "density": 0.6,
+        "row": [
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "flat",
+          "flat"
+        ]
+      },
+      {
+        "density": 0.8,
+        "row": [
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "hierarchy",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market",
+          "market"
+        ]
+      }
+    ]
+  },
+  "regime_sequence_as_c_comm_falls": [
+    {
+      "c_comm_from": 5.0,
+      "c_comm_to": 1.35897,
+      "winner": "hierarchy"
+    },
+    {
+      "c_comm_from": 1.35897,
+      "c_comm_to": 1.12245,
+      "winner": "market"
+    },
+    {
+      "c_comm_from": 1.12245,
+      "c_comm_to": 0.2,
+      "winner": "market"
+    },
+    {
+      "c_comm_from": 0.2,
+      "c_comm_to": 0.02,
+      "winner": "flat"
+    }
+  ],
+  "sensitivity_mgr_overhead": [
+    {
+      "crossover_c_comm": 0.61224,
+      "mgr_overhead": 0.0
+    },
+    {
+      "crossover_c_comm": 0.86735,
+      "mgr_overhead": 1.0
+    },
+    {
+      "crossover_c_comm": 1.12245,
+      "mgr_overhead": 2.0
+    },
+    {
+      "crossover_c_comm": 1.63265,
+      "mgr_overhead": 4.0
+    },
+    {
+      "crossover_c_comm": 2.65306,
+      "mgr_overhead": 8.0
+    }
+  ],
+  "sweep_1d": [
+    {
+      "c_comm": 5.0,
+      "totals": {
+        "flat": 134.4,
+        "hierarchy": 88.8,
+        "market": 122.88
+      },
+      "winner": "hierarchy"
+    },
+    {
+      "c_comm": 3.67918,
+      "totals": {
+        "flat": 99.5304,
+        "hierarchy": 69.4632,
+        "market": 91.1803
+      },
+      "winner": "hierarchy"
+    },
+    {
+      "c_comm": 2.70727,
+      "totals": {
+        "flat": 73.8719,
+        "hierarchy": 55.2344,
+        "market": 67.8545
+      },
+      "winner": "hierarchy"
+    },
+    {
+      "c_comm": 1.99211,
+      "totals": {
+        "flat": 54.9917,
+        "hierarchy": 44.7645,
+        "market": 50.6906
+      },
+      "winner": "hierarchy"
+    },
+    {
+      "c_comm": 1.46587,
+      "totals": {
+        "flat": 41.099,
+        "hierarchy": 37.0603,
+        "market": 38.0609
+      },
+      "winner": "hierarchy"
+    },
+    {
+      "c_comm": 1.07864,
+      "totals": {
+        "flat": 30.8761,
+        "hierarchy": 31.3913,
+        "market": 28.7674
+      },
+      "winner": "market"
+    },
+    {
+      "c_comm": 0.7937,
+      "totals": {
+        "flat": 23.3537,
+        "hierarchy": 27.2198,
+        "market": 21.9288
+      },
+      "winner": "market"
+    },
+    {
+      "c_comm": 0.58403,
+      "totals": {
+        "flat": 17.8184,
+        "hierarchy": 24.1502,
+        "market": 16.8967
+      },
+      "winner": "market"
+    },
+    {
+      "c_comm": 0.42975,
+      "totals": {
+        "flat": 13.7454,
+        "hierarchy": 21.8915,
+        "market": 13.194
+      },
+      "winner": "market"
+    },
+    {
+      "c_comm": 0.31623,
+      "totals": {
+        "flat": 10.7485,
+        "hierarchy": 20.2296,
+        "market": 10.4695
+      },
+      "winner": "market"
+    },
+    {
+      "c_comm": 0.23269,
+      "totals": {
+        "flat": 8.543,
+        "hierarchy": 19.0066,
+        "market": 8.4646
+      },
+      "winner": "market"
+    },
+    {
+      "c_comm": 0.17122,
+      "totals": {
+        "flat": 6.9202,
+        "hierarchy": 18.1067,
+        "market": 6.9893
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.12599,
+      "totals": {
+        "flat": 5.7261,
+        "hierarchy": 17.4445,
+        "market": 5.9038
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.09271,
+      "totals": {
+        "flat": 4.8475,
+        "hierarchy": 16.9573,
+        "market": 5.105
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.06822,
+      "totals": {
+        "flat": 4.201,
+        "hierarchy": 16.5987,
+        "market": 4.5173
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.0502,
+      "totals": {
+        "flat": 3.7253,
+        "hierarchy": 16.3349,
+        "market": 4.0848
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.03694,
+      "totals": {
+        "flat": 3.3752,
+        "hierarchy": 16.1408,
+        "market": 3.7666
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.02718,
+      "totals": {
+        "flat": 3.1176,
+        "hierarchy": 15.9979,
+        "market": 3.5323
+      },
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.02,
+      "totals": {
+        "flat": 2.928,
+        "hierarchy": 15.8928,
+        "market": 3.36
+      },
+      "winner": "flat"
+    }
+  ]
+}

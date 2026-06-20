@@ -26,10 +26,27 @@
 
 中心的緊張は **最適性（AIネイティブ・流動・検証中心）vs 可読性（人間が統治・主権を保てる）**。
 
+## 最初の計測（②の胚）— 通信コストと最適構造
+第一原理を最初に具体化: 「**通信コスト c_comm が下がると、コスト最小の調整構造は階層→平ら→市場へ動くか**」(F3＋Malone)を決定的モデルで計測。
+- **flat↔hierarchy 交差点 c_comm\* ≈ 1.12** — これより通信が高コストなら階層、安いと平らが勝つ。c_comm を下げると勝者は **hierarchy → market → flat**（密度依存）。
+- **管理者OHが大きいほど階層の領域は狭い**（感度分析）。検証軸を中立化しても交差点は残る（純調整コスト由来と盲点流出由来を分離）。
+- tehai の A/B（実コードの2点観測）と**独立の経路**で同じ向き（通信が安いと平ら有利）を再現 —— 弱い相互裏取り。
+- 詳細: [`docs/first-measurement.md`](docs/first-measurement.md)（解釈）／[`model/RESULTS.md`](model/RESULTS.md)（生数値・再生成）。
+
+## 走らせ方
+```bash
+python3 -m model.sweep                       # 計測を実行 → model/RESULTS.md, results.json
+python3 -m unittest discover -s tests -t .   # テスト（決定的・全green）
+```
+
 ## リポジトリ地図
-- `docs/method.md` — 方法論（機能優先・拘束系譜・反擬人化の番人・③①②の合否基準）
-- `docs/foundations.md` — ③ 本体（最小定義・原始機能・拘束系譜・2つのフロンティア・テーゼ）
-- `docs/references.md` — ① の背骨（組織論の正典と、各々の「AI再導出の問い」）
+- `docs/method.md` — 方法論（第一原理＝計測・機能優先・拘束系譜・反擬人化の番人・合否基準）
+- `docs/foundations.md` — ③ 本体（最小定義・原始機能 F1–F8・拘束系譜・2つのフロンティア・テーゼ）
+- `docs/references.md` — ① の背骨（組織論の正典と「AI再導出の問い」）
+- `docs/literature.md` — 文献調査アジェンダ（形式モデル・計算組織論・MAS・近年LLM＝要一次確認）
+- `docs/first-measurement.md` — 最初の計測の解釈・位置づけ
+- `model/` — ② の胚（`coordination.py` モデル＋`sweep.py` 実験＋生成 `RESULTS.md`）
+- `tests/` — 決定的テスト
 
 ## 状態
-2026-06-21 着手。③ の初稿を執筆中。tehai とは別リポ・別系譜。
+2026-06-21 着手。③ 初稿 + 第一原理（計測）+ 文献調査方針 + **最初の計測（②胚）** まで完了。tehai とは別リポ・別系譜・PUBLIC。
