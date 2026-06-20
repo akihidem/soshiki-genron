@@ -1,0 +1,181 @@
+"""統治膜モデル — 「最適性 vs 可読性」の中心的緊張を計測する。
+
+foundations.md §5 / F8: AIネイティブに最適化された機構の上に、人間が主権・説明責任を
+保つための「人間可読な統治膜」を被せる。膜は効率には死荷重だが、人間が高リスクの
+誤りを捕まえる窓でもある。**最適な膜の厚み m\\* はあるか、それは何に依存するか**を測る。
+
+膜の厚み m ∈ [0,1] = AI機構の判断のうち、人間可読・監査・承認ゲートを通す割合。
+
+    総損失(m) = 効率コスト(m) + 残存誤りコスト(m)
+              = c_mem · m · N            （膜は判断ごとに効率税を課す・通信非依存）
+              + p_bad · N · stakes · e^(-β·m)   （人間監督が高リスク誤りを飽和的に捕捉）
+
+効率コストは m に線形、捕捉の便益は飽和（限界便益逓減）。よって内点最適 m\\* が出る:
+
+    m\\* = clip( (1/β)·ln( β·p_bad·stakes / c_mem ), 0, 1 )
+
+- stakes が低い → m\\*=0（膜は割に合わない＝純効率が最適）
+- stakes が上がる → m\\* が対数的に増え、やがて 1（全面的な膜）
+
+これは「膜が厚すぎれば擬人的負債、薄すぎれば主権喪失」を測れる形にしたもの。
+反証: 任意の stakes>0 で m\\*=0 のまま（膜が決して割に合わない）なら、「統治は荷重部材」は本モデル下で偽。
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class GovParams:
+    n: int = 12                # decisions per run
+    p_bad: float = 0.15        # fraction of decisions that are high-stakes-error-prone
+    c_mem: float = 0.5         # efficiency tax per unit membrane per decision
+    beta: float = 3.0          # oversight reach (saturating efficacy of the membrane)
+    stakes: float = 10.0       # cost if a high-stakes error ships unchecked
+
+
+def total_loss(p: GovParams, m: float) -> dict:
+    m = max(0.0, min(1.0, m))
+    efficiency = p.c_mem * m * p.n
+    residual = p.p_bad * p.n * p.stakes * math.exp(-p.beta * m)
+    return {"m": round(m, 4), "efficiency": round(efficiency, 4),
+            "residual_error": round(residual, 4),
+            "total": round(efficiency + residual, 4)}
+
+
+def optimal_membrane(p: GovParams) -> dict:
+    """Analytic minimizer of total_loss over m∈[0,1], plus its regime."""
+    drive = p.beta * p.p_bad * p.stakes / p.c_mem
+    if drive <= 1.0:
+        m_star, regime = 0.0, "no_membrane"        # pure efficiency wins
+    else:
+        raw = math.log(drive) / p.beta
+        if raw >= 1.0:
+            m_star, regime = 1.0, "full_membrane"
+        else:
+            m_star, regime = raw, "partial_membrane"   # interior optimum
+    return {"m_star": round(m_star, 4), "regime": regime,
+            "loss_at_m_star": total_loss(p, m_star)["total"],
+            "loss_at_zero": total_loss(p, 0.0)["total"]}
+
+
+def stakes_thresholds(p: GovParams) -> dict:
+    """The two stakes values that bound the interior (thin-membrane) regime."""
+    lo = p.c_mem / (p.beta * p.p_bad)                       # below: m*=0
+    hi = math.exp(p.beta) * p.c_mem / (p.beta * p.p_bad)    # above: m*=1
+    return {"membrane_starts_paying_at_stakes": round(lo, 4),
+            "membrane_saturates_at_stakes": round(hi, 4)}
+
+
+def logspace(lo: float, hi: float, n: int) -> list[float]:
+    if n == 1:
+        return [hi]
+    step = (math.log(hi) - math.log(lo)) / (n - 1)
+    return [round(math.exp(math.log(lo) + step * i), 4) for i in range(n)]
+
+
+import dataclasses  # noqa: E402
+
+
+def run(p: GovParams | None = None) -> dict:
+    p = p or GovParams()
+    stakes_grid = logspace(0.5, 50.0, 13)
+    sweep = []
+    for s in stakes_grid:
+        opt = optimal_membrane(dataclasses.replace(p, stakes=s))
+        sweep.append({"stakes": s, "m_star": opt["m_star"], "regime": opt["regime"]})
+    # the loss curve over m at default params (shows the interior optimum)
+    m_grid = [round(0.1 * k, 1) for k in range(11)]
+    curve = [total_loss(p, m) for m in m_grid]
+    # sensitivity: oversight reach beta
+    beta_sens = []
+    for b in (1.0, 2.0, 3.0, 5.0):
+        pb = dataclasses.replace(p, beta=b)
+        beta_sens.append({"beta": b, **stakes_thresholds(pb),
+                          "m_star_at_default_stakes": optimal_membrane(pb)["m_star"]})
+    return {
+        "params": dataclasses.asdict(p),
+        "thresholds": stakes_thresholds(p),
+        "optimum_at_default": optimal_membrane(p),
+        "m_star_vs_stakes": sweep,
+        "loss_curve_over_m": curve,
+        "sensitivity_oversight_reach": beta_sens,
+        "falsifier": "任意の stakes>0 で m*=0 のままなら『統治は荷重部材』は本モデル下で偽。",
+    }
+
+
+def _md(r: dict) -> str:
+    th = r["thresholds"]
+    opt = r["optimum_at_default"]
+    L = []
+    L.append("# 第二の計測 — 統治膜の最適な厚み（最適性 vs 可読性）")
+    L.append("")
+    L.append("研究の中心的緊張（[`../docs/foundations.md`](../docs/foundations.md) §5）を計測可能化: "
+             "AI機構の上の**人間可読な統治膜の厚み m\\*** に最適値はあるか、何に依存するか。"
+             "決定的モデル（`model/governance.py`）。生数値は [`governance_results.json`](governance_results.json)。")
+    L.append("")
+    L.append("## 主結果")
+    L.append(f"- **内点最適が存在する**。既定パラメタで m\\* = {opt['m_star']}（regime: {opt['regime']}）。"
+             "膜ゼロ（純効率）でも膜全面でもなく、**部分的な膜**が最小損失。厚みは stakes が決め、低 stakes で薄く高 stakes で厚い。")
+    L.append(f"- **stakes（誤りが流出した時の損害）に依存**。stakes < {th['membrane_starts_paying_at_stakes']} "
+             f"では m\\*=0（膜は割に合わない＝純効率が最適）。stakes > {th['membrane_saturates_at_stakes']} で m\\*=1（全面膜）。"
+             "その間は薄い膜が最適で、stakes とともに対数的に厚くなる。")
+    L.append("- = foundations §5「膜が厚すぎれば擬人的負債、薄すぎれば主権喪失。最適は*必要十分に薄い膜*」を、"
+             "**stakes が決めるしきい値**として測った。")
+    L.append("")
+    L.append("## m\\* vs stakes")
+    L.append("```")
+    L.append("stakes   m_star  regime")
+    for row in r["m_star_vs_stakes"]:
+        L.append(f"{row['stakes']:>7}  {row['m_star']:>5}  {row['regime']}")
+    L.append("```")
+    L.append("")
+    L.append("## 損失曲線（既定 stakes・内点最適の確認）")
+    L.append("```")
+    L.append("  m    efficiency  residual_error  total")
+    for c in r["loss_curve_over_m"]:
+        L.append(f" {c['m']:>3}   {c['efficiency']:>9}   {c['residual_error']:>12}   {c['total']:>6}")
+    L.append("```")
+    L.append("")
+    L.append("## 感度 — 人間監督の到達度 β")
+    L.append("| β（監督の効き） | 膜が割に合う stakes | 全面膜になる stakes | 既定stakesでの m\\* |")
+    L.append("|---|---|---|---|")
+    for s in r["sensitivity_oversight_reach"]:
+        L.append(f"| {s['beta']} | {s['membrane_starts_paying_at_stakes']} | "
+                 f"{s['membrane_saturates_at_stakes']} | {s['m_star_at_default_stakes']} |")
+    L.append("")
+    L.append("→ 監督が効くほど（β大）薄い膜で足り、低 stakes でも膜が割に合う。監督が無力なら膜は死荷重。")
+    L.append("")
+    L.append("## 反証手段・妥当性")
+    L.append(f"- 反証: {r['falsifier']}")
+    L.append("- 効率コストは m に線形、捕捉便益は飽和、と仮定。係数は第一原理的だが*仮定*。"
+             "結論は質的（内点最適の存在と stakes 依存）＋感度として読む。"
+             "β（人間監督が確信的誤りをどれだけ捕まえるか）は ② か実データで測るべき経験量。")
+    return "\n".join(L)
+
+
+def main(argv=None) -> int:
+    import json
+    import os
+    r = run()
+    out_dir = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(out_dir, "governance_results.json"), "w", encoding="utf-8") as f:
+        json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+    with open(os.path.join(out_dir, "GOVERNANCE.md"), "w", encoding="utf-8") as f:
+        f.write(_md(r) + "\n")
+    opt, th = r["optimum_at_default"], r["thresholds"]
+    print(f"optimal membrane m* = {opt['m_star']} ({opt['regime']}) at default stakes")
+    print(f"membrane starts paying at stakes={th['membrane_starts_paying_at_stakes']}, "
+          f"saturates (m*=1) at stakes={th['membrane_saturates_at_stakes']}")
+    print("m* vs stakes:")
+    for row in r["m_star_vs_stakes"]:
+        print(f"  stakes={row['stakes']:>7}  m*={row['m_star']:>5}  {row['regime']}")
+    print(f"\nwrote {os.path.join(out_dir, 'governance_results.json')}")
+    print(f"wrote {os.path.join(out_dir, 'GOVERNANCE.md')}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,181 @@
+{
+  "falsifier": "任意の stakes>0 で m*=0 のままなら『統治は荷重部材』は本モデル下で偽。",
+  "loss_curve_over_m": [
+    {
+      "efficiency": 0.0,
+      "m": 0.0,
+      "residual_error": 18.0,
+      "total": 18.0
+    },
+    {
+      "efficiency": 0.6,
+      "m": 0.1,
+      "residual_error": 13.3347,
+      "total": 13.9347
+    },
+    {
+      "efficiency": 1.2,
+      "m": 0.2,
+      "residual_error": 9.8786,
+      "total": 11.0786
+    },
+    {
+      "efficiency": 1.8,
+      "m": 0.3,
+      "residual_error": 7.3183,
+      "total": 9.1183
+    },
+    {
+      "efficiency": 2.4,
+      "m": 0.4,
+      "residual_error": 5.4215,
+      "total": 7.8215
+    },
+    {
+      "efficiency": 3.0,
+      "m": 0.5,
+      "residual_error": 4.0163,
+      "total": 7.0163
+    },
+    {
+      "efficiency": 3.6,
+      "m": 0.6,
+      "residual_error": 2.9754,
+      "total": 6.5754
+    },
+    {
+      "efficiency": 4.2,
+      "m": 0.7,
+      "residual_error": 2.2042,
+      "total": 6.4042
+    },
+    {
+      "efficiency": 4.8,
+      "m": 0.8,
+      "residual_error": 1.6329,
+      "total": 6.4329
+    },
+    {
+      "efficiency": 5.4,
+      "m": 0.9,
+      "residual_error": 1.2097,
+      "total": 6.6097
+    },
+    {
+      "efficiency": 6.0,
+      "m": 1.0,
+      "residual_error": 0.8962,
+      "total": 6.8962
+    }
+  ],
+  "m_star_vs_stakes": [
+    {
+      "m_star": 0.0,
+      "regime": "no_membrane",
+      "stakes": 0.5
+    },
+    {
+      "m_star": 0.0,
+      "regime": "no_membrane",
+      "stakes": 0.7339
+    },
+    {
+      "m_star": 0.0,
+      "regime": "no_membrane",
+      "stakes": 1.0772
+    },
+    {
+      "m_star": 0.1176,
+      "regime": "partial_membrane",
+      "stakes": 1.5811
+    },
+    {
+      "m_star": 0.2455,
+      "regime": "partial_membrane",
+      "stakes": 2.3208
+    },
+    {
+      "m_star": 0.3734,
+      "regime": "partial_membrane",
+      "stakes": 3.4065
+    },
+    {
+      "m_star": 0.5014,
+      "regime": "partial_membrane",
+      "stakes": 5.0
+    },
+    {
+      "m_star": 0.6293,
+      "regime": "partial_membrane",
+      "stakes": 7.339
+    },
+    {
+      "m_star": 0.7572,
+      "regime": "partial_membrane",
+      "stakes": 10.7722
+    },
+    {
+      "m_star": 0.8851,
+      "regime": "partial_membrane",
+      "stakes": 15.8114
+    },
+    {
+      "m_star": 1.0,
+      "regime": "full_membrane",
+      "stakes": 23.2079
+    },
+    {
+      "m_star": 1.0,
+      "regime": "full_membrane",
+      "stakes": 34.0646
+    },
+    {
+      "m_star": 1.0,
+      "regime": "full_membrane",
+      "stakes": 50.0
+    }
+  ],
+  "optimum_at_default": {
+    "loss_at_m_star": 6.3944,
+    "loss_at_zero": 18.0,
+    "m_star": 0.7324,
+    "regime": "partial_membrane"
+  },
+  "params": {
+    "beta": 3.0,
+    "c_mem": 0.5,
+    "n": 12,
+    "p_bad": 0.15,
+    "stakes": 10.0
+  },
+  "sensitivity_oversight_reach": [
+    {
+      "beta": 1.0,
+      "m_star_at_default_stakes": 1.0,
+      "membrane_saturates_at_stakes": 9.0609,
+      "membrane_starts_paying_at_stakes": 3.3333
+    },
+    {
+      "beta": 2.0,
+      "m_star_at_default_stakes": 0.8959,
+      "membrane_saturates_at_stakes": 12.3151,
+      "membrane_starts_paying_at_stakes": 1.6667
+    },
+    {
+      "beta": 3.0,
+      "m_star_at_default_stakes": 0.7324,
+      "membrane_saturates_at_stakes": 22.3173,
+      "membrane_starts_paying_at_stakes": 1.1111
+    },
+    {
+      "beta": 5.0,
+      "m_star_at_default_stakes": 0.5416,
+      "membrane_saturates_at_stakes": 98.9421,
+      "membrane_starts_paying_at_stakes": 0.6667
+    }
+  ],
+  "thresholds": {
+    "membrane_saturates_at_stakes": 22.3173,
+    "membrane_starts_paying_at_stakes": 1.1111
+  }
+}

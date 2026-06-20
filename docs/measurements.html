@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>組織原論 — 最初の二つの計測</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  :root{ --paper:#f5f1e8; --ink:#1b2330; --muted:#5b6675; --line:#e0d9c7;
+    --teal:#2c6e6b; --teal-d:#205c59; --amber:#c2762c; --amber-d:#9a5b1c;
+    --market:#6b5b95; --dark:#2a2f3a; }
+  body{ background:#22262f; padding:36px 0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif; color:var(--ink); }
+  .serif{ font-family:"Yu Mincho","Hiragino Mincho ProN",serif; }
+  .mono{ font-family:"SF Mono","DejaVu Sans Mono","Roboto Mono",monospace; }
+  .fig{ width:1040px; margin:0 auto; background:var(--paper); border-radius:14px; overflow:hidden;
+    box-shadow:0 22px 70px rgba(0,0,0,.4); }
+  .fig::before{ content:""; display:block; height:9px; background:linear-gradient(90deg,var(--amber) 0 33%, var(--teal) 33% 66%, var(--market) 66% 100%); }
+  header{ padding:36px 56px 22px; border-bottom:1px solid var(--line); }
+  .kicker{ font-size:13px; letter-spacing:.3em; color:var(--teal); font-weight:700; }
+  h1{ font-size:34px; margin:10px 0 6px; }
+  .sub{ font-size:15px; color:var(--muted); line-height:1.6; }
+  .panel{ padding:30px 56px; border-bottom:1px solid var(--line); }
+  .panel:last-child{ border-bottom:none; }
+  h2{ font-size:21px; margin-bottom:4px; display:flex; align-items:center; gap:11px; }
+  h2 .n{ width:27px; height:27px; border-radius:7px; background:var(--teal); color:#fff; font-size:13px;
+    display:inline-flex; align-items:center; justify-content:center; }
+  .q{ font-size:14px; color:var(--muted); margin-bottom:18px; }
+  .q b{ color:var(--amber-d); }
+
+  /* phase grid */
+  .legend{ display:flex; gap:18px; font-size:13px; margin:0 0 12px; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .sw{ width:14px; height:14px; border-radius:3px; display:inline-block; }
+  .grid{ display:grid; gap:3px; }
+  .grow{ display:grid; grid-template-columns:64px repeat(19, 1fr); gap:3px; align-items:center; }
+  .ylab{ font-size:12px; color:var(--muted); text-align:right; padding-right:6px; }
+  .cell{ height:26px; border-radius:3px; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#fff; }
+  .H{ background:var(--amber); } .F{ background:var(--teal); } .M{ background:var(--market); }
+  .xaxis{ display:grid; grid-template-columns:64px 1fr; margin-top:8px; font-size:12px; color:var(--muted); }
+  .xaxis .scale{ display:flex; justify-content:space-between; }
+  .note{ font-size:13px; color:var(--ink); margin-top:14px; line-height:1.6; }
+  .note b{ color:var(--teal-d); }
+
+  /* membrane curve */
+  .curve{ display:flex; align-items:flex-end; gap:6px; height:200px; padding:10px 0 0;
+    border-bottom:2px solid var(--ink); border-left:2px solid var(--ink); position:relative; }
+  .bar{ flex:1; background:linear-gradient(180deg,var(--teal),#3f8f8a); border-radius:4px 4px 0 0; position:relative; min-height:2px; }
+  .bar .v{ position:absolute; top:-17px; left:50%; transform:translateX(-50%); font-size:10px; color:var(--muted); }
+  .bar .s{ position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); font-size:9.5px; color:var(--muted); }
+  .yaxL{ position:absolute; left:-30px; top:-4px; font-size:11px; color:var(--muted); }
+  .yaxL.bot{ top:auto; bottom:-4px; }
+  .thr{ position:absolute; bottom:0; top:0; border-left:2px dashed var(--amber-d); }
+  .thr span{ position:absolute; top:-2px; left:4px; font-size:10px; color:var(--amber-d); font-weight:700; white-space:nowrap; }
+  .axislabel{ text-align:center; font-size:12px; color:var(--muted); margin-top:30px; }
+
+  footer{ padding:18px 56px 26px; color:var(--muted); font-size:12px; display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+<div class="fig">
+  <header>
+    <div class="kicker">組織原論 / soshiki-genron — 計測</div>
+    <h1 class="serif">最初の二つの計測</h1>
+    <p class="sub">第一原理「モデルと実験による計測」の具体化。決定的モデルで、概念（F3・F8）を反証可能な数字にした。<span class="mono">python3 -m model.sweep / model.governance</span></p>
+  </header>
+
+  <div class="panel">
+    <h2><span class="n">1</span>通信コスト → 最適な調整構造</h2>
+    <div class="q">問い: <b>通信コスト c_comm が下がると、コスト最小の構造は階層→平ら→市場へ動くか</b>（F3 ＋ Malone）。相図 = 密度 × c_comm の各点での勝者。</div>
+    <div class="legend">
+      <span><i class="sw H"></i>hierarchy（階層）</span>
+      <span><i class="sw F"></i>flat（平ら）</span>
+      <span><i class="sw M"></i>market（市場）</span>
+    </div>
+    <div class="grid">
+      <div class="grow"><div class="ylab">ρ=0.2</div>
+        <div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div></div>
+      <div class="grow"><div class="ylab">ρ=0.4</div>
+        <div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div><div class="cell F">F</div></div>
+      <div class="grow"><div class="ylab">ρ=0.6</div>
+        <div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell F">F</div><div class="cell F">F</div></div>
+      <div class="grow"><div class="ylab">ρ=0.8</div>
+        <div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell H">H</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div><div class="cell M">M</div></div>
+    </div>
+    <div class="xaxis"><div></div><div class="scale"><span>c_comm=5.0（高・人間域）</span><span>→</span><span>0.02（低・AI域）</span></div></div>
+    <div class="note"><b>flat↔hierarchy 交差点 c_comm*≈1.12</b>。通信が高コストなら階層、安いと平ら。密度が強く効く（疎ρ=0.2は全域 flat／密ρ=0.8は階層→市場）。管理者OHを 0 にすると階層の領域は縮む（感度分析）。</div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="n">2</span>stakes → 統治膜の最適な厚み</h2>
+    <div class="q">問い: 人間可読な<b>統治膜の厚み m* に最適値はあるか</b>（F8・最適性 vs 可読性）。縦 = 最適な膜の厚み m*、横 = stakes（誤り流出時の損害）。</div>
+    <div style="position:relative; padding-left:34px; padding-right:10px;">
+      <div class="curve">
+        <span class="yaxL">m*=1</span><span class="yaxL bot">0</span>
+        <div class="thr" style="left:13%"><span>1.11: 膜が割に合い始める</span></div>
+        <div class="thr" style="left:83%"><span>22.3: 全面膜</span></div>
+        <div class="bar" style="height:1%"><span class="v">0</span><span class="s">0.5</span></div>
+        <div class="bar" style="height:1%"><span class="v">0</span><span class="s">0.7</span></div>
+        <div class="bar" style="height:1%"><span class="v">0</span><span class="s">1.1</span></div>
+        <div class="bar" style="height:11.8%"><span class="v">.12</span><span class="s">1.6</span></div>
+        <div class="bar" style="height:24.6%"><span class="v">.25</span><span class="s">2.3</span></div>
+        <div class="bar" style="height:37.3%"><span class="v">.37</span><span class="s">3.4</span></div>
+        <div class="bar" style="height:50.1%"><span class="v">.50</span><span class="s">5.0</span></div>
+        <div class="bar" style="height:62.9%"><span class="v">.63</span><span class="s">7.3</span></div>
+        <div class="bar" style="height:75.7%"><span class="v">.76</span><span class="s">10.8</span></div>
+        <div class="bar" style="height:88.5%"><span class="v">.89</span><span class="s">15.8</span></div>
+        <div class="bar" style="height:100%"><span class="v">1.0</span><span class="s">23.2</span></div>
+        <div class="bar" style="height:100%"><span class="v">1.0</span><span class="s">34</span></div>
+        <div class="bar" style="height:100%"><span class="v">1.0</span><span class="s">50</span></div>
+      </div>
+      <div class="axislabel">stakes（誤りが流出した時の損害）→</div>
+    </div>
+    <div class="note"><b>内点最適が存在</b>。stakes<1.11 では膜ゼロ（純効率が最適）、>22.3 で全面膜、間は対数的に厚くなる。= §5「膜が厚すぎれば擬人的負債・薄すぎれば主権喪失」を**しきい値**として測った。falsifier（任意 stakes で m*=0）は<b>偽にならず</b>、§5 を条件付き支持。</div>
+  </div>
+
+  <footer>
+    <span class="mono">soshiki-genron · 決定的・17 tests green · model/sweep.py + model/governance.py</span>
+    <span class="mono">github.com/akihidem/soshiki-genron (public)</span>
+  </footer>
+</div>
+</body>
+</html>
