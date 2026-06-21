@@ -219,7 +219,8 @@ def _extract_code(text: str) -> str:
     code = "\n".join(blocks) if blocks else t
     out = []
     for ln in code.splitlines():
-        if "unittest.main(" in ln:
+        if "unittest.main(" in ln or "pytest.main(" in ln:
+            out.append(ln[:len(ln) - len(ln.lstrip())] + "pass")  # neutralize, keep block valid
             continue
         m = re.match(r"\s*(?:from|import)\s+(\.[\w.]*|[A-Za-z_][\w.]*)", ln)
         if m:
@@ -261,15 +262,23 @@ def correctness(artifact: str, timeout: int = 12) -> dict:
             pass
 
 
+# calls are fixed per structure (no data dependence) -> lets us re-measure from saved artifacts
+_CALLS = {"flat": 3, "hierarchy": 5, "market": 4}
+
+
 def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
-        measure_correctness: bool = True) -> dict:
-    rows, artifacts = [], {}
+        measure_correctness: bool = True, artifacts: dict | None = None) -> dict:
+    rows, arts = [], {}
     for t in tasks:
         for s in structures:
-            artifact, calls = STRUCTURES[s](model, t)
-            if "def " not in artifact:                  # transient non-code result -> one retry
+            key = f"{t['id']}|{s}"
+            if artifacts is not None:                   # offline re-measure on saved artifacts (no LLM)
+                artifact, calls = artifacts[key], _CALLS[s]
+            else:
                 artifact, calls = STRUCTURES[s](model, t)
-            artifacts[f"{t['id']}|{s}"] = artifact
+                if "def " not in artifact:              # transient non-code result -> one retry
+                    artifact, calls = STRUCTURES[s](model, t)
+            arts[key] = artifact
             q = quality(t, artifact)
             row = {"task": t["id"], "structure": s, "calls": calls,
                    "quality": q["quality"], "impl_cov": q["impl_coverage"],
@@ -291,16 +300,16 @@ def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
             a["avg_correctness"] = round(sum(cs) / len(cs), 3) if cs else None
         agg[s] = a
     return {"model": model, "n_tasks": len(tasks), "rows": rows, "aggregate": agg,
-            "artifacts": artifacts}
+            "artifacts": arts}
 
 
 def _md(r: dict) -> str:
     a = r["aggregate"]
-    L = ["# 実証: エージェント組織シミュレータ — flat vs hierarchy（F3 接地）",
+    L = ["# 実証: エージェント組織シミュレータ — flat vs hierarchy vs market（F3 接地）",
          "",
-         f"実 LLM エージェント（{r['model']}）に相互依存タスク（設計→実装→テスト）を 2 構造で組織させ、"
-         f"コスト（コール数）と品質（静的検査）を測った。タスク {r['n_tasks']} 件。"
-         "生数値 [`org_sim_results.json`](org_sim_results.json)。",
+         f"実 LLM エージェント（{r['model']}）に相互依存タスク（設計→実装→テスト）を 3 構造で組織させ、"
+         f"コスト（コール数）・品質（静的検査）・**正しさ（sandbox 実行）**を測った。タスク {r['n_tasks']} 件。"
+         "生数値 [`org_sim_results.json`](org_sim_results.json)・生成物 [`org_sim_artifacts.json`](org_sim_artifacts.json)。",
          "",
          "## 集計",
          "| 構造 | 平均コール（コスト） | 平均品質(静的) | 平均正しさ(実行) | 総コール |",
@@ -333,16 +342,22 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="agent organization simulator (flat vs hierarchy)")
     ap.add_argument("--agent", default="mock", help="'mock' or claude:<model>")
     ap.add_argument("--tasks", type=int, default=3)
+    ap.add_argument("--remeasure", action="store_true",
+                    help="recompute quality+correctness on saved org_sim_artifacts.json (no LLM calls)")
     args = ap.parse_args(argv)
-    if args.agent == "mock":
+    out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.remeasure:                                  # offline re-grade with the current harness
+        saved = json.load(open(os.path.join(out_dir, "org_sim_artifacts.json"), encoding="utf-8"))
+        model = json.load(open(os.path.join(out_dir, "org_sim_results.json"), encoding="utf-8")).get("model", "sonnet")
+        r = run(model, TASKS[:max(1, args.tasks)], artifacts=saved)
+    elif args.agent == "mock":
         _CALL = _mock
-        model = "mock"
+        r = run("mock", TASKS[:max(1, args.tasks)])
     else:
         vendor, _, model = args.agent.partition(":")
         if vendor != "claude":
             raise SystemExit("use --agent mock or claude:<model>")
-    r = run(model, TASKS[:max(1, args.tasks)])
-    out_dir = os.path.dirname(os.path.abspath(__file__))
+        r = run(model, TASKS[:max(1, args.tasks)])
     arts = r.pop("artifacts", {})                       # sidecar: keep results.json readable
     with open(os.path.join(out_dir, "org_sim_artifacts.json"), "w", encoding="utf-8") as f:
         json.dump(arts, f, ensure_ascii=False, indent=2, sort_keys=True)
