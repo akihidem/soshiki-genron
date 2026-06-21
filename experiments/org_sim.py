@@ -158,9 +158,56 @@ _HARNESS = (
 )
 
 
+# Minimal in-process pytest shim so model-emitted pytest tests (import pytest,
+# @pytest.mark.parametrize, pytest.raises/approx) RUN in the no-net sandbox where
+# real pytest may be absent. Without this, correctness measures "did the model use
+# my test format", not correctness — a confound. A parametrized test = 1 unit that
+# runs every case (raises on first failing case).
+_PYTEST_SHIM = (
+    'import sys as _s, types as _t\n'
+    '_pt = _t.ModuleType("pytest")\n'
+    'class _Mark:\n'
+    '    def parametrize(self, argnames, argvalues, *a, **k):\n'
+    '        names = [x.strip() for x in argnames.split(",")] if isinstance(argnames, str) else list(argnames)\n'
+    '        def deco(fn):\n'
+    '            def wrapped(*args, **kw):\n'
+    '                if args or kw: return fn(*args, **kw)\n'
+    '                for case in argvalues:\n'
+    '                    vals = list(case) if (isinstance(case, (tuple, list)) and len(names) > 1) else [case]\n'
+    '                    fn(*vals)\n'
+    '            wrapped.__name__ = getattr(fn, "__name__", "test")\n'
+    '            return wrapped\n'
+    '        return deco\n'
+    '    def __getattr__(self, name):\n'
+    '        def deco(*a, **k):\n'
+    '            if len(a) == 1 and callable(a[0]) and not k: return a[0]\n'
+    '            return lambda fn: fn\n'
+    '        return deco\n'
+    '_pt.mark = _Mark()\n'
+    'class _Raises:\n'
+    '    def __init__(self, exc): self.exc = exc\n'
+    '    def __enter__(self): return self\n'
+    '    def __exit__(self, et, ev, tb):\n'
+    '        if et is None: raise AssertionError("did not raise")\n'
+    '        return issubclass(et, self.exc if isinstance(self.exc, tuple) else (self.exc,))\n'
+    '_pt.raises = lambda exc, *a, **k: _Raises(exc)\n'
+    'class _Approx:\n'
+    '    def __init__(self, x, rel=1e-6, abs=1e-9): self.x, self.rel, self.abs = x, rel, abs\n'
+    '    def __eq__(self, o):\n'
+    '        try: return abs(o - self.x) <= max(self.rel * max(abs(o), abs(self.x)), self.abs)\n'
+    '        except Exception: return False\n'
+    '_pt.approx = lambda x, rel=1e-6, abs=1e-9: _Approx(x, rel, abs)\n'
+    '_pt.fixture = lambda *a, **k: (a[0] if (len(a) == 1 and callable(a[0])) else (lambda fn: fn))\n'
+    'def _skip(*a, **k): raise _Skip()\n'
+    'class _Skip(Exception): pass\n'
+    '_pt.skip = _skip\n'
+    '_s.modules["pytest"] = _pt\n\n'
+)
+
+
 def _extract_code(text: str) -> str:
     t = text or ""
-    blocks = re.findall(r"```(?:python)?\n(.*?)```", t, re.DOTALL)
+    blocks = re.findall(r"```[a-zA-Z0-9]*\n(.*?)```", t, re.DOTALL)
     code = "\n".join(blocks) if blocks else t
     return "\n".join(ln for ln in code.splitlines() if "unittest.main(" not in ln)
 
@@ -169,7 +216,7 @@ def correctness(artifact: str, timeout: int = 12) -> dict:
     import resource
     import tempfile
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
-        f.write(_extract_code(artifact) + _HARNESS)
+        f.write(_PYTEST_SHIM + _extract_code(artifact) + _HARNESS)
         path = f.name
 
     def _limits():  # CPU + memory caps in the child (belt-and-suspenders with the wall timeout)

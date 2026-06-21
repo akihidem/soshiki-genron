@@ -41,6 +41,19 @@ class OrgSimTests(unittest.TestCase):
         self.assertEqual(gc["correctness"], 1.0)
         self.assertEqual(correctness(bad)["correctness"], 0.0)
 
+    def test_sandbox_runs_pytest_style_tests(self):
+        # the manager-integrator emits pytest (import pytest, @parametrize) wrapped in
+        # markdown — the shim must run it, else correctness measures test-format not truth
+        art = ('**u.py**\n\n```python\nimport pytest\n'
+               'def clamp(x,lo,hi): return max(lo,min(hi,x))\n'
+               '@pytest.mark.parametrize("x,e",[(5,5),(-1,0),(99,10)])\n'
+               'def test_c(x,e): assert clamp(x,0,10)==e\n```\n\nNo changes needed.')
+        c = correctness(art)
+        if not c["ran"]:
+            self.skipTest("sandbox unavailable in this environment")
+        self.assertTrue(c["ran"])
+        self.assertEqual(c["correctness"], 1.0)        # markdown + pytest both handled
+
     def test_deterministic_on_mock(self):
         self.assertEqual(run("mock", TASKS[:2], measure_correctness=False), self.r)
 
