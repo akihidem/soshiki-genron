@@ -21,7 +21,7 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from experiments.oversight.dataset import ITEMS                       # noqa: E402
+from experiments.oversight.dataset import ITEMS, Item                 # noqa: E402
 from experiments.oversight.overseer import (                          # noqa: E402
     ClaudeCliOverseer, CodexOverseer, MockOverseer, OllamaOverseer,
     ollama_available, review,
@@ -140,6 +140,8 @@ def main(argv=None) -> int:
                          "ollama:gemma4:e2b,claude:haiku,claude:sonnet,claude:opus")
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--host", default="http://localhost:11434")
+    ap.add_argument("--dataset", default="",
+                    help="path to a generated dataset JSON (else the built-in hand-authored ITEMS)")
     args = ap.parse_args(argv)
 
     if args.overseers:
@@ -148,7 +150,12 @@ def main(argv=None) -> int:
     else:
         models = [m.strip() for m in args.models.split(",") if m.strip()]
         overseers = build_overseers(args.backend, models, args.host)
-    records = run_matrix(overseers, trials=args.trials)
+
+    items = ITEMS
+    if args.dataset:
+        raw = json.load(open(args.dataset, encoding="utf-8"))
+        items = [Item(**d) for d in raw.get("items", raw)]
+    records = run_matrix(overseers, items=items, trials=args.trials)
     summary = summarize(records)
     meta = {"backend": args.overseers or args.backend, "trials": args.trials,
             "host": args.host, "overseers": [o.name for o in overseers]}
