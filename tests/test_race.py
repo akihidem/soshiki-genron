@@ -32,6 +32,21 @@ class RaceModelTests(unittest.TestCase):
         self.assertGreater(m, 0.0)
         self.assertLess(m, 1.0)
 
+    def test_liability_closes_the_race_gap(self):
+        ms = [nash_equilibrium(dataclasses.replace(self.p, liability=l))
+              for l in (0.0, 0.25, 0.5, 1.0)]
+        self.assertEqual(ms, sorted(ms))                       # more liability -> thicker membrane
+        self.assertGreaterEqual(ms[-1], social_optimum(self.p))  # full liability reaches the optimum
+
+    def test_mandate_floor_restores_the_membrane(self):
+        m_star = social_optimum(self.p)
+        m = nash_equilibrium(dataclasses.replace(self.p, mandate_floor=m_star))
+        self.assertGreaterEqual(m, m_star - 0.01)
+
+    def test_shared_infra_thickens_the_membrane(self):
+        self.assertGreater(nash_equilibrium(dataclasses.replace(self.p, infra=0.6)),
+                           nash_equilibrium(self.p))
+
     def test_run_is_deterministic(self):
         self.assertEqual(run(), run())
 

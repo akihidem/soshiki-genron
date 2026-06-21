@@ -35,6 +35,10 @@ class RaceParams:
     beta: float = 3.0            # how fast a thicker membrane cuts residual risk
     private_safety: float = 8.0  # private cost an actor bears from its OWN residual risk
     progress_value: float = 100.0  # society's value of capability/progress (lost as m grows)
+    # --- institutional internalization mechanisms (the countermeasures to the race) ---
+    liability: float = 0.0       # λ: fraction of the social catastrophe each actor bears privately (Coase)
+    mandate_floor: float = 0.0   # m_min: a regulated minimum membrane / standard (Pigou)
+    infra: float = 0.0           # σ: shared verification infra reduces the membrane's capability cost
     grid: int = 401              # m-resolution
 
 
@@ -42,8 +46,9 @@ def _ms(p: "RaceParams") -> list[float]:
     return [i / (p.grid - 1) for i in range(p.grid)]
 
 
-def speed(m: float) -> float:
-    return max(1e-9, 1.0 - m)                # thicker membrane -> slower (capability cost)
+def speed(p: "RaceParams", m: float) -> float:
+    # thicker membrane -> slower (capability cost). Shared infra (σ) cuts that cost.
+    return max(1e-9, 1.0 - m * (1.0 - p.infra))
 
 
 def residual_risk(p: "RaceParams", m: float) -> float:
@@ -51,8 +56,11 @@ def residual_risk(p: "RaceParams", m: float) -> float:
 
 
 def _util(p: "RaceParams", m: float, m_others: float) -> float:
-    win = speed(m) / (speed(m) + (p.n_actors - 1) * speed(m_others))
-    return p.prize * win - p.private_safety * residual_risk(p, m)
+    win = speed(p, m) / (speed(p, m) + (p.n_actors - 1) * speed(p, m_others))
+    # liability internalizes a fraction λ of the social catastrophe into the actor's payoff.
+    return (p.prize * win
+            - p.private_safety * residual_risk(p, m)
+            - p.liability * p.catastrophe * residual_risk(p, m))
 
 
 def best_response(p: "RaceParams", m_others: float) -> float:
@@ -68,7 +76,7 @@ def nash_equilibrium(p: "RaceParams") -> float:
             m = m_new
             break
         m = (m + m_new) / 2.0
-    return round(m, 4)
+    return round(max(m, p.mandate_floor), 4)   # a binding regulated floor lifts the equilibrium
 
 
 def social_optimum(p: "RaceParams") -> float:
@@ -76,7 +84,7 @@ def social_optimum(p: "RaceParams") -> float:
     def welfare(m):
         # the planner values progress (capability, lost as the membrane thickens) and
         # internalizes the catastrophe risk + private safety costs of an unsafe outcome.
-        return (p.progress_value * speed(m)
+        return (p.progress_value * speed(p, m)
                 - p.catastrophe * residual_risk(p, m)
                 - p.n_actors * p.private_safety * residual_risk(p, m))
     return round(max(_ms(p), key=welfare), 4)
@@ -95,6 +103,22 @@ def run(p: "RaceParams | None" = None) -> dict:
                    for v in (10.0, 50.0, 100.0, 200.0, 400.0)]
     actors_sweep = [{"n_actors": v, **gap(dataclasses.replace(p, n_actors=v))}
                     for v in (2, 3, 5, 10)]
+
+    # --- institutional internalization: how far each mechanism closes the race gap ---
+    m_eq0, m_star0 = base["m_eq"], base["m_star_social"]
+    gap0 = m_star0 - m_eq0
+
+    def _closure(pm) -> dict:
+        e = nash_equilibrium(pm)
+        frac = (e - m_eq0) / gap0 if gap0 > 1e-9 else 1.0
+        return {"m_eq": e, "gap_closed": round(min(max(frac, 0.0), 1.2), 3)}
+
+    liability_sweep = [{"liability": x, **_closure(dataclasses.replace(p, liability=x))}
+                       for x in (0.0, 0.25, 0.5, 0.75, 1.0)]
+    mandate_sweep = [{"mandate_floor": x, **_closure(dataclasses.replace(p, mandate_floor=x))}
+                     for x in (0.0, 0.25, 0.5, round(m_star0, 2))]
+    infra_sweep = [{"infra": x, **_closure(dataclasses.replace(p, infra=x))}
+                   for x in (0.0, 0.3, 0.6, 0.9)]
     return {
         "params": dataclasses.asdict(p),
         "base": base,
@@ -102,7 +126,16 @@ def run(p: "RaceParams | None" = None) -> dict:
                     "レース強度（prize・参加者数）が上がるほど gap 拡大＝AI-2027 の Race へ。"),
         "gap_vs_prize": prize_sweep,
         "gap_vs_n_actors": actors_sweep,
-        "falsifier": "どんな prize / 参加者数でも gap=0（競争が膜を削らない）なら本モデル下でレース外部性は無い。",
+        "social_optimum": m_star0,
+        "internalization": {
+            "note": "外部性の内部化（賠償責任λ / 規制下限 / 共有検証インフラσ）が race gap をどこまで閉じるか。"
+                    "gap_closed=1.0 で m_eq が m* に到達＝Slowdown。",
+            "by_liability": liability_sweep,
+            "by_mandate_floor": mandate_sweep,
+            "by_infra": infra_sweep,
+        },
+        "falsifier": "どんな prize / 参加者数でも gap=0（競争が膜を削らない）なら本モデル下でレース外部性は無い。"
+                     "／どの内部化でも gap_closed が上がらないなら、制度は race を救えない（本モデル下で偽）。",
     }
 
 
@@ -143,6 +176,25 @@ def _md(r: dict) -> str:
           "actor の私的コストに移せば均衡が厚くなる＝介入の標的。",
           "- これは単独組織の統治膜計測（第二）が**見落としていた量**: 安全最適の膜厚は、競争があると"
           "個々には選ばれない。**「薄い人間統治膜」テーゼの最大の脅威はレース**。",
+          "",
+          "## 内部化メカニズム — race を救えるか（制度経済学）",
+          f"外部性の内部化が race gap をどこまで閉じるか。無策 m_eq={r['base']['m_eq']} → 社会最適 "
+          f"m\\*={r['social_optimum']}。**gap閉=1.0 で m_eq が m\\* に到達＝Slowdown**。",
+          "",
+          "**① 賠償責任 λ（Coase: 破局を私的コスト化）**", "", "| λ | m_eq | gap閉 |", "|---|---|---|"]
+    for s in r["internalization"]["by_liability"]:
+        L.append(f"| {s['liability']} | {s['m_eq']} | {s['gap_closed']} |")
+    L += ["", "**② 規制下限 m_min（Pigou: 標準の義務化）**", "", "| m_min | m_eq | gap閉 |", "|---|---|---|"]
+    for s in r["internalization"]["by_mandate_floor"]:
+        L.append(f"| {s['mandate_floor']} | {s['m_eq']} | {s['gap_closed']} |")
+    L += ["", "**③ 共有検証インフラ σ（公共財: 膜の capability コストを下げる）**", "",
+          "| σ | m_eq | gap閉 |", "|---|---|---|"]
+    for s in r["internalization"]["by_infra"]:
+        L.append(f"| {s['infra']} | {s['m_eq']} | {s['gap_closed']} |")
+    L += ["",
+          "→ **3つとも race gap を閉じられる＝Slowdown は institutional に*到達可能***。技術で解けない③（競争）も、"
+          "**制度設計（責任・標準・共有検証）で定量的に救える**ことを反証可能に示した。"
+          "ただし*どれも1組織でなく生態系の調整*が要る ── そこが現実の難所（AI-2027 の Race が現実的な理由）。",
           "",
           "## 妥当性",
           "- 1ラウンド対称ゲームの近似。speed=1−m・risk=e^(−βm)・破局項は第一原理的だが*仮定*。"

@@ -80,7 +80,7 @@ python3 -m model.race          # レース外部性（AI-2027 動機）      →
 python3 -m model.alignment     # F7 整合（仕様+検証が能力を上限）   → model/ALIGNMENT.md
 python3 -m experiments.oversight.calibrate   # 実測較正: 測った oversight_error を両モデルへ → CALIBRATION.md
 python3 -m experiments.oversight.run         # 実証: 監督スケーリング（mock即時／--backend ollama で実測）
-python3 -m unittest discover -s tests -t .   # テスト（61本・決定的mock・全green）
+python3 -m unittest discover -s tests -t .   # テスト（64本・決定的mock・全green）
 ```
 
 ## リポジトリ地図
@@ -92,20 +92,20 @@ python3 -m unittest discover -s tests -t .   # テスト（61本・決定的mock
 - `docs/ai-2027.md` — AI-2027（実存リスクのシナリオ予測）と本研究の対応・レース計測の動機
 - `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）＋生成 `*.md`
 - `experiments/oversight/` — 実証ハーネス（弱↔強監督で oversight_error を実測）＋ `calibrate.py`（測定値を governance/alignment へ還す実測較正）／`docs/oversight-pilot.md`
-- `tests/` — 決定的テスト（61本）
+- `tests/` — 決定的テスト（64本）
 
 ## 到達点（2026-06-21 着手・初日）
 - **③ 概念**: 最小定義 + 原始機能 F1–F8 + 拘束系譜 + 2フロンティア（整合の変質 / 統治の残存）+ テーゼ。
 - **第一原理**: モデルと実験による計測を最上位規則化。各主張に反証手段を併記。
 - **① 文献**: 3件を二次確認・記録（Marschak&Radner チーム理論 / Malone 電子市場 / Carley 計算組織論）。
-- **② 計測 3本 + 合成**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適・しきい値）／容量→分解粒度（高容量ほど粗い）／処方マップ（タスク条件→推奨）。決定的・**61 tests green**・図あり。
+- **② 計測 3本 + 合成**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適・しきい値）／容量→分解粒度（高容量ほど粗い）／処方マップ（タスク条件→推奨）。決定的・**64 tests green**・図あり。
 - テーゼの**両半分が測れる対象**になった（機構の効率 と 膜の厚み）。tehai の A/B と独立経路で同じ向き。
 
 ## 次の計測（ranked・externally recorded）
 1. **一次精読** — 3文献の本文で cost 係数を正当化／反証（Carley の実験データ較正含む）。
 2. **統計強化** — 監督実証 N↑/trials↑で oversight_error(能力差) 曲線を精緻化。
 
-> 計測済み: 容量制約 F1（[`model/CAPACITY.md`](model/CAPACITY.md)）／人間の誤判定（`oversight_error` 軸）／軸の相互作用（[`model/JOINT.md`](model/JOINT.md)・分離可能性は高 stakes で破れる）／**レース外部性**（[`model/RACE.md`](model/RACE.md)）／**F7 整合**（[`model/ALIGNMENT.md`](model/ALIGNMENT.md)・仕様+検証が能力 p\* を上限づけ・超えると Goodhart）／**実測較正**（測った oversight_error 0〜0.5・過剰flag 0.33 を governance/alignment に還元 → 大能力差で膜 0.73→0.50、過剰flag で m\*=0、安全な能力 p\* 2.05→1.61）。
+> 計測済み: 容量制約 F1（[`model/CAPACITY.md`](model/CAPACITY.md)）／人間の誤判定（`oversight_error` 軸）／軸の相互作用（[`model/JOINT.md`](model/JOINT.md)・分離可能性は高 stakes で破れる）／**レース外部性**（[`model/RACE.md`](model/RACE.md)）／**F7 整合**（[`model/ALIGNMENT.md`](model/ALIGNMENT.md)・仕様+検証が能力 p\* を上限づけ・超えると Goodhart）／**制度内部化**（[`model/RACE.md`](model/RACE.md)・race gap を賠償責任λ=0.25で82%・規制標準・共有検証で回復＝Race↔Slowdown の定量分岐）／**実測較正**（測った oversight_error 0〜0.5・過剰flag 0.33 を governance/alignment に還元 → 大能力差で膜 0.73→0.50、過剰flag で m\*=0、安全な能力 p\* 2.05→1.61）。
 
 > **実証着手**（解析→実測）: 監督スケーリングの第一パイロット（[`docs/oversight-pilot.md`](docs/oversight-pilot.md)）は仮説を**否定**＝oversight_error はまだ未接地。失敗モードは recall でなく precision の可能性。measurement-first が機能。
 

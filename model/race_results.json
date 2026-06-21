@@ -4,7 +4,7 @@
     "m_eq": 0.2125,
     "m_star_social": 0.8425
   },
-  "falsifier": "どんな prize / 参加者数でも gap=0（競争が膜を削らない）なら本モデル下でレース外部性は無い。",
+  "falsifier": "どんな prize / 参加者数でも gap=0（競争が膜を削らない）なら本モデル下でレース外部性は無い。／どの内部化でも gap_closed が上がらないなら、制度は race を救えない（本モデル下で偽）。",
   "finding": "Nash 均衡の膜 m_eq は社会最適 m* より薄い（gap>0）＝競争が安全を削る。レース強度（prize・参加者数）が上がるほど gap 拡大＝AI-2027 の Race へ。",
   "gap_vs_n_actors": [
     {
@@ -64,13 +64,91 @@
       "prize": 400.0
     }
   ],
+  "internalization": {
+    "by_infra": [
+      {
+        "gap_closed": 0.0,
+        "infra": 0.0,
+        "m_eq": 0.2125
+      },
+      {
+        "gap_closed": 0.179,
+        "infra": 0.3,
+        "m_eq": 0.325
+      },
+      {
+        "gap_closed": 0.488,
+        "infra": 0.6,
+        "m_eq": 0.52
+      },
+      {
+        "gap_closed": 1.2,
+        "infra": 0.9,
+        "m_eq": 1.0
+      }
+    ],
+    "by_liability": [
+      {
+        "gap_closed": 0.0,
+        "liability": 0.0,
+        "m_eq": 0.2125
+      },
+      {
+        "gap_closed": 0.817,
+        "liability": 0.25,
+        "m_eq": 0.7275
+      },
+      {
+        "gap_closed": 0.956,
+        "liability": 0.5,
+        "m_eq": 0.815
+      },
+      {
+        "gap_closed": 1.024,
+        "liability": 0.75,
+        "m_eq": 0.8575
+      },
+      {
+        "gap_closed": 1.067,
+        "liability": 1.0,
+        "m_eq": 0.885
+      }
+    ],
+    "by_mandate_floor": [
+      {
+        "gap_closed": 0.0,
+        "m_eq": 0.2125,
+        "mandate_floor": 0.0
+      },
+      {
+        "gap_closed": 0.06,
+        "m_eq": 0.25,
+        "mandate_floor": 0.25
+      },
+      {
+        "gap_closed": 0.456,
+        "m_eq": 0.5,
+        "mandate_floor": 0.5
+      },
+      {
+        "gap_closed": 0.996,
+        "m_eq": 0.84,
+        "mandate_floor": 0.84
+      }
+    ],
+    "note": "外部性の内部化（賠償責任λ / 規制下限 / 共有検証インフラσ）が race gap をどこまで閉じるか。gap_closed=1.0 で m_eq が m* に到達＝Slowdown。"
+  },
   "params": {
     "beta": 3.0,
     "catastrophe": 400.0,
     "grid": 401,
+    "infra": 0.0,
+    "liability": 0.0,
+    "mandate_floor": 0.0,
     "n_actors": 2,
     "private_safety": 8.0,
     "prize": 40.0,
     "progress_value": 100.0
-  }
+  },
+  "social_optimum": 0.8425
 }
