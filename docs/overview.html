@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="hz:slide-selector" content=".infographic" />
+<meta name="hz:canvas-width" content="1120" />
+<meta name="hz:canvas-height" content="2540" />
+<title>組織原論 — 全体像</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  :root{ --paper:#f5f1e8; --ink:#1b2330; --muted:#5b6675; --line:#e0d9c7;
+    --teal:#2c6e6b; --teal-d:#205c59; --amber:#c2762c; --amber-d:#9a5b1c;
+    --dark:#2a2f3a; --gray:#6c7686; --market:#6b5b95; }
+  body{ background:#22262f; padding:40px 0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif; color:var(--ink); }
+  .serif{ font-family:"Yu Mincho","Hiragino Mincho ProN",serif; }
+  .mono{ font-family:"SF Mono","DejaVu Sans Mono","Roboto Mono",monospace; }
+  .infographic{ width:1120px; min-height:2540px; margin:0 auto; background:var(--paper);
+    position:relative; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.4); }
+  .infographic::before{ content:""; position:absolute; top:0; left:0; right:0; height:10px;
+    background:linear-gradient(90deg,var(--amber) 0 40%, var(--teal) 40% 75%, var(--market) 75% 100%); }
+  .pad{ padding:0 64px; }
+  header{ padding:58px 64px 30px; border-bottom:1px solid var(--line); }
+  .kicker{ font-size:14px; letter-spacing:.32em; color:var(--teal); font-weight:700; }
+  .kicker .en{ color:#a59f88; letter-spacing:.18em; }
+  h1{ font-size:50px; line-height:1.12; margin:14px 0 10px; }
+  .sub{ font-size:18px; line-height:1.65; color:var(--muted); max-width:900px; }
+
+  .sh{ display:flex; align-items:center; gap:13px; margin:46px 0 18px; }
+  .sh .bar{ width:7px; height:30px; background:var(--amber); border-radius:3px; }
+  .sh h2{ font-size:25px; } .sh .en{ font-size:12px; letter-spacing:.2em; color:#a59f88; }
+
+  /* research arc */
+  .arc{ display:flex; align-items:stretch; gap:0; flex-wrap:wrap; }
+  .arc .step{ flex:1; min-width:128px; background:#fff; border:1px solid var(--line); border-radius:11px;
+    padding:14px 12px; text-align:center; position:relative; }
+  .arc .step .n{ font-size:11px; color:var(--teal); font-weight:700; letter-spacing:.08em; }
+  .arc .step .t{ font-size:15px; font-weight:700; margin-top:3px; }
+  .arc .step .d{ font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.4; }
+  .arc .ar{ display:flex; align-items:center; color:var(--amber); font-size:20px; padding:0 5px; }
+
+  /* four-way split */
+  .four{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .cell{ border-radius:11px; padding:16px 18px; border:1px solid var(--line); }
+  .cell h3{ font-size:16px; margin-bottom:5px; } .cell p{ font-size:13.5px; line-height:1.5; color:#3c4654; }
+  .c-drop{ background:#f7ecda; } .c-drop h3{ color:var(--amber-d); }
+  .c-keep{ background:#e7f0ee; } .c-keep h3{ color:var(--teal-d); }
+  .c-mut{ background:#efeaf2; } .c-mut h3{ color:#5b4b85; }
+  .c-gov{ background:#eaf0ee; border:1.5px solid var(--teal); } .c-gov h3{ color:var(--teal-d); }
+
+  /* model cards */
+  .models{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .mod{ background:#fff; border:1px solid var(--line); border-radius:11px; padding:15px 18px; }
+  .mod .h{ font-size:15.5px; font-weight:700; color:var(--teal-d); margin-bottom:3px; }
+  .mod .h .f{ font-size:11px; background:var(--teal); color:#fff; border-radius:5px; padding:1px 7px; margin-right:7px; }
+  .mod .r{ font-size:13.5px; line-height:1.5; color:#3c4654; }
+  .mod .r b{ color:var(--amber-d); }
+
+  /* empirical loop */
+  .loop{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 22px; }
+  .loopflow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13.5px; }
+  .loopflow .b{ background:#eef1ef; border:1px solid var(--line); border-radius:8px; padding:8px 12px; flex:1; min-width:120px; text-align:center; }
+  .loopflow .b b{ color:var(--teal-d); } .loopflow .ar{ color:var(--amber); font-weight:700; }
+  .loopnote{ font-size:13px; color:#3c4654; margin-top:12px; line-height:1.55; }
+  .loopnote b{ color:var(--amber-d); }
+
+  /* integrated picture - membrane + failure modes */
+  .integ{ background:var(--dark); color:#eef1f5; border-radius:14px; padding:26px 30px; }
+  .integ .core{ text-align:center; background:#3b4250; border-radius:10px; padding:14px; font-size:16px; font-weight:700; color:#9fd3cd; margin-bottom:16px; }
+  .fails{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .fail{ background:#343a47; border-radius:9px; padding:13px 14px; border-top:3px solid var(--amber); }
+  .fail .t{ font-size:14px; font-weight:700; color:#e6b873; } .fail .d{ font-size:12.5px; color:#c3cad4; margin-top:4px; line-height:1.45; }
+  .integ .bound{ margin-top:16px; font-size:14.5px; color:#d4dae2; line-height:1.6; }
+  .integ .bound b{ color:#9fd3cd; }
+
+  /* thesis */
+  .verdict{ margin-top:44px; background:#1f2630; color:#eef1f5; border-radius:16px; padding:34px 40px; }
+  .verdict .vh{ font-size:13px; letter-spacing:.24em; color:#8fb6b2; font-weight:700; }
+  .verdict .big{ font-size:27px; line-height:1.45; margin:12px 0 12px; }
+  .verdict .big b{ color:#e6b873; }
+  .verdict .tension{ font-size:16px; color:#c3cad4; }
+  .verdict .tension b{ color:#9fd3cd; }
+
+  footer{ margin-top:28px; padding:22px 64px 36px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+  footer .row{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  footer b{ color:var(--amber-d); }
+</style>
+</head>
+<body>
+<div class="infographic">
+
+  <header>
+    <div class="kicker">組織原論 <span class="en">/ SOSHIKI-GENRON — 全体像 · THE WHOLE PICTURE</span></div>
+    <h1 class="serif">AIにとって組織とは何か</h1>
+    <p class="sub">人間組織を起点にせず、組織を<b>機能</b>から再導出し、各主張を<b>反証可能な計測</b>に落とし、中心パラメタを<b>実測較正</b>した研究の地図。初日でゼロから一周。論証全文 = <span class="mono">PAPER.md</span>。</p>
+  </header>
+
+  <div class="pad">
+
+    <div class="sh"><span class="bar"></span><h2>研究の弧</h2><span class="en">THE ARC</span></div>
+    <div class="arc">
+      <div class="step"><div class="n">①</div><div class="t">問い</div><div class="d">人間組織は AI には擬人的負債か</div></div>
+      <div class="ar">→</div>
+      <div class="step"><div class="n">②</div><div class="t">方法</div><div class="d">機能優先＋計測第一</div></div>
+      <div class="ar">→</div>
+      <div class="step"><div class="n">③</div><div class="t">再導出</div><div class="d">F1–F8 を拘束系譜で</div></div>
+      <div class="ar">→</div>
+      <div class="step"><div class="n">④</div><div class="t">計測</div><div class="d">6モデル</div></div>
+      <div class="ar">→</div>
+      <div class="step"><div class="n">⑤</div><div class="t">実証+較正</div><div class="d">oversight 実測</div></div>
+      <div class="ar">→</div>
+      <div class="step"><div class="n">⑥</div><div class="t">統合・テーゼ</div><div class="d">統治膜が中心</div></div>
+    </div>
+
+    <div class="sh"><span class="bar"></span><h2>機能は AI でどうなるか（四分類）</h2><span class="en">CONSTRAINT GENEALOGY</span></div>
+    <div class="four">
+      <div class="cell c-drop"><h3>惰性（大方不要）</h3><p>F2 固定役割・F3 帯域のための階層・F4 引き継ぎ・F6 再編の遅さ ＝ 人間の限界への対処。AIでは緩む/逆転 → 擬人的負債。</p></div>
+      <div class="cell c-keep"><h3>強く転移</h3><p>標準化（契約・スキーマ・型・provenance）。人間でも AI でも有効、AIでは lossless でより強く。</p></div>
+      <div class="cell c-mut"><h3>変質して残る（フロンティア1）</h3><p>F5 検証・F7 整合 ── 「管理」が <b>仕様+検証+監督</b> へ変態。私利の管理でなく誤りの検証へ。</p></div>
+      <div class="cell c-gov"><h3>残り荷重部材（フロンティア2）</h3><p>F8 統治・可読性 ── 人間が主権を保つため。<b>最適性 vs 可読性</b>の中心的緊張。</p></div>
+    </div>
+
+    <div class="sh"><span class="bar"></span><h2>6モデルの計測（全て決定的・反証可能）</h2><span class="en">SIX MEASURED MODELS</span></div>
+    <div class="models">
+      <div class="mod"><div class="h"><span class="f">F3</span>通信 → 構造</div><div class="r">交差点 c_comm≈1.12。安くすると勝者は <b>hierarchy → market → flat</b>。管理者OHが大きいほど階層は狭い。</div></div>
+      <div class="mod"><div class="h"><span class="f">F1</span>容量 → 粒度</div><div class="r">最適粒度 g*=⌈W/κ⌉。<b>容量↑で粗い分解</b>＝AIは"人の職サイズ"でなく → flat 後押し。</div></div>
+      <div class="mod"><div class="h"><span class="f">F8</span>統治膜</div><div class="r">内点最適 m* 存在。stakes がしきい値。<b>監督崩れ/過剰flag/競争で m*→0</b>（膜が消える）。</div></div>
+      <div class="mod"><div class="h"><span class="f">F7</span>整合</div><div class="r">安全な最適化圧 p*=1.84。<b>仕様+検証が能力を上限づける</b>。超えると Goodhart で真の目的が悪化。</div></div>
+      <div class="mod"><div class="h"><span class="f">結合</span>構造×膜</div><div class="r">分離可能でない。<b>高 stakes で効率最適 market が統治しやすい hierarchy に負ける</b>（1/9）。</div></div>
+      <div class="mod"><div class="h"><span class="f">競争</span>レース外部性</div><div class="r">均衡膜 m_eq=0.21 ＜ 社会最適 0.84。<b>競争が安全を削る</b>（race-to-the-bottom）＝AI-2027 の Race。</div></div>
+    </div>
+
+    <div class="sh"><span class="bar"></span><h2>実証ループ — 仮定を実測へ、実測を理論へ</h2><span class="en">MEASURE → CALIBRATE</span></div>
+    <div class="loop">
+      <div class="loopflow">
+        <div class="b">トイの<br><b>仮定</b> oversight_error</div>
+        <div class="ar">→</div>
+        <div class="b">opus が巧妙欠陥生成<br>→ 弱い監督に<b>同定</b>させ実測</div>
+        <div class="ar">→</div>
+        <div class="b"><b>較正</b>を2モデルへ還元<br>(governance / alignment)</div>
+      </div>
+      <div class="loopnote">
+        実測: oversight_error ＝ <b>~0（capable な監督）〜 0.5（大能力差 opus→e2b ~2B）</b>。haiku 以上は opus の巧妙欠陥も全捕捉 → 崩壊には大能力差が要り <b>→1（超人/neuralese）は測定可能モデルの外への外挿</b>。併せて <b>強い監督ほど過剰flag</b>（FP haiku 0→opus 0.33・能力は監督を単調に改善しない）。
+        <br>較正の効果: 統治膜 m* <b>0.73 → 0.50</b>（大能力差）→ <b>0</b>（過剰flag）／安全な能力 p* <b>2.05 → 1.61</b>。＝測った監督の限界が、最適な膜厚と"安全に上げられる能力"を直接動かす。
+      </div>
+    </div>
+
+    <div class="sh"><span class="bar"></span><h2>統合像 — 統治膜が中心、3方向から崩れる</h2><span class="en">INTEGRATED PICTURE</span></div>
+    <div class="integ">
+      <div class="core">AIネイティブ機構（平ら・記憶共有・オンデマンド・データフロー）＋ その上の【人間統治膜】</div>
+      <div class="fails">
+        <div class="fail"><div class="t">① recall で崩れる</div><div class="d">能力差が大きいと弱い監督が巧妙な誤りを見逃す（実測 e2b 0.5）</div></div>
+        <div class="fail"><div class="t">② precision で崩れる</div><div class="d">強い監督ほど過剰flag → 膜が消える（m*=0・実測由来）</div></div>
+        <div class="fail"><div class="t">③ 競争で崩れる</div><div class="d">レースが膜を社会最適より薄く（race-to-the-bottom）</div></div>
+      </div>
+      <div class="bound">そして <b>能力そのものが仕様+検証に上限づけられる</b>（F7）。→ 「AIネイティブの組織は組織でなくデータフロー＋薄い膜」だが、<b>薄い膜の設計と維持が最難</b>で、そこが安全の急所。</div>
+    </div>
+
+    <div class="verdict">
+      <div class="vh">テーゼ · THESIS</div>
+      <div class="big">AIネイティブの「組織」はたぶん<b>組織ではない</b> —— 型付き・証拠付き・記憶共有のデータフロー＋オンデマンド生成、その上に<b>薄い人間統治膜</b>。「チーム/役割/階層」はその人間可読な投影。</div>
+      <div class="tension">中心的緊張は <b>最適性（AIネイティブ）vs 可読性（人間統治）</b>。本研究はその設計空間を反証可能に計測し、中心パラメタを実測較正した。</div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div style="margin-bottom:8px;"><b>限界</b>: 決定的トイモデル（oversight_error と過剰flag だけ実測較正済・他は仮定）／実証は N 小・trials=1／→1 は外挿／完全なエージェント組織シミュレータではない。テーゼは論証＋部分計測であって証明でない。</div>
+    <div class="row"><span class="mono">soshiki-genron · 6 models + 実証 + 較正 · 61 tests green · PAPER.md</span><span class="mono">github.com/akihidem/soshiki-genron (public)</span></div>
+  </footer>
+
+</div>
+</body>
+</html>
