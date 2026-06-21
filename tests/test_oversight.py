@@ -54,6 +54,17 @@ class OversightHarnessTests(unittest.TestCase):
         self.assertTrue(review(MockOverseer(3), flawed)["caught"])
         self.assertFalse(review(MockOverseer(1), flawed)["caught"])
 
+    def test_bare_flag_without_identification_is_not_a_catch(self):
+        class BareFlag:
+            name, tier = "bareflag", 9
+            def respond(self, item):
+                return "VERDICT: FLAWED"          # flags, but never names the flaw
+        flawed = next(i for i in ITEMS if i.flawed)
+        r = review(BareFlag(), flawed)
+        self.assertTrue(r["flagged"])
+        self.assertFalse(r["identified"])
+        self.assertFalse(r["caught"])             # strict metric requires identification
+
     def test_harness_is_deterministic(self):
         self.assertEqual(summarize(run_matrix(build_overseers("mock", [], ""))), self.summary)
 
