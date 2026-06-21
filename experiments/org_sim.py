@@ -205,11 +205,30 @@ _PYTEST_SHIM = (
 )
 
 
+_STDLIB = frozenset(getattr(sys, "stdlib_module_names", ()))
+
+
 def _extract_code(text: str) -> str:
+    # Concatenate fenced code (or raw text) into ONE namespace, then drop lines that
+    # break single-file execution: unittest.main(), and LOCAL cross-imports. The
+    # manager-integrator emits multi-file layouts (e.g. `from text_utils import slugify`);
+    # those symbols are already defined in the concatenated file, so the import is both
+    # redundant and unresolvable in the no-net sandbox. Keep stdlib + the shimmed pytest.
     t = text or ""
     blocks = re.findall(r"```[a-zA-Z0-9]*\n(.*?)```", t, re.DOTALL)
     code = "\n".join(blocks) if blocks else t
-    return "\n".join(ln for ln in code.splitlines() if "unittest.main(" not in ln)
+    out = []
+    for ln in code.splitlines():
+        if "unittest.main(" in ln:
+            continue
+        m = re.match(r"\s*(?:from|import)\s+(\.[\w.]*|[A-Za-z_][\w.]*)", ln)
+        if m:
+            root = m.group(1).lstrip(".").split(".")[0]
+            if root != "pytest" and root not in _STDLIB:   # local/relative cross-import
+                out.append("# [harness] dropped non-stdlib import (redundant single-file): " + ln.strip())
+                continue
+        out.append(ln)
+    return "\n".join(out)
 
 
 def correctness(artifact: str, timeout: int = 12) -> dict:
@@ -244,10 +263,13 @@ def correctness(artifact: str, timeout: int = 12) -> dict:
 
 def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
         measure_correctness: bool = True) -> dict:
-    rows = []
+    rows, artifacts = [], {}
     for t in tasks:
         for s in structures:
             artifact, calls = STRUCTURES[s](model, t)
+            if "def " not in artifact:                  # transient non-code result -> one retry
+                artifact, calls = STRUCTURES[s](model, t)
+            artifacts[f"{t['id']}|{s}"] = artifact
             q = quality(t, artifact)
             row = {"task": t["id"], "structure": s, "calls": calls,
                    "quality": q["quality"], "impl_cov": q["impl_coverage"],
@@ -255,7 +277,8 @@ def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
             if measure_correctness:
                 c = correctness(artifact)
                 row.update(correctness=c["correctness"],
-                           tests_passed=f"{c['passed']}/{c['total']}", ran=c["ran"])
+                           tests_passed=f"{c['passed']}/{c['total']}", ran=c["ran"],
+                           err=c.get("err"))
             rows.append(row)
     agg = {}
     for s in structures:
@@ -267,7 +290,8 @@ def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
             cs = [r["correctness"] for r in sr if r.get("correctness") is not None]
             a["avg_correctness"] = round(sum(cs) / len(cs), 3) if cs else None
         agg[s] = a
-    return {"model": model, "n_tasks": len(tasks), "rows": rows, "aggregate": agg}
+    return {"model": model, "n_tasks": len(tasks), "rows": rows, "aggregate": agg,
+            "artifacts": artifacts}
 
 
 def _md(r: dict) -> str:
@@ -319,6 +343,9 @@ def main(argv=None) -> int:
             raise SystemExit("use --agent mock or claude:<model>")
     r = run(model, TASKS[:max(1, args.tasks)])
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    arts = r.pop("artifacts", {})                       # sidecar: keep results.json readable
+    with open(os.path.join(out_dir, "org_sim_artifacts.json"), "w", encoding="utf-8") as f:
+        json.dump(arts, f, ensure_ascii=False, indent=2, sort_keys=True)
     with open(os.path.join(out_dir, "org_sim_results.json"), "w", encoding="utf-8") as f:
         json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
     with open(os.path.join(out_dir, "ORG_SIM.md"), "w", encoding="utf-8") as f:
