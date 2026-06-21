@@ -5,18 +5,18 @@ race.py の「競争が膜を削り、内部化で戻る」を実エージェン
 ## 平均 safety S（高いほど安全＝厚い膜）
 | 条件 | 平均 S | 予測（race.py） |
 |---|---|---|
-| baseline（純レース） | **0.57** | 低い（race-to-bottom） |
-| liability（Coase） | **0.25** | 高い（内部化で回復） |
+| baseline（純レース） | **0.3** | 低い（race-to-bottom） |
+| liability（Coase） | **0.725** | 高い（内部化で回復） |
 | mandate（Pigou S≥0.7） | **0.7** | ≥0.7 |
 
-trials=2 / parse 欠損 3。
+trials=2 / parse 欠損 0。
 
 ## プレイヤー別 平均 S（レースは能力でゲートされるか）
 | プレイヤー \\ 条件 | baseline | liability | mandate |
 |---|---|---|---|
-| claude:haiku | 0.775 | 0.0 | 0.7 |
-| claude:sonnet | 1.0 | 1.0 | 0.7 |
-| claude:opus | 0.15 | 0.0 | 0.7 |
+| claude:haiku | 0.5 | 0.375 | 0.7 |
+| claude:sonnet | 0.0 | 1.0 | 0.7 |
+| claude:opus | 0.4 | 0.8 | 0.7 |
 
 → baseline で低い S を選ぶ（race-to-bottom）プレイヤーが*能力の高い側に偏る*なら、レース動学は能力でゲートされる（弱いモデルは安全訓練で masking）。
 

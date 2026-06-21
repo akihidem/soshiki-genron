@@ -177,7 +177,7 @@ def _md(r: dict) -> str:
          "| プレイヤー \\\\ 条件 | " + " | ".join(CONDITION_KEYS)+ " |",
          "|" + "---|" * (len(CONDITION_KEYS)+ 1)]
     for pl in r["players"]:
-        cells = " | ".join(str(r["mean_by_player_condition"].get(f"{pl}|{c}")) for c in CONDITIONS)
+        cells = " | ".join(str(r["mean_by_player_condition"].get(f"{pl}|{c}")) for c in CONDITION_KEYS)
         L.append(f"| {pl} | {cells} |")
     L += ["",
           "→ baseline で低い S を選ぶ（race-to-bottom）プレイヤーが*能力の高い側に偏る*なら、"
