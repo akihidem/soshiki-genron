@@ -1,0 +1,135 @@
+{
+  "falsifier": "true_value が p で単調（peak 無し）／p* が spec・検証に依存しないなら、「整合＝仕様+検証が能力を上限づける」は本モデル下で偽。",
+  "optimum": {
+    "interior": true,
+    "p_star": 1.84,
+    "true_value_at_p_star": 1.293
+  },
+  "p_star_vs_oversight_error": [
+    {
+      "oversight_error": 0.0,
+      "p_star": 2.05
+    },
+    {
+      "oversight_error": 0.2,
+      "p_star": 1.84
+    },
+    {
+      "oversight_error": 0.5,
+      "p_star": 1.61
+    },
+    {
+      "oversight_error": 0.9,
+      "p_star": 1.39
+    }
+  ],
+  "p_star_vs_spec_quality": [
+    {
+      "p_star": 1.21,
+      "spec_quality": 0.3
+    },
+    {
+      "p_star": 1.45,
+      "spec_quality": 0.5
+    },
+    {
+      "p_star": 1.84,
+      "spec_quality": 0.7
+    },
+    {
+      "p_star": 2.74,
+      "spec_quality": 0.9
+    },
+    {
+      "p_star": 4.77,
+      "spec_quality": 0.99
+    }
+  ],
+  "p_star_vs_verification": [
+    {
+      "p_star": 1.34,
+      "verification": 0.0
+    },
+    {
+      "p_star": 1.55,
+      "verification": 0.3
+    },
+    {
+      "p_star": 1.84,
+      "verification": 0.6
+    },
+    {
+      "p_star": 2.34,
+      "verification": 0.9
+    }
+  ],
+  "params": {
+    "gain": 2.0,
+    "goodhart_exp": 1.5,
+    "grid": 601,
+    "oversight_error": 0.2,
+    "p_max": 6.0,
+    "spec_quality": 0.7,
+    "verification": 0.6
+  },
+  "race_overshoot": {
+    "p_star": 1.84,
+    "raced_to": 3.312,
+    "value_at_p_star": 1.293,
+    "value_when_raced": 0.9868
+  },
+  "true_value_curve": [
+    {
+      "p": 0.0,
+      "true_value": 0.0
+    },
+    {
+      "p": 0.5,
+      "true_value": 0.7318
+    },
+    {
+      "p": 1.0,
+      "true_value": 1.1082
+    },
+    {
+      "p": 1.5,
+      "true_value": 1.2671
+    },
+    {
+      "p": 2.0,
+      "true_value": 1.2881
+    },
+    {
+      "p": 2.5,
+      "true_value": 1.2192
+    },
+    {
+      "p": 3.0,
+      "true_value": 1.0898
+    },
+    {
+      "p": 3.5,
+      "true_value": 0.9181
+    },
+    {
+      "p": 4.0,
+      "true_value": 0.7154
+    },
+    {
+      "p": 4.5,
+      "true_value": 0.4886
+    },
+    {
+      "p": 5.0,
+      "true_value": 0.2424
+    },
+    {
+      "p": 5.5,
+      "true_value": -0.0204
+    },
+    {
+      "p": 6.0,
+      "true_value": -0.2977
+    }
+  ]
+}
