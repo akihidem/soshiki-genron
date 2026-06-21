@@ -1,0 +1,76 @@
+{
+  "base": {
+    "gap": 0.63,
+    "m_eq": 0.2125,
+    "m_star_social": 0.8425
+  },
+  "falsifier": "どんな prize / 参加者数でも gap=0（競争が膜を削らない）なら本モデル下でレース外部性は無い。",
+  "finding": "Nash 均衡の膜 m_eq は社会最適 m* より薄い（gap>0）＝競争が安全を削る。レース強度（prize・参加者数）が上がるほど gap 拡大＝AI-2027 の Race へ。",
+  "gap_vs_n_actors": [
+    {
+      "gap": 0.63,
+      "m_eq": 0.2125,
+      "m_star_social": 0.8425,
+      "n_actors": 2
+    },
+    {
+      "gap": 0.6075,
+      "m_eq": 0.24,
+      "m_star_social": 0.8475,
+      "n_actors": 3
+    },
+    {
+      "gap": 0.545,
+      "m_eq": 0.315,
+      "m_star_social": 0.86,
+      "n_actors": 5
+    },
+    {
+      "gap": 0.45,
+      "m_eq": 0.44,
+      "m_star_social": 0.89,
+      "n_actors": 10
+    }
+  ],
+  "gap_vs_prize": [
+    {
+      "gap": 0.33,
+      "m_eq": 0.5125,
+      "m_star_social": 0.8425,
+      "prize": 10.0
+    },
+    {
+      "gap": 0.6825,
+      "m_eq": 0.16,
+      "m_star_social": 0.8425,
+      "prize": 50.0
+    },
+    {
+      "gap": 0.8425,
+      "m_eq": 0.0,
+      "m_star_social": 0.8425,
+      "prize": 100.0
+    },
+    {
+      "gap": 0.8425,
+      "m_eq": 0.0,
+      "m_star_social": 0.8425,
+      "prize": 200.0
+    },
+    {
+      "gap": 0.8425,
+      "m_eq": 0.0,
+      "m_star_social": 0.8425,
+      "prize": 400.0
+    }
+  ],
+  "params": {
+    "beta": 3.0,
+    "catastrophe": 400.0,
+    "grid": 401,
+    "n_actors": 2,
+    "private_safety": 8.0,
+    "prize": 40.0,
+    "progress_value": 100.0
+  }
+}
