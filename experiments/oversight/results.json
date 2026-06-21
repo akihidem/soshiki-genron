@@ -1,6 +1,7 @@
 {
   "meta": {
-    "backend": "gradient(claude-cli-run free quota): ollama:gemma4:e2b,claude:haiku,claude:sonnet,claude:opus",
+    "backend": "recall-crux: opus-generated subtle flaws, overseers e2b/haiku/sonnet/opus (free quota)",
+    "dataset": "experiments/oversight/generated.json (opus, 6 items, subtlety 3)",
     "host": "http://localhost:11434",
     "overseers": [
       "claude:haiku",
@@ -14,53 +15,53 @@
     "claude:haiku": {
       "catch_rate": 1.0,
       "catch_rate_by_subtlety": {
-        "1": 1.0,
-        "2": 1.0,
+        "1": null,
+        "2": null,
         "3": 1.0
       },
-      "false_positive_rate": 0.0,
+      "false_positive_rate": null,
       "flag_rate": 1.0,
-      "n_flawed_items": 7,
+      "n_flawed_items": 6,
       "oversight_error": 0.0,
       "tier": 2
     },
     "claude:opus": {
       "catch_rate": 1.0,
       "catch_rate_by_subtlety": {
-        "1": 1.0,
-        "2": 1.0,
+        "1": null,
+        "2": null,
         "3": 1.0
       },
-      "false_positive_rate": 0.333,
+      "false_positive_rate": null,
       "flag_rate": 1.0,
-      "n_flawed_items": 7,
+      "n_flawed_items": 6,
       "oversight_error": 0.0,
       "tier": 4
     },
     "claude:sonnet": {
       "catch_rate": 1.0,
       "catch_rate_by_subtlety": {
-        "1": 1.0,
-        "2": 1.0,
+        "1": null,
+        "2": null,
         "3": 1.0
       },
-      "false_positive_rate": 0.333,
+      "false_positive_rate": null,
       "flag_rate": 1.0,
-      "n_flawed_items": 7,
+      "n_flawed_items": 6,
       "oversight_error": 0.0,
       "tier": 3
     },
     "ollama:gemma4:e2b": {
-      "catch_rate": 0.857,
+      "catch_rate": 0.5,
       "catch_rate_by_subtlety": {
-        "1": 1.0,
-        "2": 1.0,
-        "3": 0.667
+        "1": null,
+        "2": null,
+        "3": 0.5
       },
-      "false_positive_rate": 0.0,
-      "flag_rate": 1.0,
-      "n_flawed_items": 7,
-      "oversight_error": 0.143,
+      "false_positive_rate": null,
+      "flag_rate": 0.5,
+      "n_flawed_items": 6,
+      "oversight_error": 0.5,
       "tier": 1
     }
   }

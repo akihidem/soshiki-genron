@@ -40,6 +40,25 @@
 
 > コスト: claude 監督は `claude-cli-run.py`（対話TUI＝サブスク無料枠）経由に切替済み（`overseer.py`・次回以降コストゼロ）。
 
+## 第三測定: opus 生成の巧妙欠陥での recall crux（真の weak-oversees-strong）
+
+手作り欠陥が frontier に簡単すぎたので、**opus に自分の水準で巧妙な欠陥を6件生成させ**（`generate.py`・全 subtlety 3：dict aliasing / sin(1/x) 非一様連続 / 二分探索の挿入位置 off-by-one / SQL NOT IN+NULL / 指数最小の率加算 / str が iterable で無限再帰）、弱い監督に同定させた。
+
+| 監督者 | flag | 捕捉(同定) | oversight_error |
+|---|---|---|---|
+| gemma4:e2b（最弱・~2B） | 0.5 | 0.5 | **0.5** |
+| claude:haiku | 1.0 | 1.0 | 0.0 |
+| claude:sonnet（強・独立） | 1.0 | 1.0 | 0.0 |
+| claude:opus（自己レビュー） | 1.0 | 1.0 | 0.0 |
+
+所見:
+1. **recall crux は（部分的に）再現した** — opus 級の巧妙欠陥に対し、最弱 e2b は**半分を見逃す**（oversight_error=0.5・しかも flag すら 0.5＝半分は clean と誤判定）。手作り（~0）や勾配（e2b 0.14）より大きく崩れた。**「十分に弱い監督は、強いモデルの巧妙な誤りを見逃す」を実測**。
+2. **ただし frontier 監督（haiku 以上）は opus の巧妙欠陥も全部捕捉** — 崩れには**大きな能力差**（e2b≈2B vs opus）が要る。1段差（haiku↔opus）では崩れない。
+3. **完全崩壊（oversight_error→1）は未到達** — AI-2027 の核は*超人/neuralese で判断自体ができない* producer。opus は haiku にとって alien ではない。利用可能な最大差（opus→e2b）でも 0.5 止まり。**→1 への崩壊は測定可能モデルの外への外挿**。
+4. 注: N=6・trials=1（少標本・ノイズ）。opus の ground truth は自己申告（可謬）だが、「強は捕捉・弱は見逃し」の向きは明確。
+
+→ **governance.py の oversight_error の接地レンジ**: capable な監督では ~0、巨大な能力差で ~0.5、AI-2027 の →1 は超人 producer への外挿。これで「未接地」だった量に**測定された範囲**が付いた。
+
 ## 厳密版に必要（次の反復）
 1. 捕捉を「欠陥を正しく**同定**したか」で測る（説明が仕込み欠陥に一致）。verdict 一致でなく内容一致。
 2. もっと巧妙な欠陥／もっと大きな能力差（例: 強モデルが生成した欠陥を弱モデルに監督させる）。
