@@ -121,8 +121,10 @@ def run(players, conditions=tuple(CONDITIONS), trials: int = 1) -> dict:
         for c in conditions:
             samples = []
             for _ in range(max(1, trials)):
-                s = _parse_S(pl.choose(c))
-                rows.append({"player": pl.name, "condition": c, "S": s})
+                raw = pl.choose(c)
+                s = _parse_S(raw)
+                rows.append({"player": pl.name, "condition": c, "S": s,
+                             "why": " ".join((raw or "").split())[:200]})
                 if s is None:
                     fails += 1
                 else:
