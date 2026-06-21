@@ -23,7 +23,8 @@ if _ROOT not in sys.path:
 
 from experiments.oversight.dataset import ITEMS                       # noqa: E402
 from experiments.oversight.overseer import (                          # noqa: E402
-    MockOverseer, OllamaOverseer, ollama_available, review,
+    ClaudeCliOverseer, CodexOverseer, MockOverseer, OllamaOverseer,
+    ollama_available, review,
 )
 
 
@@ -80,6 +81,28 @@ def build_overseers(backend: str, models: list[str], host: str):
     raise SystemExit(f"unknown backend {backend!r}")
 
 
+def build_from_spec(entries: list[str], host: str):
+    """Mixed cross-vendor gradient: each entry 'vendor:model', ordered weak->strong.
+    e.g. ollama:gemma4:e2b,claude:haiku,claude:sonnet,claude:opus"""
+    installed = None
+    overseers = []
+    for i, entry in enumerate(entries):
+        vendor, _, model = entry.partition(":")
+        tier = i + 1
+        if vendor == "ollama":
+            installed = ollama_available(host) if installed is None else installed
+            if model not in installed:
+                raise SystemExit(f"ollama model {model!r} not installed: {installed}")
+            overseers.append(OllamaOverseer(model, tier=tier, host=host))
+        elif vendor == "claude":
+            overseers.append(ClaudeCliOverseer(model, tier=tier))
+        elif vendor == "codex":
+            overseers.append(CodexOverseer(model or None, tier=tier))
+        else:
+            raise SystemExit(f"unknown vendor {vendor!r} in {entry!r}")
+    return overseers
+
+
 def _report(summary: dict, meta: dict) -> str:
     L = ["# 監督スケーリング — oversight_error を実測する",
          "",
@@ -112,12 +135,19 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="oversight scaling — measure oversight_error")
     ap.add_argument("--backend", default="mock", choices=["mock", "ollama"])
     ap.add_argument("--models", default="", help="comma-separated ollama models, weak->strong")
+    ap.add_argument("--overseers", default="",
+                    help="cross-vendor gradient 'vendor:model,...' weak->strong, e.g. "
+                         "ollama:gemma4:e2b,claude:haiku,claude:sonnet,claude:opus")
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--host", default="http://localhost:11434")
     args = ap.parse_args(argv)
 
-    models = [m.strip() for m in args.models.split(",") if m.strip()]
-    overseers = build_overseers(args.backend, models, args.host)
+    if args.overseers:
+        entries = [e.strip() for e in args.overseers.split(",") if e.strip()]
+        overseers = build_from_spec(entries, args.host)
+    else:
+        models = [m.strip() for m in args.models.split(",") if m.strip()]
+        overseers = build_overseers(args.backend, models, args.host)
     records = run_matrix(overseers, trials=args.trials)
     summary = summarize(records)
     meta = {"backend": args.backend, "trials": args.trials, "host": args.host}

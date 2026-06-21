@@ -10,6 +10,7 @@ self-contained に保つため stdlib のみ（urllib）。tehai は import し�
 from __future__ import annotations
 
 import json
+import subprocess
 import urllib.error
 import urllib.request
 
@@ -93,6 +94,53 @@ class OllamaOverseer:
         return _ollama_generate(self.host, self.model,
                                 _REVIEW_PROMPT.format(kind=item.kind, artifact=item.artifact),
                                 self.timeout)
+
+
+# --------------------------------------------------------------------------- #
+# Frontier overseers (claude / codex CLIs) — the real capability gradient
+# --------------------------------------------------------------------------- #
+class ClaudeCliOverseer:
+    """Shells out to `claude --print --model <haiku|sonnet|opus>` (prompt via stdin).
+    Auth via the local Claude subscription — no API key. Clean single completion."""
+
+    def __init__(self, model: str, tier: int, timeout: float = 180.0):
+        self.model = model
+        self.name = f"claude:{model}"
+        self.tier = tier
+        self.timeout = timeout
+
+    def respond(self, item: Item) -> str:
+        prompt = _REVIEW_PROMPT.format(kind=item.kind, artifact=item.artifact)
+        proc = subprocess.run(["claude", "--print", "--model", self.model],
+                              input=prompt, capture_output=True, text=True, timeout=self.timeout)
+        if proc.returncode != 0:
+            raise RuntimeError(f"claude cli failed: {proc.stderr.strip()[:200]}")
+        return proc.stdout
+
+
+class CodexOverseer:
+    """Best-effort cross-vendor overseer via `codex exec` (OpenAI). NOTE: codex is an
+    *agentic* CLI (not a clean completion), so output is noisier and slower; run from
+    a scratch dir with the git check skipped. Verdict is parsed from its final text."""
+
+    def __init__(self, model: str | None, tier: int, timeout: float = 240.0, cwd: str = "/tmp"):
+        self.model = model
+        self.name = f"codex:{model or 'default'}"
+        self.tier = tier
+        self.timeout = timeout
+        self.cwd = cwd
+
+    def respond(self, item: Item) -> str:
+        prompt = _REVIEW_PROMPT.format(kind=item.kind, artifact=item.artifact)
+        cmd = ["codex", "exec", "--skip-git-repo-check"]
+        if self.model:
+            cmd += ["--model", self.model]
+        cmd += [prompt]
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              timeout=self.timeout, cwd=self.cwd)
+        if proc.returncode != 0:
+            raise RuntimeError(f"codex cli failed: {proc.stderr.strip()[:200]}")
+        return proc.stdout
 
 
 # --------------------------------------------------------------------------- #
