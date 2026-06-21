@@ -36,6 +36,12 @@ class GovParams:
     stakes: float = 10.0       # cost if a high-stakes error ships unchecked
     oversight_error: float = 0.0   # fraction of error-prone decisions human oversight
                                    # ITSELF misses regardless of m (0 = perfect oversight)
+    # --- precision axis (B): empirically, stronger/thicker oversight OVER-flags clean
+    # decisions (alert fatigue/noise). Default 0 = off (backward compatible). The
+    # oversight experiment measured FP rising with capability (haiku 0 -> opus 0.33).
+    fp_rate_max: float = 0.0       # max over-flag (false-positive) rate as the membrane saturates
+    fp_cost: float = 0.0           # cost per over-flagged clean decision
+    fp_gamma: float = 3.0          # how fast over-flagging rises with membrane thickness m
 
 
 def total_loss(p: GovParams, m: float) -> dict:
@@ -76,6 +82,32 @@ def stakes_thresholds(p: GovParams) -> dict:
             "membrane_saturates_at_stakes": round(hi, 4)}
 
 
+# --------------------------------------------------------------------------- #
+# B: precision cost — oversight OVER-flags clean decisions, and (measured) the
+# over-flag rate rises with overseer capability. docs/oversight-pilot.md.
+# --------------------------------------------------------------------------- #
+def over_flag_rate(p: GovParams, m: float) -> float:
+    return p.fp_rate_max * (1.0 - math.exp(-p.fp_gamma * max(0.0, m)))
+
+
+def total_loss_with_precision(p: GovParams, m: float) -> dict:
+    base = total_loss(p, m)
+    clean = p.n * (1.0 - p.p_bad)
+    over_flag = p.fp_cost * clean * over_flag_rate(p, m)
+    return {**base, "over_flag": round(over_flag, 4),
+            "total": round(base["total"] + over_flag, 4)}
+
+
+def optimal_membrane_precision(p: GovParams, grid: int = 1001) -> dict:
+    """Numeric optimum INCLUDING the over-flag cost (no closed form). When the
+    precision params are 0 this equals the recall-only optimum."""
+    ms = [i / (grid - 1) for i in range(grid)]
+    best = min(ms, key=lambda m: total_loss_with_precision(p, m)["total"])
+    return {"m_star": round(best, 4),
+            "loss": total_loss_with_precision(p, best)["total"],
+            "m_star_recall_only": optimal_membrane(p)["m_star"]}
+
+
 def logspace(lo: float, hi: float, n: int) -> list[float]:
     if n == 1:
         return [hi]
@@ -111,6 +143,13 @@ def run(p: GovParams | None = None) -> dict:
             "m_star_at_default_stakes": optimal_membrane(pe)["m_star"],
             "membrane_starts_paying_at_stakes": stakes_thresholds(pe)["membrane_starts_paying_at_stakes"],
         })
+    # B (empirical): stronger oversight over-flags more (measured FP haiku 0 -> opus 0.33);
+    # as the over-flag rate rises, the optimal membrane gets THINNER (precision caps it).
+    precision_sens = []
+    for fpm in (0.0, 0.1, 0.2, 0.33):
+        pp = dataclasses.replace(p, fp_cost=5.0, fp_rate_max=fpm)
+        precision_sens.append({"fp_rate_max": fpm,
+                               "m_star": optimal_membrane_precision(pp)["m_star"]})
     return {
         "params": dataclasses.asdict(p),
         "thresholds": stakes_thresholds(p),
@@ -119,6 +158,7 @@ def run(p: GovParams | None = None) -> dict:
         "loss_curve_over_m": curve,
         "sensitivity_oversight_reach": beta_sens,
         "sensitivity_oversight_error": oversight_sens,
+        "sensitivity_precision_overflag": precision_sens,
         "falsifier": "任意の stakes>0 で m*=0 のままなら『統治は荷重部材』は本モデル下で偽。",
     }
 
@@ -176,6 +216,18 @@ def _md(r: dict) -> str:
     L.append("")
     L.append("→ 監督が当てにならないほど膜は薄くて済む／やがて割に合わなくなる。"
              "**「人間統治膜が荷重部材」なのは、監督がある程度信頼できる限りでの条件付き主張**であることが明示された。")
+    L.append("")
+    L.append("## 感度 — 過剰flag（precision）コスト ［B・実測由来］")
+    L.append("実証で「強い監督ほど clean を誤って flag」が再現（FP haiku 0 → opus 0.33・[`../docs/oversight-pilot.md`](../docs/oversight-pilot.md)）。"
+             "over-flag 率（fp_rate_max）が上がるほど最適膜は**薄く**なる:")
+    L.append("")
+    L.append("| fp_rate_max（過剰flag上限） | 最適膜 m\\* |")
+    L.append("|---|---|")
+    for s in r["sensitivity_precision_overflag"]:
+        L.append(f"| {s['fp_rate_max']} | {s['m_star']} |")
+    L.append("")
+    L.append("→ **能力↑で過剰flag↑ → 最適膜は薄くなる**（反直観・実測由来）。膜のコストは効率税だけでなく**誤検出ノイズ**も含む。"
+             "強い監督ほど厚い膜が良い、とは限らない。")
     L.append("")
     L.append("## 反証手段・妥当性")
     L.append(f"- 反証: {r['falsifier']}")

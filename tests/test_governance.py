@@ -8,7 +8,8 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from model.governance import (  # noqa: E402
-    GovParams, optimal_membrane, total_loss, stakes_thresholds, run,
+    GovParams, optimal_membrane, optimal_membrane_precision, total_loss,
+    stakes_thresholds, run,
 )
 
 
@@ -61,6 +62,22 @@ class GovernanceModelTests(unittest.TestCase):
 
     def test_default_oversight_is_perfect_for_backward_compat(self):
         self.assertEqual(self.p.oversight_error, 0.0)
+
+    def test_precision_off_matches_recall_only(self):
+        # with fp params 0, the precision-aware numeric optimum matches the recall-only
+        # analytic optimum (up to grid resolution).
+        self.assertAlmostEqual(optimal_membrane_precision(self.p)["m_star"],
+                               optimal_membrane(self.p)["m_star"], delta=0.01)
+
+    def test_over_flagging_thins_the_membrane(self):
+        base = optimal_membrane(self.p)["m_star"]
+        noisy = optimal_membrane_precision(
+            dataclasses.replace(self.p, fp_cost=5.0, fp_rate_max=0.33))["m_star"]
+        self.assertLess(noisy, base)          # measured over-flag rate collapses the membrane
+
+    def test_precision_sweep_monotonic_nonincreasing(self):
+        ms = [s["m_star"] for s in run()["sensitivity_precision_overflag"]]
+        self.assertEqual(ms, sorted(ms, reverse=True))
 
     def test_run_is_deterministic(self):
         self.assertEqual(run(), run())

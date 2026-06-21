@@ -61,7 +61,8 @@
 ### 実証: 監督スケーリング（②を実モデルへ接地）
 統治膜の `oversight_error` を実エージェントで接地する最初の実証（`experiments/oversight/`）。弱い監督 gemma4:e2b vs 強い gemma4:latest に巧妙さ別の仕込み欠陥をレビューさせた。
 - **結果は予想外**: 両者とも全欠陥を FLAWED と判定（仮説＝弱い監督は見逃す、は**再現せず**）。むしろ**強い監督ほど誤検出が多い**（FP 0.33 vs 0.0）＝失敗モードは見逃し(recall)でなく**過剰flag(precision)**。
-- measurement-first が効いた: トイモデルの oversight_error 前提を*実測のフリで通さなかった*。`governance.py` の値は**未接地**と明記。次は同定一致メトリクス＋超人差。詳細: [`docs/oversight-pilot.md`](docs/oversight-pilot.md)。
+- **フロンティア勾配**（gemma4:e2b→haiku→sonnet→opus・claude は無料枠 `claude-cli-run.py` 経由）でも **recall は天井**（弱い e2b だけ subtle で 0.667）／**precision は能力とともに悪化**（FP haiku 0→opus 0.33・2実験で再現）。失敗モードは見逃しでなく**過剰flag**。
+- **B 実装済み**: この precision 失敗モードを `governance.py` に項として還流。over-flag 率↑で最適膜は薄くなり、**実測の opus 率 0.33 では m\*=0（膜が消える）**＝強い監督ほど厚い膜が良いとは限らない。詳細: [`docs/oversight-pilot.md`](docs/oversight-pilot.md)。
 
 ## 走らせ方
 ```bash
@@ -72,7 +73,7 @@ python3 -m model.design_map    # 合成: タスク条件→推奨設計   → mo
 python3 -m model.joint         # 結合: 構造×膜（分離可能性の反証） → model/JOINT.md
 python3 -m model.race          # レース外部性（AI-2027 動機）      → model/RACE.md
 python3 -m experiments.oversight.run         # 実証: 監督スケーリング（mock即時／--backend ollama で実測）
-python3 -m unittest discover -s tests -t .   # テスト（46本・決定的mock・全green）
+python3 -m unittest discover -s tests -t .   # テスト（50本・決定的mock・全green）
 ```
 
 ## リポジトリ地図
@@ -84,13 +85,13 @@ python3 -m unittest discover -s tests -t .   # テスト（46本・決定的mock
 - `docs/ai-2027.md` — AI-2027（実存リスクのシナリオ予測）と本研究の対応・レース計測の動機
 - `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）＋生成 `*.md`
 - `experiments/oversight/` — 実証ハーネス（弱↔強監督で oversight_error を実測）／`docs/oversight-pilot.md`
-- `tests/` — 決定的テスト（46本）
+- `tests/` — 決定的テスト（50本）
 
 ## 到達点（2026-06-21 着手・初日）
 - **③ 概念**: 最小定義 + 原始機能 F1–F8 + 拘束系譜 + 2フロンティア（整合の変質 / 統治の残存）+ テーゼ。
 - **第一原理**: モデルと実験による計測を最上位規則化。各主張に反証手段を併記。
 - **① 文献**: 3件を二次確認・記録（Marschak&Radner チーム理論 / Malone 電子市場 / Carley 計算組織論）。
-- **② 計測 3本 + 合成**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適・しきい値）／容量→分解粒度（高容量ほど粗い）／処方マップ（タスク条件→推奨）。決定的・**46 tests green**・図あり。
+- **② 計測 3本 + 合成**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適・しきい値）／容量→分解粒度（高容量ほど粗い）／処方マップ（タスク条件→推奨）。決定的・**50 tests green**・図あり。
 - テーゼの**両半分が測れる対象**になった（機構の効率 と 膜の厚み）。tehai の A/B と独立経路で同じ向き。
 
 ## 次の計測（ranked・externally recorded）

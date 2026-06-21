@@ -144,6 +144,9 @@
   "params": {
     "beta": 3.0,
     "c_mem": 0.5,
+    "fp_cost": 0.0,
+    "fp_gamma": 3.0,
+    "fp_rate_max": 0.0,
     "n": 12,
     "oversight_error": 0.0,
     "p_bad": 0.15,
@@ -195,6 +198,24 @@
       "m_star_at_default_stakes": 0.5416,
       "membrane_saturates_at_stakes": 98.9421,
       "membrane_starts_paying_at_stakes": 0.6667
+    }
+  ],
+  "sensitivity_precision_overflag": [
+    {
+      "fp_rate_max": 0.0,
+      "m_star": 0.73
+    },
+    {
+      "fp_rate_max": 0.1,
+      "m_star": 0.621
+    },
+    {
+      "fp_rate_max": 0.2,
+      "m_star": 0.453
+    },
+    {
+      "fp_rate_max": 0.33,
+      "m_star": 0.0
     }
   ],
   "thresholds": {
