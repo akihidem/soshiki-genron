@@ -150,7 +150,8 @@ def main(argv=None) -> int:
         overseers = build_overseers(args.backend, models, args.host)
     records = run_matrix(overseers, trials=args.trials)
     summary = summarize(records)
-    meta = {"backend": args.backend, "trials": args.trials, "host": args.host}
+    meta = {"backend": args.overseers or args.backend, "trials": args.trials,
+            "host": args.host, "overseers": [o.name for o in overseers]}
 
     out_dir = os.path.dirname(os.path.abspath(__file__))
     report = {"meta": meta, "summary": summary}

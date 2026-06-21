@@ -10,6 +10,7 @@ self-contained に保つため stdlib のみ（urllib）。tehai は import し�
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import urllib.error
 import urllib.request
@@ -99,22 +100,39 @@ class OllamaOverseer:
 # --------------------------------------------------------------------------- #
 # Frontier overseers (claude / codex CLIs) — the real capability gradient
 # --------------------------------------------------------------------------- #
-class ClaudeCliOverseer:
-    """Shells out to `claude --print --model <haiku|sonnet|opus>` (prompt via stdin).
-    Auth via the local Claude subscription — no API key. Clean single completion."""
+# Free-quota path: claude-cli-run.py drives the interactive TUI (subscription
+# allowance) instead of `claude --print` (which since 2026-06-15 bills against the
+# metered Agent SDK credit pool). Auto-used when present; set CLAUDE_RUNNER="" to force --print.
+_CLAUDE_RUNNER = os.environ.get(
+    "CLAUDE_RUNNER", os.path.expanduser("~/Projects/claude-headless-via-tui/claude-cli-run.py"))
+_CLAUDE_MODEL_ALIAS = {
+    "haiku": "claude-haiku-4-5-20251001",
+    "sonnet": "claude-sonnet-4-6",
+    "opus": "claude-opus-4-8",
+}
 
-    def __init__(self, model: str, tier: int, timeout: float = 180.0):
-        self.model = model
+
+class ClaudeCliOverseer:
+    """Claude-tier overseer. Prefers the free-quota TUI runner (claude-cli-run.py)
+    when available, else falls back to `claude --print`. Prompt via stdin."""
+
+    def __init__(self, model: str, tier: int, timeout: float = 360.0, runner: str | None = None):
+        self.model = _CLAUDE_MODEL_ALIAS.get(model, model)
         self.name = f"claude:{model}"
         self.tier = tier
         self.timeout = timeout
+        r = runner if runner is not None else _CLAUDE_RUNNER
+        self.runner = r if (r and os.path.exists(r)) else None
 
     def respond(self, item: Item) -> str:
         prompt = _REVIEW_PROMPT.format(kind=item.kind, artifact=item.artifact)
-        proc = subprocess.run(["claude", "--print", "--model", self.model],
-                              input=prompt, capture_output=True, text=True, timeout=self.timeout)
+        if self.runner:
+            cmd = ["python3", self.runner, "--model", self.model]   # free subscription quota
+        else:
+            cmd = ["claude", "--print", "--model", self.model]      # metered Agent SDK credits
+        proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=self.timeout)
         if proc.returncode != 0:
-            raise RuntimeError(f"claude cli failed: {proc.stderr.strip()[:200]}")
+            raise RuntimeError(f"claude overseer failed: {proc.stderr.strip()[:200]}")
         return proc.stdout
 
 
