@@ -1,0 +1,100 @@
+{
+  "generator": "opus",
+  "items": [
+    {
+      "id": "gen0_opus",
+      "kind": "code",
+      "artifact": "def merge_with_defaults(config, defaults):\n    \"\"\"Return a mapping of config values, falling back to defaults\n    for any keys missing from config.\"\"\"\n    merged = defaults\n    merged.update(config)\n    return merged",
+      "flawed": true,
+      "subtlety": 3,
+      "flaw": "Assigning `merged = defaults` aliases (does not copy) the defaults dict, so `merged.update(config)` mutates the caller's defaults in place, corrupting shared/default state across calls.",
+      "flaw_keywords": [
+        "mutates",
+        "defaults",
+        "alias",
+        "copy",
+        "in-place",
+        "side-effect"
+      ]
+    },
+    {
+      "id": "gen1_opus",
+      "kind": "claim",
+      "artifact": "Claim: If f is continuous and bounded on the open interval (0,1), then f is uniformly continuous on (0,1). Justification: Boundedness, |f(x)| ≤ M, caps how far the function's values can spread, so f cannot oscillate fast enough to violate uniform continuity.",
+      "flawed": true,
+      "subtlety": 3,
+      "flaw": "Boundedness plus continuity on an open interval does not imply uniform continuity — f(x)=sin(1/x) is continuous and bounded on (0,1) yet not uniformly continuous, because the missing-endpoint (non-compact) domain allows unbounded oscillation rate despite bounded values.",
+      "flaw_keywords": [
+        "bounded",
+        "uniform continuity",
+        "open interval",
+        "non-compact",
+        "sin(1/x)",
+        "counterexample"
+      ]
+    },
+    {
+      "id": "gen2_opus",
+      "kind": "code",
+      "artifact": "def lower_bound(a, target):\n    \"\"\"Return the leftmost index i such that a[i] >= target.\n    `a` must be sorted ascending. If target is larger than every\n    element, returns len(a) (the past-the-end insertion point).\n    \"\"\"\n    lo, hi = 0, len(a) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if a[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo\n\n\n# Example\n# >>> lower_bound([1, 3, 5, 7], 4)   -> 2   (correct)\n# >>> lower_bound([1, 3, 5, 7], 5)   -> 2   (correct)\n# >>> lower_bound([1, 3, 5, 7], 9)   -> 3   (WRONG: should be 4)",
+      "flawed": true,
+      "subtlety": 3,
+      "flaw": "`hi` is initialized to `len(a) - 1` instead of `len(a)`, so the half-open search space never includes the past-the-end slot, and when target exceeds every element the function returns `len(a) - 1` instead of the promised `len(a)`.",
+      "flaw_keywords": [
+        "hi",
+        "len(a)-1",
+        "off-by-one",
+        "boundary",
+        "insertion point",
+        "greater than all"
+      ]
+    },
+    {
+      "id": "gen3_opus",
+      "kind": "code",
+      "artifact": "-- List customers who have never placed a cancelled order\nSELECT c.customer_id, c.name\nFROM customers c\nWHERE c.customer_id NOT IN (\n    SELECT o.customer_id\n    FROM orders o\n    WHERE o.status = 'cancelled'\n);",
+      "flawed": true,
+      "subtlety": 3,
+      "flaw": "If the subquery returns any NULL customer_id, the NOT IN predicate evaluates to UNKNOWN for every row and the query silently returns zero rows.",
+      "flaw_keywords": [
+        "not in",
+        "null",
+        "subquery",
+        "unknown",
+        "empty"
+      ]
+    },
+    {
+      "id": "gen4_opus",
+      "kind": "claim",
+      "artifact": "Two independent components have lifetimes that are exponentially distributed with means 2 years and 3 years, respectively. The system keeps running only while both components are alive, so it fails the instant the first component dies. Because the earlier failure is driven by the more fragile, shorter-lived component, and that component has a mean lifetime of 2 years, the expected time until the system fails is about 2 years.",
+      "flawed": true,
+      "subtlety": 3,
+      "flaw": "For the minimum of independent exponentials the rates add (1/2 + 1/3 = 5/6), so the system's mean time to first failure is 6/5 = 1.2 years — strictly less than either component's mean, not equal to the smaller mean of 2 years.",
+      "flaw_keywords": [
+        "minimum",
+        "exponential",
+        "add",
+        "rates",
+        "1.2",
+        "5/6"
+      ]
+    },
+    {
+      "id": "gen5_opus",
+      "kind": "code",
+      "artifact": "from collections.abc import Iterable\n\n\ndef flatten(seq):\n    \"\"\"Recursively flatten an arbitrarily nested sequence into a flat list.\"\"\"\n    result = []\n    for item in seq:\n        if isinstance(item, Iterable):\n            result.extend(flatten(item))\n        else:\n            result.append(item)\n    return result\n\n\n# >>> flatten([1, [2, [3, 4], 5], 6])\n# [1, 2, 3, 4, 5, 6]",
+      "flawed": true,
+      "subtlety": 3,
+      "flaw": "Strings (and bytes) are Iterable, so any str element recurses forever because a length-1 string iterates to yield itself, an identical length-1 string — causing infinite recursion (RecursionError) rather than being treated as a leaf.",
+      "flaw_keywords": [
+        "string",
+        "iterable",
+        "infinite",
+        "recursion",
+        "isinstance",
+        "leaf"
+      ]
+    }
+  ]
+}
