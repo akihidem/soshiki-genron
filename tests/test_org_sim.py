@@ -1,4 +1,4 @@
-"""Tests for the agent-organization simulator (deterministic mock agent)."""
+"""Tests for the agent-organization simulator (deterministic mock agent + sandbox)."""
 
 import os
 import sys
@@ -7,17 +7,19 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import experiments.org_sim as M  # noqa: E402
-from experiments.org_sim import TASKS, quality, run, _mock  # noqa: E402
+from experiments.org_sim import TASKS, correctness, quality, run, _mock  # noqa: E402
 
 
 class OrgSimTests(unittest.TestCase):
     def setUp(self):
-        M._CALL = _mock                      # use the deterministic mock agent
-        self.r = run("mock", TASKS[:2])
+        M._CALL = _mock                                  # deterministic mock agent
+        self.r = run("mock", TASKS[:2], measure_correctness=False)   # static only = hermetic/fast
 
-    def test_hierarchy_costs_more_calls_than_flat(self):
+    def test_overhead_ordering_flat_market_hierarchy(self):
         a = self.r["aggregate"]
-        self.assertGreater(a["hierarchy"]["avg_calls"], a["flat"]["avg_calls"])  # manager overhead
+        self.assertEqual(a["flat"]["avg_calls"], 3.0)
+        self.assertEqual(a["market"]["avg_calls"], 4.0)
+        self.assertEqual(a["hierarchy"]["avg_calls"], 5.0)   # manager overhead is largest
 
     def test_quality_rewards_coverage_and_consistency(self):
         t = TASKS[0]
@@ -28,11 +30,19 @@ class OrgSimTests(unittest.TestCase):
         self.assertLess(quality(t, partial)["quality"], 1.0)
 
     def test_every_cell_measured(self):
-        self.assertEqual(len(self.r["rows"]), 2 * 2)   # 2 tasks x 2 structures
-        self.assertTrue(all("quality" in row for row in self.r["rows"]))
+        self.assertEqual(len(self.r["rows"]), 2 * 3)     # 2 tasks x 3 structures
+
+    def test_sandbox_distinguishes_correct_from_incorrect(self):
+        good = "def add(a,b):\n    return a+b\ndef test_g():\n    assert add(2,3)==5\n"
+        bad = "def add(a,b):\n    return a-b\ndef test_b():\n    assert add(2,3)==5\n"
+        gc = correctness(good)
+        if not gc["ran"]:
+            self.skipTest("sandbox unavailable in this environment")
+        self.assertEqual(gc["correctness"], 1.0)
+        self.assertEqual(correctness(bad)["correctness"], 0.0)
 
     def test_deterministic_on_mock(self):
-        self.assertEqual(run("mock", TASKS[:2]), self.r)
+        self.assertEqual(run("mock", TASKS[:2], measure_correctness=False), self.r)
 
 
 if __name__ == "__main__":

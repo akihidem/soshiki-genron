@@ -97,7 +97,21 @@ def run_hierarchy(model: str, task: dict) -> tuple[str, int]:
     return final, 5
 
 
-STRUCTURES = {"flat": run_flat, "hierarchy": run_hierarchy}
+def run_market(model: str, task: dict) -> tuple[str, int]:
+    spec, names = task["spec"], ", ".join(task["names"])
+    auction = _CALL(model, f"You run a MARKET of independent agents bidding for subtasks (design, implement, "
+                           f"test) of this module: {spec} (functions: {names}). Allocate by bid and note any "
+                           f"specialization. Output a short allocation.")
+    design = _CALL(model, f"You WON the design bid. Allocation:\n{auction}\nDesign Python signatures. "
+                          f"Output ONLY signatures.")
+    impl = _CALL(model, f"You WON the implement bid. Signatures (purchased):\n{design}\nImplement the "
+                        f"functions fully. Output ONLY runnable code.")
+    tests = _CALL(model, f"You WON the test bid. Implementation (purchased):\n{impl}\nWrite one test per "
+                         f"function. Output ONLY test code.")
+    return impl + "\n\n" + tests, 4
+
+
+STRUCTURES = {"flat": run_flat, "hierarchy": run_hierarchy, "market": run_market}
 
 
 # --------------------------------------------------------------------------- #
@@ -117,21 +131,95 @@ def quality(task: dict, artifact: str) -> dict:
             "quality": score, "defined": defined}
 
 
-def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES)) -> dict:
+# --------------------------------------------------------------------------- #
+# correctness: actually RUN the generated tests in an isolated sandbox (no net/pid)
+# --------------------------------------------------------------------------- #
+import shutil  # noqa: E402
+
+_UNSHARE = shutil.which("unshare") is not None
+_HARNESS = (
+    '\n\nif True:\n'
+    '    import sys as _sys, unittest as _ut\n'
+    '    _g = dict(globals())\n'
+    '    _fns = [v for k, v in _g.items() if k.startswith("test") and callable(v) and not isinstance(v, type)]\n'
+    '    _p = _n = 0\n'
+    '    for _f in _fns:\n'
+    '        _n += 1\n'
+    '        try:\n'
+    '            _f(); _p += 1\n'
+    '        except Exception:\n'
+    '            pass\n'
+    '    try:\n'
+    '        _r = _ut.TestResult(); _ut.TestLoader().loadTestsFromModule(_sys.modules["__main__"]).run(_r)\n'
+    '        _n += _r.testsRun; _p += _r.testsRun - len(_r.failures) - len(_r.errors)\n'
+    '    except Exception:\n'
+    '        pass\n'
+    '    print("CORRECT", _p, _n)\n'
+)
+
+
+def _extract_code(text: str) -> str:
+    t = text or ""
+    blocks = re.findall(r"```(?:python)?\n(.*?)```", t, re.DOTALL)
+    code = "\n".join(blocks) if blocks else t
+    return "\n".join(ln for ln in code.splitlines() if "unittest.main(" not in ln)
+
+
+def correctness(artifact: str, timeout: int = 12) -> dict:
+    import resource
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+        f.write(_extract_code(artifact) + _HARNESS)
+        path = f.name
+
+    def _limits():  # CPU + memory caps in the child (belt-and-suspenders with the wall timeout)
+        resource.setrlimit(resource.RLIMIT_CPU, (timeout, timeout))
+        resource.setrlimit(resource.RLIMIT_AS, (768 * 1024 * 1024,) * 2)
+
+    base = ["python3", path]
+    cmd = (["unshare", "--user", "--net", "--pid", "--fork", "--mount-proc"] + base) if _UNSHARE else base
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 4, preexec_fn=_limits)
+        m = re.search(r"CORRECT (\d+) (\d+)", proc.stdout)
+        if m:
+            p, n = int(m.group(1)), int(m.group(2))
+            return {"passed": p, "total": n, "correctness": round(p / n, 3) if n else None, "ran": True}
+        return {"passed": 0, "total": 0, "correctness": None, "ran": False,
+                "err": ((proc.stderr or proc.stdout) or "")[:160]}
+    except Exception as e:
+        return {"passed": 0, "total": 0, "correctness": None, "ran": False, "err": str(e)[:160]}
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
+        measure_correctness: bool = True) -> dict:
     rows = []
     for t in tasks:
         for s in structures:
             artifact, calls = STRUCTURES[s](model, t)
             q = quality(t, artifact)
-            rows.append({"task": t["id"], "structure": s, "calls": calls,
-                         "quality": q["quality"], "impl_cov": q["impl_coverage"],
-                         "test_cov": q["test_coverage"], "chars": len(artifact)})
+            row = {"task": t["id"], "structure": s, "calls": calls,
+                   "quality": q["quality"], "impl_cov": q["impl_coverage"],
+                   "test_cov": q["test_coverage"], "chars": len(artifact)}
+            if measure_correctness:
+                c = correctness(artifact)
+                row.update(correctness=c["correctness"],
+                           tests_passed=f"{c['passed']}/{c['total']}", ran=c["ran"])
+            rows.append(row)
     agg = {}
     for s in structures:
         sr = [r for r in rows if r["structure"] == s]
-        agg[s] = {"avg_calls": round(sum(r["calls"] for r in sr) / len(sr), 2),
-                  "avg_quality": round(sum(r["quality"] for r in sr) / len(sr), 3),
-                  "total_calls": sum(r["calls"] for r in sr)}
+        a = {"avg_calls": round(sum(r["calls"] for r in sr) / len(sr), 2),
+             "avg_quality": round(sum(r["quality"] for r in sr) / len(sr), 3),
+             "total_calls": sum(r["calls"] for r in sr)}
+        if measure_correctness:
+            cs = [r["correctness"] for r in sr if r.get("correctness") is not None]
+            a["avg_correctness"] = round(sum(cs) / len(cs), 3) if cs else None
+        agg[s] = a
     return {"model": model, "n_tasks": len(tasks), "rows": rows, "aggregate": agg}
 
 
@@ -144,26 +232,28 @@ def _md(r: dict) -> str:
          "生数値 [`org_sim_results.json`](org_sim_results.json)。",
          "",
          "## 集計",
-         "| 構造 | 平均コール（コスト） | 平均品質 | 総コール |",
-         "|---|---|---|---|"]
-    for s in ("flat", "hierarchy"):
+         "| 構造 | 平均コール（コスト） | 平均品質(静的) | 平均正しさ(実行) | 総コール |",
+         "|---|---|---|---|---|"]
+    for s in ("flat", "hierarchy", "market"):
         if s in a:
-            L.append(f"| {s} | {a[s]['avg_calls']} | {a[s]['avg_quality']} | {a[s]['total_calls']} |")
+            L.append(f"| {s} | {a[s]['avg_calls']} | {a[s]['avg_quality']} | "
+                     f"{a[s].get('avg_correctness')} | {a[s]['total_calls']} |")
     L += ["",
           "## 読み",
-          "- hierarchy のコール数 ＞ flat（管理者OH）。**品質が同等以下なら → flat が安い（解析 F3・tehai A/B を実エージェントで支持）**。",
-          "- hierarchy の品質が*明確に高い*なら、管理者の統合がOHを正当化（構造の価値）。",
+          "- hierarchy/market のコール数 ＞ flat（調整OH）。**品質・正しさが同等以下なら → flat が安い**（解析 F3・tehai A/B を実エージェントで支持）。",
+          "- market は均質な組織では bidding OH のみで heterogeneity の便益が無い → flat に劣るはず（解析の予測）。",
+          "- 正しさ（実行＝tests が通る割合）は静的 coverage より厳しい本物の品質。",
           "",
           "## タスク別",
-          "| task | 構造 | calls | quality | impl_cov | test_cov |",
+          "| task | 構造 | calls | quality(静的) | 正しさ(実行) | tests |",
           "|---|---|---|---|---|---|"]
     for row in r["rows"]:
         L.append(f"| {row['task']} | {row['structure']} | {row['calls']} | {row['quality']} | "
-                 f"{row['impl_cov']} | {row['test_cov']} |")
+                 f"{row.get('correctness')} | {row.get('tests_passed', '-')} |")
     L += ["",
           "## 妥当性",
-          "- 少標本・品質は静的検査（実行せず＝coverage/consistency の代理・正しさ自体は未検証）。"
-          "構造の実装は最小（flat=共有黒板の逐次・hierarchy=管理者2コール）。コストはコール数の代理。"]
+          "- 品質は静的 coverage ＋ **正しさは sandbox 実行**（unshare で no-net/no-pid 隔離・generated code を実行）。"
+          "構造の実装は最小（flat=共有黒板逐次・hierarchy=管理者2コール・market=bidding 1コール）。コストはコール数の代理。少標本。"]
     return "\n".join(L)
 
 
@@ -171,7 +261,7 @@ def main(argv=None) -> int:
     global _CALL
     ap = argparse.ArgumentParser(description="agent organization simulator (flat vs hierarchy)")
     ap.add_argument("--agent", default="mock", help="'mock' or claude:<model>")
-    ap.add_argument("--tasks", type=int, default=2)
+    ap.add_argument("--tasks", type=int, default=3)
     args = ap.parse_args(argv)
     if args.agent == "mock":
         _CALL = _mock
