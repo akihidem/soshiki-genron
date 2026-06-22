@@ -134,7 +134,7 @@ python3 -m unittest discover -s tests -t .   # テスト（109本・決定的moc
 - **第一原理**: モデルと実験による計測を最上位規則化。各主張に反証手段を併記。
 - **① 文献**: 3件を二次確認・記録（Marschak&Radner チーム理論 / Malone 電子市場 / Carley 計算組織論）。
 - **② 解析モデル 7本**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適）／容量→分解粒度／処方マップ／構造×膜の結合／レース外部性＋制度内部化／F7 整合（Goodhart）／**市場支配定理 p\*=w/s**。
-- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配）**／Goodhart（損 0.217・指数は閾値的で同定不可）。決定的部分 **109 tests green**。
+- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配）**／Goodhart（損 0.217・指数は閾値的で同定不可）。決定的部分 **121 tests green**。
 - **実測較正**: oversight_error・過剰flag・mgr_overhead（=2コール）・市場閾値 p（trials=3）・spec_quality（0.57–0.78）を実エージェントで接地。
 - **方法論**: 計測過程で結論が3度自己修正＋8つの転移可能な教訓（n=1/フレーミング/harness 交絡/自己評価のモデル依存/外部基準の誤り/係数の非同定性…）＝measurement-first が外部錨として機能（PAPER §9）。
 

@@ -316,7 +316,11 @@ def _codex(model: str, prompt: str, timeout: int = 300) -> str:
         try:
             proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True,
                                   timeout=timeout, env=env)
-            if "```" in proc.stdout or "def " in proc.stdout:
+            # Accept ANY substantive output. The old `"```" in stdout or "def " in stdout` filter
+            # silently dropped valid SEARCH/REPLACE diffs (no fence, no `def `) -> spurious empty
+            # -> every codex repair scored 0 (a harness artifact, not codex failing). Retry only
+            # on genuinely empty stdout.
+            if proc.stdout.strip():
                 return proc.stdout
         except Exception:
             pass
