@@ -1,0 +1,151 @@
+{
+  "models": [
+    "opus",
+    "codex"
+  ],
+  "n_solved_cells": 18,
+  "pairs": [
+    {
+      "best_single": 0.833,
+      "complementary": [
+        "sympy__sympy-24443"
+      ],
+      "gain": 0.0,
+      "pair": "opus + codex",
+      "union": 0.833
+    }
+  ],
+  "per_model": {
+    "codex": 0.778,
+    "opus": 0.833
+  },
+  "rounds": 1,
+  "rows": [
+    {
+      "base_p2p_fail": 1,
+      "codex": 1,
+      "file": "sympy/solvers/diophantine/diophantine.py",
+      "instance": "sympy__sympy-23808",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/hep/gamma_matrices.py",
+      "instance": "sympy__sympy-23824",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/sets/contains.py",
+      "instance": "sympy__sympy-23950",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/units/unitsystem.py",
+      "instance": "sympy__sympy-24066",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "sympy/parsing/mathematica.py",
+      "instance": "sympy__sympy-24102",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/quantum/tensorproduct.py",
+      "instance": "sympy__sympy-24152",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/units/unitsystem.py",
+      "instance": "sympy__sympy-24213",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/units/systems/cgs.py",
+      "instance": "sympy__sympy-24325",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "setup.py",
+      "instance": "sympy__sympy-24353",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 1,
+      "codex": 1,
+      "file": "sympy/core/numbers.py",
+      "instance": "sympy__sympy-24370",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "sympy/combinatorics/homomorphisms.py",
+      "instance": "sympy__sympy-24443",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/combinatorics/perm_groups.py",
+      "instance": "sympy__sympy-24455",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/polys/rings.py",
+      "instance": "sympy__sympy-24539",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 1,
+      "codex": 1,
+      "file": "sympy/core/numbers.py",
+      "instance": "sympy__sympy-24562",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/tensor/array/expressions/arrayexpr_derivatives.py",
+      "instance": "sympy__sympy-24638",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 3,
+      "codex": 1,
+      "file": "sympy/parsing/sympy_parser.py",
+      "instance": "sympy__sympy-24661",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/stats/matrix_distributions.py",
+      "instance": "sympy__sympy-24723",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "sympy/physics/units/prefixes.py",
+      "instance": "sympy__sympy-24909",
+      "opus": 0
+    }
+  ]
+}
