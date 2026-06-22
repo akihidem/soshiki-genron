@@ -30,7 +30,7 @@ from dataclasses import dataclass
 class MarketParams:
     w: float = 0.2          # weak-tier cost (gemma, list-price-ratio proxy)
     s: float = 1.0          # strong-tier cost (haiku = cheapest single model that solves all)
-    p: float = round(4 / 6, 4)   # weak-tier full-solve rate (gemma: 4/6 tasks at 1.0, measured §5)
+    p: float = 0.8888       # weak-tier full-solve rate (gemma, trials=3 calibrated §5; trials=1 was 0.667)
 
 
 def escalation_cost(w: float, s: float, p: float) -> float:
@@ -79,15 +79,16 @@ def run(prm: "MarketParams | None" = None) -> dict:
         {"regime": "②frontier-hetero (haiku/sonnet/opus)", "w": 1.0, "s": 1.0, "p": 1.0,
          "note": "最安 haiku が全解(p=1)→市場=flat-haiku＝最良単一モデルに*厳密な*利得なし"
                  "（実測一致。素朴に opus を選ぶ flat-opus には勝つが、最良単一モデルは超えない）"},
-        {"regime": "③large-gap (gemma×haiku)", "w": 0.2, "s": 1.0, "p": round(4 / 6, 4),
-         "note": "gemma 4/6 完全解→市場 0.533<flat-haiku 1.0→Pareto 支配（実測 0.533 と厳密一致）"},
+        {"regime": "③large-gap (gemma×haiku)", "w": 0.2, "s": 1.0, "p": 0.8888,
+         "note": "gemma trials=3 較正 p=0.889→市場 0.311<flat-haiku 1.0→Pareto 支配"
+                 "（trials=1 では p=0.667/market 0.533・leap 取りこぼしはノイズと判明）"},
     ]
     for rg in regimes:
         rg["market_cost"] = escalation_cost(rg["w"], rg["s"], rg["p"])
         rg["p_star"] = p_star(rg["w"], rg["s"])
         rg["dominates"] = dominates(rg["w"], rg["s"], rg["p"])
 
-    gap_ladder = ladder([(0.2, round(4 / 6, 4)), (1.0, 1.0), (15.0, 1.0)])   # full gemma->haiku->opus
+    gap_ladder = ladder([(0.2, 0.8888), (1.0, 1.0), (15.0, 1.0)])   # full gemma->haiku->opus (trials=3)
 
     return {
         "params": dataclasses.asdict(prm),
@@ -137,8 +138,8 @@ def _md(r: dict) -> str:
                  f"{rg['market_cost']} | {'**支配**' if rg['dominates'] else '—'} |")
     gl = r["gap_ladder_3tier"]
     L += ["",
-          f"3ティア梯子（gemma→haiku→opus）: コスト **{gl['cost']}**・正しさ {gl['correctness']} "
-          f"＝実測 §5 (0.533, 1.0) と一致。",
+          f"3ティア梯子（gemma→haiku→opus, trials=3 較正 p=0.889）: コスト **{gl['cost']}**・正しさ "
+          f"{gl['correctness']}（trials=1 では 0.533）。",
           "",
           "## 含意",
           "- 「市場型組織が有効か」は **agent 間の能力差（p と w/s）** で決まる ── 構造の問題でなく*分布*の問題。",

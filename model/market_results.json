@@ -1,9 +1,9 @@
 {
   "base": {
     "flat_strong_cost": 1.0,
-    "flat_weak_correctness": 0.6667,
+    "flat_weak_correctness": 0.8888,
     "flat_weak_cost": 0.2,
-    "market_cost": 0.5333,
+    "market_cost": 0.3112,
     "market_dominates_flat_strong": true,
     "p_star": 0.2
   },
@@ -30,9 +30,9 @@
     },
     {
       "dominates": true,
-      "market_cost": 0.5333,
-      "note": "gemma 4/6 完全解→市場 0.533<flat-haiku 1.0→Pareto 支配（実測 0.533 と厳密一致）",
-      "p": 0.6667,
+      "market_cost": 0.3112,
+      "note": "gemma trials=3 較正 p=0.889→市場 0.311<flat-haiku 1.0→Pareto 支配（trials=1 では p=0.667/market 0.533・leap 取りこぼしはノイズと判明）",
+      "p": 0.8888,
       "p_star": 0.2,
       "regime": "③large-gap (gemma×haiku)",
       "s": 1.0,
@@ -43,10 +43,10 @@
   "finding": "安いほど（w/s 小）市場が勝つバーは低い。均質(w=s)では p>1 が要り不可能＝市場は勝てない。大能力差では安いティアが*そこそこ*解けば（p>w/s）市場が単一モデルを支配する。",
   "gap_ladder_3tier": {
     "correctness": 1.0,
-    "cost": 0.5333
+    "cost": 0.3112
   },
   "params": {
-    "p": 0.6667,
+    "p": 0.8888,
     "s": 1.0,
     "w": 0.2
   },

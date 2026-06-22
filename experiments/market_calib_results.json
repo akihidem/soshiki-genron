@@ -1,0 +1,99 @@
+{
+  "p_weak": 0.8888,
+  "pairs": [
+    {
+      "dominates": true,
+      "flat_strong_cost": 1.0,
+      "market_cost": 0.3112,
+      "p_weak": 0.8888,
+      "s": 1.0,
+      "strong": "haiku",
+      "w": 0.2,
+      "w_over_s": 0.2
+    },
+    {
+      "dominates": true,
+      "flat_strong_cost": 3.0,
+      "market_cost": 0.5336,
+      "p_weak": 0.8888,
+      "s": 3.0,
+      "strong": "sonnet",
+      "w": 0.2,
+      "w_over_s": 0.0667
+    },
+    {
+      "dominates": true,
+      "flat_strong_cost": 15.0,
+      "market_cost": 1.868,
+      "p_weak": 0.8888,
+      "s": 15.0,
+      "strong": "opus",
+      "w": 0.2,
+      "w_over_s": 0.0133
+    }
+  ],
+  "per_task": [
+    {
+      "mean_correctness": 1.0,
+      "solve_rate": 1.0,
+      "task": "clamp",
+      "trials": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "mean_correctness": 1.0,
+      "solve_rate": 1.0,
+      "task": "leap",
+      "trials": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "mean_correctness": 1.0,
+      "solve_rate": 1.0,
+      "task": "revwords",
+      "trials": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "mean_correctness": 0.8,
+      "solve_rate": 0.333,
+      "task": "roman",
+      "trials": [
+        0.7,
+        0.7,
+        1.0
+      ]
+    },
+    {
+      "mean_correctness": 1.0,
+      "solve_rate": 1.0,
+      "task": "intervals",
+      "trials": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "mean_correctness": 1.0,
+      "solve_rate": 1.0,
+      "task": "wildcard",
+      "trials": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "trials": 3,
+  "weak": "gemma4:e2b"
+}
