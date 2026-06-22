@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="hz:slide-selector" content=".infographic" />
 <meta name="hz:canvas-width" content="1120" />
-<meta name="hz:canvas-height" content="3360" />
+<meta name="hz:canvas-height" content="3760" />
 <title>組織原論 — 全体像</title>
 <style>
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -15,7 +15,7 @@
   body{ background:#22262f; padding:40px 0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif; color:var(--ink); }
   .serif{ font-family:"Yu Mincho","Hiragino Mincho ProN",serif; }
   .mono{ font-family:"SF Mono","DejaVu Sans Mono","Roboto Mono",monospace; }
-  .infographic{ width:1120px; min-height:3360px; margin:0 auto; background:var(--paper);
+  .infographic{ width:1120px; min-height:3760px; margin:0 auto; background:var(--paper);
     position:relative; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.4); }
   .infographic::before{ content:""; position:absolute; top:0; left:0; right:0; height:10px;
     background:linear-gradient(90deg,var(--amber) 0 40%, var(--teal) 40% 75%, var(--market) 75% 100%); }
@@ -72,6 +72,20 @@
   .fail .t{ font-size:14px; font-weight:700; color:#e6b873; } .fail .d{ font-size:12.5px; color:#c3cad4; margin-top:4px; line-height:1.45; }
   .integ .bound{ margin-top:16px; font-size:14.5px; color:#d4dae2; line-height:1.6; }
   .integ .bound b{ color:#9fd3cd; }
+
+  /* prescribed org chart */
+  .orgchart{ display:flex; flex-direction:column; gap:10px; }
+  .layer{ border-radius:11px; padding:14px 18px; font-weight:700; font-size:15px; }
+  .layer.membrane{ background:#eaf0ee; border:1.5px solid var(--teal); color:var(--teal-d); text-align:center; }
+  .layer.membrane span{ font-weight:500; font-size:12.5px; color:var(--muted); margin-left:8px; }
+  .layer.flow{ background:#2a2f3a; color:#eef1f5; padding:16px 18px; }
+  .flowhead{ font-size:15px; color:#9fd3cd; margin-bottom:12px; }
+  .sublayers{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .sub{ background:#343a47; border-radius:9px; padding:11px 13px; font-size:13px; color:#dbe2ea; font-weight:700; border-top:3px solid var(--gray); }
+  .sub small{ display:block; font-weight:400; font-size:11.5px; color:#aeb7c4; margin-top:4px; line-height:1.4; }
+  .sub.mesh{ border-top-color:var(--market); }
+  .reject{ margin-top:12px; background:#f7ecda; border:1px solid var(--line); border-radius:10px; padding:12px 16px; font-size:13px; color:var(--amber-d); }
+  .reject b{ color:var(--ink); }
 
   /* thesis */
   .verdict{ margin-top:44px; background:#1f2630; color:#eef1f5; border-radius:16px; padding:34px 40px; }
@@ -191,6 +205,27 @@
         <div class="fail"><div class="t">③ 競争で崩れる</div><div class="d">レースが膜を薄く削る。<b style="color:#9fd3cd">→ 制度内部化（責任λ=0.25 で gap 82%／標準／共有検証）で回復可</b></div></div>
       </div>
       <div class="bound">そして <b>能力そのものが仕様+検証に上限づけられる</b>（F7）。→ 「組織でなくデータフロー＋薄い膜」だが <b>膜の設計・維持が急所</b>。救い方: <b>①②は技術</b>（膜を*検証アーキテクチャ*へ変質）／<b>③は制度</b>（Coase 責任・Pigou 標準・共有検証で内部化）── ③は技術でなく<b>生態系の調整</b>が要る。</div>
+    </div>
+
+    <div class="sh"><span class="bar" style="background:var(--teal)"></span><h2>採用すべき組織図 — 実証からの処方</h2><span class="en">PRESCRIBED ORG CHART</span></div>
+    <div class="orgchart">
+      <div class="layer membrane">① 薄い人間統治膜（F8）<span>stakes × 監督信頼性で厚みが決まる</span></div>
+      <div class="layer flow">
+        <div class="flowhead">② 平らな・型付き・<b style="color:#fff">検証を運ぶ</b> データフロー（共有メモリ上を仕事が流れる・<b style="color:#fff">管理者なし</b>）</div>
+        <div class="sublayers">
+          <div class="sub">③ 検証ルーティング・エスカレーション<small>安いモデルで試し、外部検証 NG の所だけ上位へ昇格（p*=w/s）</small></div>
+          <div class="sub mesh">④ 補完能力 mesh（縁でだけ）<small>単一が誤り始める所で、<b style="color:#cbb6e8">違う失敗をする異種</b>を相互検証</small></div>
+          <div class="sub">⑤ 外部検証が背骨<small>自己レビューでなく外部 gold が配分・選別・正しさを駆動</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="reject"><b>明確に捨てる（擬人的負債）</b>: ✗ チーム/固定役割/管理者/階層（死荷重・flat が安く同等） ／ ✗「常に最強モデル」（escalation が安い） ／ ✗「ベンダを混ぜれば多様性で創発」（opus×codex は利得0 ── 混ぜるべきは <b>異なる能力</b>＝補完する盲点）</div>
+    <div class="loopflow" style="margin-top:14px; font-size:12.5px;">
+      <div class="b">既定<br><b>flat＋外部検証</b></div><div class="ar">→</div>
+      <div class="b">能力差あり<br><b>エスカレーション</b></div><div class="ar">→</div>
+      <div class="b">不安定<br><b>best-of-N＋検証器</b></div><div class="ar">→</div>
+      <div class="b" style="border-color:var(--market)">誤り始める縁<br><b style="color:#5b4b85">補完能力 mesh</b></div><div class="ar">→</div>
+      <div class="b" style="border-color:var(--teal)">全体に<br><b style="color:var(--teal-d)">薄い人間膜</b></div>
     </div>
 
     <div class="verdict">
