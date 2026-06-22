@@ -1,0 +1,121 @@
+{
+  "baselines": {
+    "haiku": {
+      "avg_correctness": 1.0,
+      "avg_cost": 3.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 3.0,
+          "task": "textutil"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 3.0,
+          "task": "numutil"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 3.0,
+          "task": "timeutil"
+        }
+      ]
+    },
+    "opus": {
+      "avg_correctness": 0.889,
+      "avg_cost": 45.0,
+      "rows": [
+        {
+          "correctness": 0.667,
+          "cost": 45.0,
+          "task": "textutil"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 45.0,
+          "task": "numutil"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 45.0,
+          "task": "timeutil"
+        }
+      ]
+    },
+    "sonnet": {
+      "avg_correctness": 0.778,
+      "avg_cost": 9.0,
+      "rows": [
+        {
+          "correctness": 0.333,
+          "cost": 9.0,
+          "task": "textutil"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 9.0,
+          "task": "numutil"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 9.0,
+          "task": "timeutil"
+        }
+      ]
+    }
+  },
+  "market": {
+    "avg_correctness": 1.0,
+    "avg_cost": 3.0,
+    "rows": [
+      {
+        "correctness": 1.0,
+        "cost": 3.0,
+        "ladder": [
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "textutil"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 3.0,
+        "ladder": [
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "numutil"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 3.0,
+        "ladder": [
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "timeutil"
+      }
+    ]
+  },
+  "n_tasks": 3,
+  "tiers": [
+    [
+      "haiku",
+      1.0
+    ],
+    [
+      "sonnet",
+      3.0
+    ],
+    [
+      "opus",
+      15.0
+    ]
+  ]
+}
