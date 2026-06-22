@@ -777,6 +777,79 @@ def run_openended(prompts=tuple(_OPEN_TASKS), gen=("opus", "codex"), judges=("op
             "artifacts": cache}
 
 
+# de-confounded open-ended: isolate whether cross-vendor DIVERSITY adds, vs just 'merging two
+# drafts + length'. Same synthesizer merges either two SAME-vendor drafts or one+one CROSS-vendor;
+# a NEUTRAL judge (neither generator nor synthesizer) compares. Both merges are equal length /
+# same author -> the only difference is source diversity. cross>same => diversity genuinely helps.
+def _merge_prompt(p: str, d1: str, d2: str) -> str:
+    return (f"Two draft answers to the task are below. Produce ONE merged answer that combines their "
+            f"strengths and fixes their gaps.\nTASK: {p}\n\nDRAFT 1:\n{d1}\n\nDRAFT 2:\n{d2}\n\n"
+            f"Output only the merged answer.")
+
+
+def run_xvs(prompts=tuple(_OPEN_TASKS), a="opus", b="codex", synth="opus",
+            judges=("sonnet", "haiku"), cache_path: str | None = None) -> dict:
+    cache = {}
+    if cache_path and os.path.exists(cache_path):
+        cache = json.load(open(cache_path, encoding="utf-8"))
+
+    def call(key, model, prompt):
+        if not cache.get(key):
+            cache[key] = _CALL(model, prompt)
+            if cache_path:
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return cache[key]
+
+    rows = []
+    for i, p in enumerate(prompts):
+        a1 = call(f"{i}|a1", a, p)
+        a2 = call(f"{i}|a2", a, p)              # same-vendor second draft
+        bx = call(f"{i}|b", b, p)               # cross-vendor draft
+        syn_same = call(f"{i}|syn_same", synth, _merge_prompt(p, a1, a2))
+        syn_cross = call(f"{i}|syn_cross", synth, _merge_prompt(p, a1, bx))
+        swap = (i % 2 == 1)                      # alternate position to control order bias
+        x, y = (syn_cross, syn_same) if swap else (syn_same, syn_cross)
+        ss, cs = [], []
+        for jm in judges:
+            jp = (f"Score each answer to the task on quality (correctness + completeness + insight) "
+                  f"as integers 1-10. Be critical and discriminating.\nTASK: {p}\n\nANSWER X:\n{x}\n\n"
+                  f"ANSWER Y:\n{y}\n\nReply with ONLY one line: 'X=<n> Y=<n>'.")
+            sc = _parse_scores(call(f"{i}|judge_{jm}", jm, jp).replace("X", "A").replace("Y", "B"))
+            same_v = sc.get("B" if swap else "A")
+            cross_v = sc.get("A" if swap else "B")
+            if same_v is not None:
+                ss.append(same_v)
+            if cross_v is not None:
+                cs.append(cross_v)
+        same_avg = round(sum(ss) / len(ss), 2) if ss else 0
+        cross_avg = round(sum(cs) / len(cs), 2) if cs else 0
+        rows.append({"task": p[:55] + "...", "same_vendor": same_avg, "cross_vendor": cross_avg,
+                     "diversity_gain": round(cross_avg - same_avg, 2)})
+    mg = round(sum(r["diversity_gain"] for r in rows) / len(rows), 3)
+    return {"a": a, "b": b, "synth": synth, "judges": list(judges), "rows": rows,
+            "mean_diversity_gain": mg, "artifacts": cache}
+
+
+def _md_xvs(r: dict) -> str:
+    L = ["# de-confounded open-ended — cross-vendor の*多様性*は genuine に効くか",
+         "",
+         f"同じ合成器({r['synth']})で **同ベンダ合成**({r['a']}×2案) と **異ベンダ合成**({r['a']}+{r['b']}案) を作り、"
+         f"中立 judge({', '.join(r['judges'])}＝生成器でも合成器でもない)で比較。両方 2案 merge・同筆・同長＝"
+         "情報優位/長さ/自己judge を相殺し、**差はソースの多様性だけ**。",
+         "",
+         f"## 多様性 gain（異ベンダ − 同ベンダ合成）= **{r['mean_diversity_gain']:+}**",
+         "| task | 同ベンダ合成 | 異ベンダ合成 | 多様性 gain |",
+         "|---|---|---|---|"]
+    for row in r["rows"]:
+        L.append(f"| {row['task']} | {row['same_vendor']} | {row['cross_vendor']} | **{row['diversity_gain']:+}** |")
+    L += ["", "## 読み",
+          "- **gain>0 なら cross-vendor の*多様性*が genuine に効く**（merge/長さを相殺した上で）＝mesh の真の燃料は*異種性*。",
+          "- gain≈0 なら open-ended の +0.83 は『2案 merge＋長さ』が主因で、cross-vendor 固有の利得は小さい。",
+          "- 位置バイアスは task index で X/Y 入替えて相殺。judge は2機の平均。少標本・主観。"]
+    return "\n".join(L)
+
+
 def _md_openended(r: dict) -> str:
     L = [f"# open-ended mesh — cross-vendor 合成は単独を超えるか（LLM-judge・gold 無し領域）",
          "",
@@ -909,9 +982,24 @@ def main(argv=None) -> int:
                     help="novel/compound hard tasks across frontier vendors (try to make the frontier err)")
     ap.add_argument("--openended", action="store_true",
                     help="open-ended mesh: does cross-vendor synthesis beat single answers (LLM-judged)?")
+    ap.add_argument("--xvs", action="store_true",
+                    help="de-confounded: cross-vendor vs same-vendor synthesis (isolates diversity)")
     ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.xvs:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_xvs_artifacts.json")
+        r = run_xvs(cache_path=cache)
+        with open(os.path.join(out_dir, "market_xvs_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_XVS.md"), "w", encoding="utf-8") as f:
+            f.write(_md_xvs(r) + "\n")
+        print(f"mean diversity gain (cross - same vendor synthesis) = {r['mean_diversity_gain']:+}")
+        for row in r["rows"]:
+            print(f"  same={row['same_vendor']} cross={row['cross_vendor']} gain={row['diversity_gain']:+}  {row['task']}")
+        print("\nwrote market_xvs_results.json and MARKET_XVS.md")
+        return 0
     if args.openended:
         _CALL = _mock if args.agent == "mock" else _route
         cache = os.path.join(out_dir, "market_openended_artifacts.json")
