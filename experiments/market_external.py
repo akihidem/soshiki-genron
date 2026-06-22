@@ -594,12 +594,17 @@ def run_ensemble(model: str = "gemma4:e2b", task_ids=_ENSEMBLE_TASKS, n: int = 6
                         json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
             solved.append(1 if (grade(cache[key], t)["correctness"] or 0) >= 1.0 else 0)
         best_of_k = [1 if any(solved[:k]) else 0 for k in range(1, n + 1)]   # gold picks any passing attempt
+        p = sum(solved) / n
+        # expected best-of-k = 1-(1-p)^k (cleaner than the realized sequence, which is high-variance)
+        exp_bok = [round(1 - (1 - p) ** (k + 1), 3) for k in range(n)]
         rows.append({"task": tid, "per_trial": solved, "best_of_k": best_of_k,
-                     "single_shot": round(sum(solved) / n, 3)})
+                     "single_shot": round(p, 3), "expected_best_of_k": exp_bok})
     bok = [round(sum(r["best_of_k"][k] for r in rows) / len(rows), 3) for k in range(n)]
+    exp = [round(sum(r["expected_best_of_k"][k] for r in rows) / len(rows), 3) for k in range(n)]
     w = dict(_TIERS_LADDER).get(model, 0.2)
     return {"model": model, "n": n, "w_weak": w, "rows": rows, "best_of_k_avg": bok,
-            "cost_of_k": [round(w * (k + 1), 2) for k in range(n)], "artifacts": cache}
+            "expected_best_of_k_avg": exp, "cost_of_k": [round(w * (k + 1), 2) for k in range(n)],
+            "artifacts": cache}
 
 
 def _md_ensemble(r: dict) -> str:
@@ -609,26 +614,27 @@ def _md_ensemble(r: dict) -> str:
          "外部検証器（gold）が選択器: best-of-k = 最初の k 回のどれかが gold を通れば solved。"
          f"コスト = k × w_weak（{r['w_weak']}）。frontier 単発は全タスク 1.0（既測）＝比較基準。",
          "",
-         "## best-of-k（k 回試したときの平均 solved 率）と コスト",
-         "| k | best-of-k 正しさ | コスト (k×w) | vs haiku単発(1.0, cost1) |",
+         "## 期待 best-of-k = 1−(1−p)^k（k 回試して gold が通る確率）と コスト",
+         "| k | 期待 best-of-k | コスト (k×w) | vs haiku単発(正しさ1.0, cost1) |",
          "|---|---|---|---|"]
     for k in range(n):
-        bo, c = r["best_of_k_avg"][k], r["cost_of_k"][k]
-        cmp = "**追いついた**" if bo >= 1.0 else ("接近" if bo >= 0.9 else "—")
-        L.append(f"| {k + 1} | {bo} | {c} | {cmp}{'・haikuより高い' if c > 1.0 and bo >= 1.0 else ''} |")
+        bo, c = r["expected_best_of_k_avg"][k], r["cost_of_k"][k]
+        cmp = "**追いついた**" if bo >= 0.99 else ("接近" if bo >= 0.85 else "—")
+        L.append(f"| {k + 1} | {bo} | {c} | {cmp}{'・haikuと同コスト級' if abs(c - 1.0) < 0.25 else ''} |")
     L += ["",
-          "## タスク別（single-shot → best-of-N）",
-          "| task | single-shot | best-of-" + str(n) + " | per-trial |",
+          "## タスク別（single-shot p → 期待 best-of-" + str(n) + "）",
+          "| task | single-shot p | 期待 best-of-" + str(n) + " | per-trial |",
           "|---|---|---|---|"]
     for row in r["rows"]:
-        L.append(f"| {row['task']} | {row['single_shot']} | {row['best_of_k'][-1]} | {row['per_trial']} |")
+        L.append(f"| {row['task']} | {row['single_shot']} | {row['expected_best_of_k'][-1]} | {row['per_trial']} |")
     L += ["",
           "## 読み",
-          "- best-of-k が k とともに上がり frontier(1.0) に**迫る/追いつく**なら → **検証器付きの弱モデル反復が高レベル機能を近似**"
-          "（＝低レベルの組み合わせで higher-level に迫る・原点の問いに部分 YES）。",
-          "- ただし追いつく k での**コスト k×w が strong 単発コストを超える**なら → 「近似はできるが安くはない」"
-          "＝能力は反復で買えるが、検証器とコストが代償。",
-          "- 上がらない（single-shot ≈ best-of-N）タスク → 弱モデルの**系統的**な無能（反復で消えない＝真の能力差）。",
+          "- **不安定（sometimes-right）なタスク**（roman/wildcard+ p≈0.5・negabinary p≈0.83）は best-of-k が k とともに 1.0 に迫る ── "
+          "**検証器付きの弱モデル反復が高レベルの*信頼性*を近似**（低レベルの組み合わせで higher-level に迫る・原点の問いに部分 YES）。",
+          "- **系統的に解けないタスク**（calc p=0・6回とも失敗）は best-of-k が**0 のまま** ── "
+          "**反復は*不安定*を信頼性に変えるが、*欠落した能力*は作れない**（best-of-N の核心的限界）。",
+          "- **コスト**: p≈0.5 のタスクで 1.0 に迫る k≈5–6 ＝ コスト k×w ≈ 1.0 ＝ **haiku 単発とほぼ同コスト** ── "
+          "「弱モデル反復で強モデルに迫れるが*安くはなく*、しかも外部検証器が要る」。",
           "",
           "## 妥当性",
           "- gold は固定外部正解（参照実装で検算済）。best-of-k は gold をオラクルに使う（検証器が前提）。少標本。"]
