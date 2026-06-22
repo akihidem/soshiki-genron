@@ -81,6 +81,23 @@ class MeshflowTests(unittest.TestCase):
         r = execute([_task("a", 0), _task("b", 0, deps=("a",))], _tiers())
         self.assertEqual(r["blackboard"]["a"], "SOLN:a")   # upstream artifact available downstream
 
+    def test_real_seam_escalates_with_stubbed_models(self):
+        # the --real path wires gen_impl (agent) + grade (external verify). Stub both -> escalation fires.
+        import experiments.market_external as MX
+        import experiments.meshflow as MF
+        caps = {"gemma4:e2b": 0, "haiku": 1, "sonnet": 2, "opus": 3}
+        diffs = {"clamp": 0, "roman": 1, "atoms": 1, "calc": 1}
+        orig_gen, orig_grade = MX.gen_impl, MX.grade
+        MX.gen_impl = lambda model, task: f"def _x(): pass  # {model}"
+        MX.grade = lambda art, task: {"correctness": 1.0 if caps[art.split("# ")[1]] >= diffs[task["id"]] else 0.5}
+        try:
+            tasks, tiers = MF.llm_demo({}, None)
+            rows = {r["task"]: r["resolved_by"] for r in MF.execute(tasks, tiers, mesh=False)["rows"]}
+            self.assertEqual(rows["clamp"], "gemma")      # cheapest solves diff-0 -> no escalation
+            self.assertEqual(rows["roman"], "haiku")      # gemma fails diff-1 -> escalate to haiku
+        finally:
+            MX.gen_impl, MX.grade = orig_gen, orig_grade
+
     def test_metrics_and_determinism(self):
         tasks = [_task("e", 0), _task("m", 1), _task("crit", 99, stakes=0.9)]
         r = execute(tasks, _tiers())

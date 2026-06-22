@@ -114,7 +114,7 @@ python3 -m experiments.goodhart --agent claude:sonnet            # 実証: Goodh
 python3 -m experiments.race_game --players claude:haiku,claude:sonnet --framing neutral  # 実証: レース外部性
 python3 -m experiments.calibrate_coord       # 較正: 通信コスト（org_sim → mgr_overhead/c_comm）
 python3 -m experiments.meshflow              # 採用組織図の動く実行系（検証ルーティング→mesh→人間膜・決定的）
-python3 -m unittest discover -s tests -t .   # テスト（106本・決定的mock・全green）
+python3 -m unittest discover -s tests -t .   # テスト（107本・決定的mock・全green）
 ```
 
 ## リポジトリ地図
@@ -127,14 +127,14 @@ python3 -m unittest discover -s tests -t .   # テスト（106本・決定的moc
 - `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）／`market.py`（市場支配定理 p\*=w/s）＋生成 `*.md`
 - `experiments/oversight/` — 監督スケーリング実証＋ `calibrate.py`（測定値を governance/alignment へ還す実測較正）／`docs/oversight-pilot.md`
 - `experiments/` — 実証ハーネス群: `org_sim.py`（構造 F3・sandbox 正しさ）／`race_game.py`（レース外部性・2フレーミング）／`market_external.py`（市場3レジーム・外部 gold・**異種ベンダ**＝Claude/gemma/**codex**・`--gap`/`--ladder`/`--ensemble`/`--decorr`/`--novel`/`--openended`/`--map`/`--calibrate`）／`goodhart.py`（code-overfitting・`--curve`）／`calibrate_coord.py`（通信コスト較正）＋生成 `*.md`
-- `tests/` — 決定的テスト（106本・全 mock・green）
+- `tests/` — 決定的テスト（107本・全 mock・green）
 
 ## 到達点（2026-06-21 着手〜）
 - **③ 概念**: 最小定義 + 原始機能 F1–F8 + 拘束系譜 + 2フロンティア（整合の変質 / 統治の残存）+ テーゼ。
 - **第一原理**: モデルと実験による計測を最上位規則化。各主張に反証手段を併記。
 - **① 文献**: 3件を二次確認・記録（Marschak&Radner チーム理論 / Malone 電子市場 / Carley 計算組織論）。
 - **② 解析モデル 7本**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適）／容量→分解粒度／処方マップ／構造×膜の結合／レース外部性＋制度内部化／F7 整合（Goodhart）／**市場支配定理 p\*=w/s**。
-- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配）**／Goodhart（損 0.217・指数は閾値的で同定不可）。決定的部分 **106 tests green**。
+- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配）**／Goodhart（損 0.217・指数は閾値的で同定不可）。決定的部分 **107 tests green**。
 - **実測較正**: oversight_error・過剰flag・mgr_overhead（=2コール）・市場閾値 p（trials=3）・spec_quality（0.57–0.78）を実エージェントで接地。
 - **方法論**: 計測過程で結論が3度自己修正＋8つの転移可能な教訓（n=1/フレーミング/harness 交絡/自己評価のモデル依存/外部基準の誤り/係数の非同定性…）＝measurement-first が外部錨として機能（PAPER §9）。
 

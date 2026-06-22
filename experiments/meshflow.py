@@ -154,9 +154,65 @@ _DIFF = {"easy": 0, "mid1": 1, "hard": 2, "edge": ("A", "B", "C"), "crit": 99}
 _DIFF["edge"] = ("A", "B", "C")   # cheap->"A", mid->"B", strong->"C"; union "A\nB\nC" verifies
 
 
+# --------------------------------------------------------------------------- #
+# real LLM seam: tiers = gemma<haiku<sonnet<opus, external verify = sandbox gold.
+# The same executor, now driven by actual models. Escalation fires when a cheaper
+# model fails the external check. (mesh on code = a synthesizer agent, left as a seam;
+# here the frontier solves everything so escalation suffices -> consistent with PAPER S5.)
+# --------------------------------------------------------------------------- #
+def _llm_agent(model, cache, cache_path):
+    import json
+    import experiments.market_external as MX
+
+    def agent(task, bb):
+        key = f"{task.id}|{model}"
+        if not (cache.get(key) and "def " in cache[key]):
+            cache[key] = MX.gen_impl(model, task._mx)
+            if cache_path:
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return cache[key]
+
+    return agent
+
+
+def llm_demo(cache, cache_path):
+    import experiments.market_external as MX
+    by_id = {t["id"]: t for t in MX._EASY_TASKS + MX.EXT_TASKS + MX._HARD_TASKS + MX._LADDER_TASKS}
+    chosen = ["clamp", "roman", "atoms", "calc"]     # gemma solves clamp; fails roman/atoms/calc -> escalate
+    tiers = [Tier(m, w, _llm_agent(mm, cache, cache_path))
+             for m, mm, w in (("gemma", "gemma4:e2b", 0.2), ("haiku", "haiku", 1.0),
+                              ("sonnet", "sonnet", 3.0), ("opus", "opus", 15.0))]
+    tasks = []
+    for tid in chosen:
+        mx = by_id[tid]
+        t = Task(tid, mx["spec"], lambda art, bb, _mx=mx: MX.grade(art, _mx)["correctness"] or 0.0)
+        object.__setattr__(t, "_mx", mx)
+        tasks.append(t)
+    return tasks, tiers
+
+
 def main(argv=None) -> int:
     import json
     import os
+    import sys
+    if "--real" in (argv if argv is not None else sys.argv[1:]):
+        import experiments.market_external as MX
+        MX._CALL = MX._route                          # real LLM routing (gemma->ollama, claude->runner)
+        out_dir = os.path.dirname(os.path.abspath(__file__))
+        cp = os.path.join(out_dir, "meshflow_real_artifacts.json")
+        cache = json.load(open(cp, encoding="utf-8")) if os.path.exists(cp) else {}
+        tasks, tiers = llm_demo(cache, cp)
+        r = execute(tasks, tiers, mesh=False)         # mesh on code = synthesizer agent (seam); escalation here
+        with open(os.path.join(out_dir, "meshflow_real.json"), "w", encoding="utf-8") as f:
+            json.dump({k: v for k, v in r.items() if k != "blackboard"}, f, ensure_ascii=False, indent=2, sort_keys=True)
+        print("PRESCRIBED ORG CHART on REAL models (external verify = sandbox gold):")
+        for row in r["rows"]:
+            ladder = " -> ".join(f"{a['tier']}:{a['score']}" for a in row["attempts"])
+            print(f"  {row['task']:<8} {ladder}  => resolved_by={row['resolved_by']} cost={row['cost']}")
+        print(f"\ntotal_cost={r['total_cost']}  verified_rate={r['verified_rate']}  human_gate_rate={r['human_gate_rate']}")
+        print("wrote meshflow_real.json")
+        return 0
     tasks, tiers = _demo()
     r = execute(tasks, tiers)
     out_dir = os.path.dirname(os.path.abspath(__file__))

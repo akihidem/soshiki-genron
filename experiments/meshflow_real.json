@@ -1,0 +1,71 @@
+{
+  "human_gate_rate": 0.0,
+  "rows": [
+    {
+      "attempts": [
+        {
+          "score": 1.0,
+          "tier": "gemma"
+        }
+      ],
+      "cost": 0.2,
+      "human": false,
+      "resolved_by": "gemma",
+      "score": 1.0,
+      "task": "clamp"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.7,
+          "tier": "gemma"
+        },
+        {
+          "score": 1.0,
+          "tier": "haiku"
+        }
+      ],
+      "cost": 1.2,
+      "human": false,
+      "resolved_by": "haiku",
+      "score": 1.0,
+      "task": "roman"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.25,
+          "tier": "gemma"
+        },
+        {
+          "score": 1.0,
+          "tier": "haiku"
+        }
+      ],
+      "cost": 1.2,
+      "human": false,
+      "resolved_by": "haiku",
+      "score": 1.0,
+      "task": "atoms"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.2,
+          "tier": "gemma"
+        },
+        {
+          "score": 1.0,
+          "tier": "haiku"
+        }
+      ],
+      "cost": 1.2,
+      "human": false,
+      "resolved_by": "haiku",
+      "score": 1.0,
+      "task": "calc"
+    }
+  ],
+  "total_cost": 3.8,
+  "verified_rate": 1.0
+}
