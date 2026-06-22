@@ -31,9 +31,12 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class AlignParams:
     spec_quality: float = 0.7      # s: how well the spec captures the true objective [0,1]
+                                   # (grounded: goodhart.py proxy-quality 0.57 hard / 0.78 full suite)
     verification: float = 0.6      # v: fraction of divergence verification would catch [0,1]
     oversight_error: float = 0.2   # verification itself is imperfect (grounded: experiments/oversight)
     goodhart_exp: float = 1.5      # super-linearity of spec-gaming in optimization pressure
+                                   # (structural: goodhart.py --curve finds a THRESHOLD not a smooth
+                                   #  power-law on a frontier model -> exp is not identifiable)
     gain: float = 2.0              # scale of the productive gain (saturating)
     p_max: float = 6.0             # max optimization pressure considered
     grid: int = 601

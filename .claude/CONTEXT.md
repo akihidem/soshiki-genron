@@ -1,5 +1,5 @@
 # Project Context Snapshot
-<!-- Auto-updated by save-project-context.sh — 2026-06-22 13:27 -->
+<!-- Auto-updated by save-project-context.sh — 2026-06-22 13:36 -->
 <!-- セッション開始時はこのファイルを読むだけで OK。詳細は各ファイルを Read すること。 -->
 
 ## Remote
@@ -9,6 +9,8 @@
 - main
 
 ## Recent Commits (last 10)
+- 5fdd346 goodhart --curve: calibrate goodhart_exp via a proxy-pressure ladder
+- 70f1910 results: dominance map (3 local models) + Goodhart (loss 0.217 on hard tasks)
 - 7a94c57 goodhart.py: empirical code-overfitting test (proxy-optimization vs true goal)
 - d3ebfe1 calibrate comm cost: org_sim grounds mgr_overhead=2 (exact), c_comm_calls~0 -> flat
 - d564e4c market_external --map: dominance map over several local weak models
@@ -17,18 +19,13 @@
 - 06b3c11 model/market.py: threshold theorem p*=w/s unifies the 3 empirical regimes
 - bb82806 gap result: heterogeneity benefit APPEARS — market Pareto-dominates with a large gap
 - 9894e97 market_external --gap: LARGE capability gap (tiny gemma vs frontier)
-- bffd34d hetero re-test (external gold): no capability gradient -> market still dominated
-- 696d52e re-test heterogeneity on an EXTERNAL gold suite (de-confound self-test)
 
 ## Open PRs
 - (none)
 
 ## Git Status
 -  M .claude/CONTEXT.md
--  M experiments/market_calib_artifacts.json
-- ?? experiments/MARKET_MAP.md
-- ?? experiments/goodhart_artifacts.json
-- ?? experiments/market_map_results.json
+- ?? experiments/goodhart_curve_artifacts.json
 
 ## Top-level Structure
 - PAPER.md

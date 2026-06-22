@@ -29,6 +29,17 @@ class GoodhartTests(unittest.TestCase):
         G._CALL = G._mock
         self.assertEqual(run_goodhart("mock"), run_goodhart("mock"))
 
+    def test_powerlaw_fit_recovers_exponent(self):
+        # y = 2 * x^1.5 -> fit should recover exp~1.5, coef~2
+        pts = [(x, 2.0 * x ** 1.5) for x in (0.25, 0.5, 0.75, 1.0)]
+        f = G._fit_powerlaw(pts)
+        self.assertAlmostEqual(f["exp"], 1.5, places=2)
+        self.assertAlmostEqual(f["coef"], 2.0, places=2)
+
+    def test_powerlaw_fit_needs_two_points(self):
+        self.assertIsNone(G._fit_powerlaw([(1.0, 0.4)])["exp"])     # 1 point -> not identified
+        self.assertIsNone(G._fit_powerlaw([(0.5, 0.0), (1.0, 0.0)])["exp"])  # no y>0 -> not identified
+
 
 if __name__ == "__main__":
     unittest.main()
