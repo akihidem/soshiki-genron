@@ -1,0 +1,130 @@
+{
+  "baselines": {
+    "haiku": {
+      "avg_correctness": 1.0,
+      "avg_cost": 1.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "roman",
+          "tests": "10/10"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "intervals",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "wildcard",
+          "tests": "10/10"
+        }
+      ]
+    },
+    "opus": {
+      "avg_correctness": 1.0,
+      "avg_cost": 15.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "roman",
+          "tests": "10/10"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "intervals",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "wildcard",
+          "tests": "10/10"
+        }
+      ]
+    },
+    "sonnet": {
+      "avg_correctness": 1.0,
+      "avg_cost": 3.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 3.0,
+          "task": "roman",
+          "tests": "10/10"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 3.0,
+          "task": "intervals",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 3.0,
+          "task": "wildcard",
+          "tests": "10/10"
+        }
+      ]
+    }
+  },
+  "market": {
+    "avg_correctness": 1.0,
+    "avg_cost": 1.0,
+    "rows": [
+      {
+        "correctness": 1.0,
+        "cost": 1.0,
+        "ladder": [
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "roman"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 1.0,
+        "ladder": [
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "intervals"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 1.0,
+        "ladder": [
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "wildcard"
+      }
+    ]
+  },
+  "n_tasks": 3,
+  "tiers": [
+    [
+      "haiku",
+      1.0
+    ],
+    [
+      "sonnet",
+      3.0
+    ],
+    [
+      "opus",
+      15.0
+    ]
+  ]
+}

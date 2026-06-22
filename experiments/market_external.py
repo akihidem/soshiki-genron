@@ -78,7 +78,7 @@ EXT_TASKS = [
          'def gold_w7(): assert is_match("","*") == True\n'
          'def gold_w8(): assert is_match("abc","a?c") == True\n'
          'def gold_w9(): assert is_match("abefcdgiescdfimde","ab*cd?i*de") == True\n'
-         'def gold_w10(): assert is_match("mississippi","m*issi*p*i") == False\n'
+         'def gold_w10(): assert is_match("mississippi","m*issi*p*i") == True\n'
      )},
 ]
 
