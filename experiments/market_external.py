@@ -311,6 +311,48 @@ def calibrate(weak_model: str, tasks=_EASY_TASKS + EXT_TASKS, strong=_STRONG_TIE
     return {"weak": weak_model, "trials": trials, "p_weak": p, "per_task": per_task, "pairs": pairs}
 
 
+_MAP_MODELS = ("gemma4:e2b", "gemma4:latest", "gemma4-chat:latest")
+
+
+def map_models(models=_MAP_MODELS, trials: int = 2, cache_path: str | None = None) -> dict:
+    """Calibrate several local weak models -> a dominance map over the (p_weak, w/s) plane."""
+    rows = []
+    for mdl in models:
+        c = calibrate(mdl, trials=trials, cache_path=cache_path)
+        rows.append({"weak": mdl, "p_weak": c["p_weak"],
+                     "per_task": {x["task"]: x["solve_rate"] for x in c["per_task"]},
+                     "pairs": c["pairs"]})
+    return {"trials": trials, "strong": [list(t) for t in _STRONG_TIERS], "models": rows}
+
+
+def _md_map(r: dict) -> str:
+    L = ["# 支配地図 — 複数ローカル弱モデルを (p_weak, w/s) 平面に置く",
+         "",
+         f"支配定理 p\\*=w/s（[`../model/MARKET.md`](../model/MARKET.md)）に対し、ローカル弱モデル群の "
+         f"完全解率 p_weak を測り、各 weak→strong ペアが支配領域に入るかを地図化（trials={r['trials']}）。",
+         "",
+         "## p_weak と支配（✓ = market が flat-strong を Pareto 支配 ＝ p>w/s）",
+         "| 弱モデル | p_weak | →haiku (w/s=0.2) | →sonnet (0.067) | →opus (0.013) |",
+         "|---|---|---|---|---|"]
+    for m in r["models"]:
+        dom = {p["strong"]: p["dominates"] for p in m["pairs"]}
+        L.append(f"| {m['weak']} | **{m['p_weak']}** | {'✓' if dom['haiku'] else '—'} | "
+                 f"{'✓' if dom['sonnet'] else '—'} | {'✓' if dom['opus'] else '—'} |")
+    tasks = list(r["models"][0]["per_task"].keys())
+    L += ["",
+          "## per-task solve_rate（1.0 到達率）— どのタスクで能力差が出るか",
+          "| 弱モデル | " + " | ".join(tasks) + " |",
+          "|" + "---|" * (len(tasks) + 1)]
+    for m in r["models"]:
+        L.append(f"| {m['weak']} | " + " | ".join(str(m["per_task"][t]) for t in tasks) + " |")
+    L += ["",
+          "## 読み",
+          "- 弱モデルが p>w/s（特に最も厳しい →haiku の閾値 0.2）を超える限り、市場は単一モデルを支配。",
+          "- ローカル小型モデルが全て高 p（≫0.2）に固まるなら → 支配は頑健・境界(p≈0.2)は更に難しいタスクでのみ。",
+          "- per-task で 0/1 に割れるタスクが*構造的*な能力差の在処（市場が高ティアを呼ぶ理由）。"]
+    return "\n".join(L)
+
+
 def _md_calib(r: dict) -> str:
     L = ["# 閾値の実測較正 — 弱モデルの完全解率 p を trials>1 で固める",
          "",
@@ -348,9 +390,25 @@ def main(argv=None) -> int:
                     help="LARGE capability gap: tiny gemma tier + easy/hard spread (routes gemma->ollama)")
     ap.add_argument("--calibrate", action="store_true",
                     help="trials>1 calibration of the weak model's full-solve rate p (gemma only)")
+    ap.add_argument("--map", action="store_true", dest="domap",
+                    help="dominance map over several local weak models (gemma e2b/latest/chat)")
     ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.domap:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_calib_artifacts.json")   # shares the calibrate cache
+        r = map_models(trials=max(1, args.trials), cache_path=cache)
+        with open(os.path.join(out_dir, "market_map_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_MAP.md"), "w", encoding="utf-8") as f:
+            f.write(_md_map(r) + "\n")
+        for m in r["models"]:
+            dom = {p["strong"]: p["dominates"] for p in m["pairs"]}
+            print(f"  {m['weak']:<20} p_weak={m['p_weak']:<7} dominates: "
+                  f"haiku={dom['haiku']} sonnet={dom['sonnet']} opus={dom['opus']}")
+        print("\nwrote market_map_results.json and MARKET_MAP.md")
+        return 0
     if args.calibrate:
         _CALL = _mock if args.agent == "mock" else _route
         cache = os.path.join(out_dir, "market_calib_artifacts.json")
