@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "calc3|codex": "```python\ndef calc3(s):\n    s = s.replace(' ', '')\n\n    def div_toward_zero(a, b):\n        return (abs(a) // abs(b)) * (1 if a * b >= 0 else -1)\n\n    def ap(st, sg, nm):\n        if sg == '+':\n            st.append(nm)\n        elif sg == '-':\n            st.append(-nm)\n        elif sg == '*':\n            st.append(st.pop() * nm)\n        elif sg == '/':\n            st.append(div_toward_zero(st.pop(), nm))\n\n    def h(i):\n        st = []\n        nm = 0\n        sg = '+'\n        while i < len(s):\n            c = s[i]\n            if c.isdigit():\n                nm = nm * 10 + int(c)\n                i += 1\n            elif c == '(':\n                nm, i = h(i + 1)\n            else:\n                ap(st, sg, nm)\n                nm = 0\n                if c == ')':\n                    return sum(st), i + 1\n                sg = c\n                i += 1\n        ap(st, sg, nm)\n        return sum(st), i\n\n    return h(0)[0]\n```\n",
+    "calc3|opus": "```python\ndef calc3(s):\n    s = s.replace(' ', '')\n    def ap(st, sg, nm):\n        if sg=='+': st.append(nm)\n        elif sg=='-': st.append(-nm)\n        elif sg=='*': st.append(st.pop()*nm)\n        elif sg=='/': st.append(int(st.pop()/nm))\n    def h(i):\n        st=[]; nm=0; sg='+'\n        while i < len(s):\n            c=s[i]\n            if c.isdigit(): nm=nm*10+int(c); i+=1\n            elif c=='(': nm,i=h(i+1)\n            else:\n                ap(st,sg,nm); nm=0\n                if c==')': return sum(st), i+1\n                sg=c; i+=1\n        ap(st,sg,nm); return sum(st), i\n    return h(0)[0]\n```\n",
+    "calc3|sonnet": "```python\ndef calc3(s):\n    s = s.replace(' ', '')\n    def ap(st, sg, nm):\n        if sg=='+': st.append(nm)\n        elif sg=='-': st.append(-nm)\n        elif sg=='*': st.append(st.pop()*nm)\n        elif sg=='/': st.append(int(st.pop()/nm))\n    def h(i):\n        st=[]; nm=0; sg='+'\n        while i < len(s):\n            c=s[i]\n            if c.isdigit(): nm=nm*10+int(c); i+=1\n            elif c=='(': nm,i=h(i+1)\n            else:\n                ap(st,sg,nm); nm=0\n                if c==')': return sum(st), i+1\n                sg=c; i+=1\n        ap(st,sg,nm); return sum(st), i\n    return h(0)[0]\n```\n",
+    "edit_distance|codex": "```python\ndef edit_distance(a, b):\n    m, n = len(a), len(b)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n\n    for i in range(m + 1):\n        dp[i][0] = i\n    for j in range(n + 1):\n        dp[0][j] = j\n\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1]\n            else:\n                dp[i][j] = 1 + min(\n                    dp[i - 1][j - 1],\n                    dp[i - 1][j],\n                    dp[i][j - 1],\n                )\n\n    return dp[m][n]\n```\n",
+    "edit_distance|opus": "```python\ndef edit_distance(a, b):\n    m, n = len(a), len(b)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(m+1): dp[i][0] = i\n    for j in range(n+1): dp[0][j] = j\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if a[i-1] == b[j-1]: dp[i][j] = dp[i-1][j-1]\n            else: dp[i][j] = 1 + min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1])\n    return dp[m][n]\n```\n",
+    "edit_distance|sonnet": "```python\ndef edit_distance(a, b):\n    m, n = len(a), len(b)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(m+1): dp[i][0] = i\n    for j in range(n+1): dp[0][j] = j\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if a[i-1] == b[j-1]: dp[i][j] = dp[i-1][j-1]\n            else: dp[i][j] = 1 + min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1])\n    return dp[m][n]\n```\n",
+    "fraction|codex": "```python\ndef fraction_to_decimal(num, den):\n    if num == 0:\n        return '0'\n\n    sign = '-' if (num < 0) ^ (den < 0) else ''\n    num, den = abs(num), abs(den)\n\n    res = sign + str(num // den)\n    rem = num % den\n\n    if rem == 0:\n        return res\n\n    res += '.'\n    seen = {}\n    f = ''\n\n    while rem:\n        if rem in seen:\n            i = seen[rem]\n            return res + f[:i] + '(' + f[i:] + ')'\n        seen[rem] = len(f)\n        rem *= 10\n        f += str(rem // den)\n        rem %= den\n\n    return res + f\n```\n",
+    "fraction|opus": "```python\ndef fraction_to_decimal(num, den):\n    if num == 0: return '0'\n    res = ''\n    if (num < 0) != (den < 0): res += '-'\n    num, den = abs(num), abs(den)\n    res += str(num//den); rem = num % den\n    if rem == 0: return res\n    res += '.'; seen = {}; f = ''\n    while rem:\n        if rem in seen: i = seen[rem]; return res + f[:i] + '(' + f[i:] + ')'\n        seen[rem] = len(f); rem *= 10; f += str(rem//den); rem %= den\n    return res + f\n```\n",
+    "fraction|sonnet": "```python\ndef fraction_to_decimal(num, den):\n    if num == 0: return '0'\n    sign = '-' if (num < 0) ^ (den < 0) else ''\n    num, den = abs(num), abs(den)\n    res = sign + str(num // den); rem = num % den\n    if rem == 0: return res\n    res += '.'; seen = {}; f = ''\n    while rem:\n        if rem in seen: i = seen[rem]; return res + f[:i] + '(' + f[i:] + ')'\n        seen[rem] = len(f); rem *= 10; f += str(rem // den); rem %= den\n    return res + f\n```\n",
+    "re_match|codex": "```python\ndef re_match(s, p):\n    from functools import lru_cache\n\n    @lru_cache(None)\n    def dp(i, j):\n        if j == len(p):\n            return i == len(s)\n        first = i < len(s) and p[j] in (s[i], \".\")\n        if j + 1 < len(p) and p[j + 1] == \"*\":\n            return dp(i, j + 2) or (first and dp(i + 1, j))\n        return first and dp(i + 1, j + 1)\n\n    return dp(0, 0)\n```\n",
+    "re_match|opus": "```python\ndef re_match(s, p):\n    from functools import lru_cache\n    @lru_cache(None)\n    def dp(i, j):\n        if j == len(p): return i == len(s)\n        first = i < len(s) and p[j] in (s[i], '.')\n        if j+1 < len(p) and p[j+1] == '*':\n            return dp(i, j+2) or (first and dp(i+1, j))\n        return first and dp(i+1, j+1)\n    return dp(0, 0)\n```\n",
+    "re_match|sonnet": "```python\ndef re_match(s, p):\n    from functools import lru_cache\n    @lru_cache(None)\n    def dp(i, j):\n        if j == len(p): return i == len(s)\n        first = i < len(s) and p[j] in (s[i], '.')\n        if j+1 < len(p) and p[j+1] == '*':\n            return dp(i, j+2) or (first and dp(i+1, j))\n        return first and dp(i+1, j+1)\n    return dp(0, 0)\n```\n"
+  },
+  "fixed": {
+    "codex|calc3": 1,
+    "codex|edit_distance": 1,
+    "codex|fraction": 1,
+    "codex|re_match": 1,
+    "opus|calc3": 1,
+    "opus|edit_distance": 1,
+    "opus|fraction": 1,
+    "opus|re_match": 1,
+    "sonnet|calc3": 1,
+    "sonnet|edit_distance": 1,
+    "sonnet|fraction": 1,
+    "sonnet|re_match": 1
+  },
+  "models": [
+    "opus",
+    "codex",
+    "sonnet"
+  ],
+  "pairs": [
+    {
+      "best_single": 1.0,
+      "complementary": [],
+      "gain": 0.0,
+      "pair": "opus + codex",
+      "union": 1.0
+    },
+    {
+      "best_single": 1.0,
+      "complementary": [],
+      "gain": 0.0,
+      "pair": "opus + sonnet",
+      "union": 1.0
+    },
+    {
+      "best_single": 1.0,
+      "complementary": [],
+      "gain": 0.0,
+      "pair": "codex + sonnet",
+      "union": 1.0
+    }
+  ],
+  "per_model": {
+    "codex": 1.0,
+    "opus": 1.0,
+    "sonnet": 1.0
+  }
+}
