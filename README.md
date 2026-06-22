@@ -86,6 +86,12 @@
 - **Goodhart**（`experiments/goodhart.py`）: proxy（可視テスト）最適化が真の正しさを下げるか。**損 0.217・難タスク集中**（roman 0.6/wildcard 0.7）＝alignment.py の Goodhart 項を実証。圧スイープでは **指数は同定不可・効果は閾値的**（frontier は明示「ハードコード可」まで overfit しない・§9-8）。
 - **通信コスト較正**（`experiments/calibrate_coord.py`）: org_sim から **mgr_overhead = hierarchy−flat = 2コール（coordination.py 既定 2.0 と厳密一致）／c_comm（コール単位）≈0 → flat 勝ち** を接地。
 
+### 多モデルの組み合わせ — 安く/確実に迫るが、「超える」のは能力の縁でだけ
+原点の問い「複数 AI モデルの組み合わせは単一モデルを*超え*られるか」を実証（`market_external.py` の各モード・**Claude＋local gemma＋OpenAI codex** の異種ベンダ）。
+- **escalation 市場** → 最良モデルの水準を*安く*（能力差があれば・超えはしない）／**best-of-N＋検証器** → 弱モデルの*信頼性*を強に近づける（*欠落能力*は作れず・安くもない）。
+- **異種ベンダ（opus × codex）** → 全 checkable タスクで完全一致＝union 利得なし。見かけの「codex が opus を救う」は **opus の agentic harness artifact**（「既存ファイルを検証する」と散文だけ返す）だった → `gen_impl` 反agentic化で抑止（§9-9）。
+- **創発の源泉＝誤りの脱相関**: frontier は LeetCode-hard でも誤らず脱相関ゼロ。だが**弱い所では実在**（negabinary で gemma が haiku の盲点を覆う）。→ **cross-vendor mesh は「能力の縁」の組織形態** ── 単一モデルが信頼できなくなる所でだけ点火し、仕事が縁へ動くほど価値が上がる。詳細: [`PAPER.md`](PAPER.md) §5。
+
 ## 走らせ方
 ```bash
 python3 -m model.sweep         # ① 通信コスト→構造        → model/RESULTS.md
@@ -100,7 +106,10 @@ python3 -m experiments.oversight.calibrate   # 実測較正: 測った oversight
 python3 -m experiments.oversight.run         # 実証: 監督スケーリング（mock即時／--backend ollama で実測）
 python3 -m experiments.org_sim --agent claude:sonnet --tasks 3   # 実証: 構造 F3（flat/hierarchy/market・正しさ）
 python3 -m experiments.market_external --gap --agent claude:real # 実証: 大能力差で market が Pareto 支配（gemma×frontier）
-python3 -m experiments.market_external --map --trials 2          # 支配地図（複数ローカルモデルの p_weak）
+python3 -m experiments.market_external --ladder --agent claude:real  # 異種ベンダ難易度ラダー（gemma/haiku/sonnet/opus/codex）
+python3 -m experiments.market_external --ensemble --agent claude:real # 弱 best-of-N が検証器付きで強に迫るか
+python3 -m experiments.market_external --decorr --agent claude:real   # mesh 概念実証: 弱モデルの誤りは脱相関するか
+python3 -m experiments.market_external --openended --agent claude:real # open-ended: cross-vendor 合成は単独を超えるか（LLM-judge）
 python3 -m experiments.goodhart --agent claude:sonnet            # 実証: Goodhart（proxy 最適化 vs 真の正しさ）
 python3 -m experiments.race_game --players claude:haiku,claude:sonnet --framing neutral  # 実証: レース外部性
 python3 -m experiments.calibrate_coord       # 較正: 通信コスト（org_sim → mgr_overhead/c_comm）
@@ -116,7 +125,7 @@ python3 -m unittest discover -s tests -t .   # テスト（95本・決定的mock
 - `docs/ai-2027.md` — AI-2027（実存リスクのシナリオ予測）と本研究の対応・レース計測の動機
 - `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）／`market.py`（市場支配定理 p\*=w/s）＋生成 `*.md`
 - `experiments/oversight/` — 監督スケーリング実証＋ `calibrate.py`（測定値を governance/alignment へ還す実測較正）／`docs/oversight-pilot.md`
-- `experiments/` — 実証ハーネス群: `org_sim.py`（構造 F3・sandbox 正しさ）／`race_game.py`（レース外部性・2フレーミング）／`market_external.py`（市場3レジーム・外部 gold・`--gap`/`--map`/`--calibrate`）／`goodhart.py`（code-overfitting・`--curve`）／`calibrate_coord.py`（通信コスト較正）＋生成 `*.md`
+- `experiments/` — 実証ハーネス群: `org_sim.py`（構造 F3・sandbox 正しさ）／`race_game.py`（レース外部性・2フレーミング）／`market_external.py`（市場3レジーム・外部 gold・**異種ベンダ**＝Claude/gemma/**codex**・`--gap`/`--ladder`/`--ensemble`/`--decorr`/`--novel`/`--openended`/`--map`/`--calibrate`）／`goodhart.py`（code-overfitting・`--curve`）／`calibrate_coord.py`（通信コスト較正）＋生成 `*.md`
 - `tests/` — 決定的テスト（95本・全 mock・green）
 
 ## 到達点（2026-06-21 着手〜）
