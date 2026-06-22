@@ -21,6 +21,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
@@ -43,15 +44,22 @@ TASKS = [
 # --------------------------------------------------------------------------- #
 # agent caller (free quota) + deterministic mock
 # --------------------------------------------------------------------------- #
-def _agent(model: str, prompt: str, timeout: int = 360) -> str:
+def _agent(model: str, prompt: str, timeout: int = 360, retries: int = 3) -> str:
     m = _CLAUDE_MODEL_ALIAS.get(model, model)
     cmd = (["python3", _CLAUDE_RUNNER, "--model", m, "--no-sentinel"]
            if _CLAUDE_RUNNER and os.path.exists(_CLAUDE_RUNNER)
            else ["claude", "--print", "--model", m])
-    proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout)
-    if proc.returncode != 0:
-        raise RuntimeError(f"agent failed: {proc.stderr.strip()[:200]}")
-    return proc.stdout
+    last = ""
+    for attempt in range(retries):                      # free-quota TUI launch / rate hiccups are transient
+        try:
+            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout)
+            if proc.returncode == 0:
+                return proc.stdout
+            last = (proc.stderr or "").strip()[:200]
+        except subprocess.TimeoutExpired:
+            last = f"timeout>{timeout}s"
+        time.sleep(3 * (attempt + 1))                   # brief backoff before retry
+    raise RuntimeError(f"agent failed after {retries} tries: {last}")
 
 
 def _mock(model: str, prompt: str, timeout: int = 0) -> str:
