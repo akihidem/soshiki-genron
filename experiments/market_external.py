@@ -31,6 +31,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from experiments.org_sim import _PYTEST_SHIM, _UNSHARE, _agent, _extract_code, _mock  # noqa: E402
+from experiments.oversight.overseer import _ollama_generate  # noqa: E402
 
 
 # Tasks with a model-INDEPENDENT gold suite (objective truth, not self-tests).
@@ -83,7 +84,59 @@ EXT_TASKS = [
 ]
 
 _TIERS = (("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
-_CALL = _agent  # swapped to _mock for tests / --agent mock
+
+# --gap: LARGE capability gap. The frontier-only test found no gradient (all 1.0).
+# Here a tiny local model (gemma ~2B) is the cheapest tier, with a difficulty SPREAD:
+# easy tasks the tiny model can do (cheaply) + hard tasks only the frontier solves.
+# Cost weights: gemma local ~0.2 (near-free) << haiku 1 << opus 15 (price-ratio proxy).
+_TIERS_GAP = (("gemma4:e2b", 0.2), ("haiku", 1.0), ("opus", 15.0))
+_HOST = "http://localhost:11434"
+
+_EASY_TASKS = [
+    {"id": "clamp", "names": ["clamp"],
+     "spec": "clamp(x, lo, hi): return x bounded to the inclusive range [lo, hi] (lo <= hi).",
+     "gold": (
+         'def gold_c1(): assert clamp(5,0,10) == 5\n'
+         'def gold_c2(): assert clamp(-3,0,10) == 0\n'
+         'def gold_c3(): assert clamp(99,0,10) == 10\n'
+         'def gold_c4(): assert clamp(0,0,10) == 0\n'
+         'def gold_c5(): assert clamp(10,0,10) == 10\n'
+     )},
+    {"id": "leap", "names": ["is_leap"],
+     "spec": "is_leap(year): Gregorian leap year — divisible by 4, except centuries unless divisible by 400.",
+     "gold": (
+         'def gold_l1(): assert is_leap(2000) == True\n'
+         'def gold_l2(): assert is_leap(1900) == False\n'
+         'def gold_l3(): assert is_leap(2024) == True\n'
+         'def gold_l4(): assert is_leap(2023) == False\n'
+         'def gold_l5(): assert is_leap(2100) == False\n'
+     )},
+    {"id": "revwords", "names": ["reverse_words"],
+     "spec": ("reverse_words(s): reverse the order of single-space-separated words; output joined by single "
+              "spaces, no leading/trailing space."),
+     "gold": (
+         'def gold_v1(): assert reverse_words("hello world") == "world hello"\n'
+         'def gold_v2(): assert reverse_words("a b c") == "c b a"\n'
+         'def gold_v3(): assert reverse_words("x") == "x"\n'
+         'def gold_v4(): assert reverse_words("one two three four") == "four three two one"\n'
+     )},
+]
+
+_CALL = _agent  # swapped to _mock (tests) / _route (--gap, routes gemma->ollama)
+
+
+def _route(model: str, prompt: str, timeout: int | None = None) -> str:
+    """Route by model name: gemma -> local ollama, everything else -> claude runner."""
+    if model.startswith("gemma"):
+        for _ in range(2):                               # ollama can hiccup; one retry
+            try:
+                out = _ollama_generate(_HOST, model, prompt, timeout=timeout or 240)
+                if out.strip():
+                    return out
+            except Exception:
+                pass
+        return ""                                        # tiny model failed -> empty -> scored 0
+    return _agent(model, prompt)                         # claude (has its own retry/backoff)
 
 # Runs ONLY gold_* functions -> the model's own test_* (if any leaked in) are ignored.
 _GOLD_HARNESS = (
@@ -193,7 +246,7 @@ def _md(r: dict) -> str:
          "正しさを採点。モデルは実装だけ書く。難度勾配のあるタスク（roman / merge_intervals / wildcard）で "
          "**検証ルーティング型エスカレーション市場**（gold 正しさ<1.0 の間だけ上位ティアへ）が単一モデル flat の "
          f"(コスト, 正しさ) 前線を支配するかを測る。タスク {r['n_tasks']} 件。生数値 "
-         "[`market_external_results.json`](market_external_results.json)。",
+         "生数値は同梱の results.json。",
          "",
          "## (コスト, 正しさ) — 低コスト×高正しさが良い",
          "| 戦略 | 平均コスト（ティア重み×コール） | 平均正しさ(gold) |",
@@ -207,16 +260,13 @@ def _md(r: dict) -> str:
           "- 弱モデルが難タスクで落ち、上位だけが gold を通せば、エスカレーションは「必要な所だけ高価な能力を買う」＝市場の本領。",
           "- それでも market が単一モデルに勝てなければ「難度勾配があっても市場配分は単一モデルを上回らない」＝有効な否定的所見。",
           "",
-          "## タスク別 gold 正しさ（model:正しさ）と市場の梯子",
-          "| task | flat-haiku | flat-sonnet | flat-opus | market 梯子 | market (cost, 正しさ) |",
-          "|---|---|---|---|---|---|"]
-    for i, t in enumerate(r.get("_task_ids", [row["task"] for row in m["rows"]])):
-        h = b["haiku"]["rows"][i]["correctness"]
-        s = b["sonnet"]["rows"][i]["correctness"]
-        o = b["opus"]["rows"][i]["correctness"]
-        mr = m["rows"][i]
+          "## タスク別 gold 正しさと市場の梯子",
+          "| task | " + " | ".join(f"flat-{mm}" for mm, _ in r["tiers"]) + " | market 梯子 | market (cost, 正しさ) |",
+          "|" + "---|" * (len(r["tiers"]) + 3)]
+    for i, mr in enumerate(m["rows"]):
+        cells = " | ".join(str(b[mm]["rows"][i]["correctness"]) for mm, _ in r["tiers"])
         ladder = " → ".join(f"{mm}:{cc}" for mm, cc in mr["ladder"])
-        L.append(f"| {t} | {h} | {s} | {o} | {ladder} | ({mr['cost']}, {mr['correctness']}) |")
+        L.append(f"| {mr['task']} | {cells} | {ladder} | ({mr['cost']}, {mr['correctness']}) |")
     L += ["",
           "## 妥当性",
           "- gold は固定の外部正解（モデル非依存）。各試行は impl 1コール（設計/テスト工程なし＝モデル能力を分離）。"
@@ -227,26 +277,32 @@ def _md(r: dict) -> str:
 def main(argv=None) -> int:
     global _CALL
     ap = argparse.ArgumentParser(description="heterogeneity re-test on an external gold suite")
-    ap.add_argument("--agent", default="mock", help="'mock' or claude:<anything> (tiers are fixed haiku/sonnet/opus)")
-    ap.add_argument("--tasks", type=int, default=len(EXT_TASKS))
+    ap.add_argument("--agent", default="mock", help="'mock' or claude:<anything> (frontier tiers fixed)")
+    ap.add_argument("--gap", action="store_true",
+                    help="LARGE capability gap: tiny gemma tier + easy/hard spread (routes gemma->ollama)")
     args = ap.parse_args(argv)
-    _CALL = _mock if args.agent == "mock" else _agent
     out_dir = os.path.dirname(os.path.abspath(__file__))
-    cache = os.path.join(out_dir, "market_external_artifacts.json")
-    r = run_ext(EXT_TASKS[:max(1, args.tasks)], cache_path=cache)
+    if args.gap:
+        _CALL = _mock if args.agent == "mock" else _route
+        tasks, tiers, stem = _EASY_TASKS + EXT_TASKS, _TIERS_GAP, "market_gap"
+    else:
+        _CALL = _mock if args.agent == "mock" else _agent
+        tasks, tiers, stem = EXT_TASKS, _TIERS, "market_external"
+    cache = os.path.join(out_dir, f"{stem}_artifacts.json")
+    r = run_ext(tasks, tiers=tiers, cache_path=cache)
     arts = r.pop("artifacts", {})
     with open(cache, "w", encoding="utf-8") as f:
         json.dump(arts, f, ensure_ascii=False, indent=2, sort_keys=True)
-    with open(os.path.join(out_dir, "market_external_results.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, f"{stem}_results.json"), "w", encoding="utf-8") as f:
         json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
-    with open(os.path.join(out_dir, "MARKET_EXTERNAL.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, f"{stem.upper()}.md"), "w", encoding="utf-8") as f:
         f.write(_md(r) + "\n")
     print("baselines (cost, correctness):",
           {k: (v["avg_cost"], v["avg_correctness"]) for k, v in r["baselines"].items()})
     print("market   (cost, correctness):", (r["market"]["avg_cost"], r["market"]["avg_correctness"]))
     for row in r["market"]["rows"]:
         print(f"  {row['task']:<10} ladder={row['ladder']} -> cost={row['cost']} correct={row['correctness']}")
-    print("\nwrote market_external_results.json and MARKET_EXTERNAL.md")
+    print(f"\nwrote {stem}_results.json and {stem.upper()}.md")
     return 0
 
 
