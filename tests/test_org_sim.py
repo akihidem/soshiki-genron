@@ -54,6 +54,19 @@ class OrgSimTests(unittest.TestCase):
         self.assertTrue(c["ran"])
         self.assertEqual(c["correctness"], 1.0)        # markdown + pytest both handled
 
+    def test_hetero_market_stops_at_cheapest_sufficient_tier(self):
+        M._CALL = _mock
+        # mock code passes its own trivial tests -> every tier reaches correctness 1.0,
+        # so the verification-routed escalation market must STOP at the cheapest tier
+        if not correctness("def f():\n    return 1\ndef test_f():\n    assert f()==1\n")["ran"]:
+            self.skipTest("sandbox unavailable in this environment")
+        r = M.run_hetero(TASKS[:2])
+        b, mk = r["baselines"], r["market"]
+        self.assertEqual(mk["avg_correctness"], 1.0)                  # achieves full correctness
+        self.assertEqual(mk["avg_cost"], b["haiku"]["avg_cost"])      # ...at the cheapest tier's cost
+        self.assertLessEqual(mk["avg_cost"], b["opus"]["avg_cost"])   # dominates the expensive baseline
+        self.assertTrue(all(len(row["ladder"]) == 1 for row in mk["rows"]))  # never escalated
+
     def test_deterministic_on_mock(self):
         self.assertEqual(run("mock", TASKS[:2], measure_correctness=False), self.r)
 

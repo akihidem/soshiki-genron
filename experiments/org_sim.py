@@ -303,6 +303,90 @@ def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
             "artifacts": arts}
 
 
+# --------------------------------------------------------------------------- #
+# heterogeneous market: does allocation across DIFFERENT-capability agents beat a
+# single model? The homogeneous sim above showed market loses (no heterogeneity to
+# exploit). Here capability tiers differ (haiku<sonnet<opus) and a verification-routed
+# ESCALATION market spends expensive capability only where the sandbox says it's needed.
+# Cost weights ~ list-price output-token ratios (proxy): haiku 1, sonnet 3, opus 15.
+# --------------------------------------------------------------------------- #
+_TIERS = (("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
+
+
+def run_hetero(tasks: list[dict], tiers=_TIERS) -> dict:
+    # compute flat (artifact, correctness) for every (model, task) ONCE; both the
+    # homogeneous baselines and the escalation market are derived from this grid.
+    grid, arts = {}, {}
+    for model, _w in tiers:
+        for t in tasks:
+            art, calls = run_flat(model, t)
+            if "def " not in art:                       # transient non-code -> one retry
+                art, calls = run_flat(model, t)
+            arts[f"{t['id']}|{model}"] = art
+            corr = correctness(art).get("correctness")
+            grid[(model, t["id"])] = {"calls": calls, "corr": corr if corr is not None else 0.0}
+
+    def _avg(rows, k):
+        return round(sum(r[k] for r in rows) / len(rows), 3)
+
+    baselines = {}                                       # homogeneous: each single model alone
+    for model, w in tiers:
+        rows = [{"task": t["id"], "cost": round(grid[(model, t["id"])]["calls"] * w, 1),
+                 "correctness": round(grid[(model, t["id"])]["corr"], 3)} for t in tasks]
+        baselines[model] = {"rows": rows, "avg_cost": _avg(rows, "cost"),
+                            "avg_correctness": _avg(rows, "correctness")}
+
+    mkt = []                                             # heterogeneous escalation market
+    for t in tasks:
+        cost, best, ladder = 0.0, 0.0, []
+        for model, w in tiers:
+            g = grid[(model, t["id"])]
+            cost += g["calls"] * w
+            ladder.append([model, round(g["corr"], 3)])
+            best = max(best, g["corr"])
+            if g["corr"] >= 1.0:                         # verification satisfied -> stop paying
+                break
+        mkt.append({"task": t["id"], "cost": round(cost, 1),
+                    "correctness": round(best, 3), "ladder": ladder})
+    market = {"rows": mkt, "avg_cost": _avg(mkt, "cost"), "avg_correctness": _avg(mkt, "correctness")}
+    return {"tiers": [[m, w] for m, w in tiers], "n_tasks": len(tasks),
+            "baselines": baselines, "market": market, "artifacts": arts}
+
+
+def _md_hetero(r: dict) -> str:
+    b, m = r["baselines"], r["market"]
+    L = ["# 実証: 異種能力の market — 検証ルーティング型エスカレーション",
+         "",
+         "均質組織では market は flat に劣った（[`ORG_SIM.md`](ORG_SIM.md)）。ここでは能力ティア "
+         "（haiku<sonnet<opus・コスト重み ~1:3:15＝出力トークン定価比の代理）を入れ、**検証ルーティング型"
+         "エスカレーション市場**（安いモデルで試し、sandbox 正しさ<1.0 の間だけ上位へ）が単一モデル flat の "
+         f"(コスト, 正しさ) 前線を支配するかを測る。タスク {r['n_tasks']} 件。",
+         "",
+         "## (コスト, 正しさ) — 低コストで高正しさが良い",
+         "| 戦略 | 平均コスト（ティア重み付き） | 平均正しさ |",
+         "|---|---|---|"]
+    for model, _w in r["tiers"]:
+        L.append(f"| flat-{model}（均質） | {b[model]['avg_cost']} | {b[model]['avg_correctness']} |")
+    L.append(f"| **market（異種・エスカレーション）** | **{m['avg_cost']}** | **{m['avg_correctness']}** |")
+    L += ["",
+          "## 読み",
+          "- market が flat-opus と同等の正しさを**より低いコスト**で出せば → **market の価値は heterogeneity 条件付き**（均質では負け・異種では前線を支配）。",
+          "- 全タスクが opus を要すれば market は haiku+sonnet+opus を払い flat-opus に**負ける**（異種でも市場が勝つとは限らない＝同じく有効な所見）。",
+          "- 配分は自己申告でなく**実行検証**で駆動（外部錨＝本研究のテーゼ）。",
+          "",
+          "## タスク別エスカレーション梯子（model, その正しさ）",
+          "| task | 梯子（停止＝正しさ1.0 到達 or opus 到達） | market コスト | market 正しさ |",
+          "|---|---|---|---|"]
+    for row in m["rows"]:
+        ladder = " → ".join(f"{mm}:{cc}" for mm, cc in row["ladder"])
+        L.append(f"| {row['task']} | {ladder} | {row['cost']} | {row['correctness']} |")
+    L += ["",
+          "## 妥当性",
+          "- コスト重みは定価の代理（実トークン課金でなく相対比）。正しさは sandbox 実行（pytest shim・local-import drop 込み）。"
+          "n 小・trials=1。エスカレーションはタスク粒度（関数粒度でなく全タスク再試行＝安価試行のコストも計上）。"]
+    return "\n".join(L)
+
+
 def _md(r: dict) -> str:
     a = r["aggregate"]
     L = ["# 実証: エージェント組織シミュレータ — flat vs hierarchy vs market（F3 接地）",
@@ -344,8 +428,25 @@ def main(argv=None) -> int:
     ap.add_argument("--tasks", type=int, default=3)
     ap.add_argument("--remeasure", action="store_true",
                     help="recompute quality+correctness on saved org_sim_artifacts.json (no LLM calls)")
+    ap.add_argument("--hetero", action="store_true",
+                    help="heterogeneous-market experiment (capability tiers + verification-routed escalation)")
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.hetero:                                     # does allocation across DIFFERENT agents beat one model?
+        _CALL = _mock if args.agent == "mock" else _agent
+        r = run_hetero(TASKS[:max(1, args.tasks)])
+        arts = r.pop("artifacts", {})
+        with open(os.path.join(out_dir, "org_sim_hetero_artifacts.json"), "w", encoding="utf-8") as f:
+            json.dump(arts, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "org_sim_hetero_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "ORG_SIM_HETERO.md"), "w", encoding="utf-8") as f:
+            f.write(_md_hetero(r) + "\n")
+        print("baselines (cost, correctness):",
+              {k: (v["avg_cost"], v["avg_correctness"]) for k, v in r["baselines"].items()})
+        print("market   (cost, correctness):", (r["market"]["avg_cost"], r["market"]["avg_correctness"]))
+        print("\nwrote org_sim_hetero_results.json and ORG_SIM_HETERO.md")
+        return 0
     if args.remeasure:                                  # offline re-grade with the current harness
         saved = json.load(open(os.path.join(out_dir, "org_sim_artifacts.json"), encoding="utf-8"))
         model = json.load(open(os.path.join(out_dir, "org_sim_results.json"), encoding="utf-8")).get("model", "sonnet")
