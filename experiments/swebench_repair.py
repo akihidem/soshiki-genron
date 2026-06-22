@@ -92,23 +92,27 @@ def _apply_edits(content: str, text: str) -> str | None:
     return new if new != content else None
 
 
-def _fail_count(tests, timeout=300) -> int:
-    """Failing tests by pytest EXIT CODE (the source of truth). 10**6 = broken run (do NOT misread
-    a crash/collection-interrupt as 0 — the first all-zero result was exactly that artifact).
+def _run_capture(tests, timeout=300):
+    """(fail_count, output_tail). Failing tests by pytest EXIT CODE (the source of truth);
+    10**6 = broken run (do NOT misread a crash/collection-interrupt as 0 — the first all-zero
+    result was exactly that artifact). The tail feeds the iterative agent its own test failure.
 
     pytest rc: 0=all passed, 1=tests failed, 2=interrupted, 3=internal, 4=usage, 5=no tests."""
     if not tests:
-        return 0
+        return 0, ""
     proc = subprocess.run([_PY, "-m", "pytest", *tests, "-q", "--no-header", "-p", "no:cacheprovider"],
                           cwd=_REPO, capture_output=True, text=True, timeout=timeout)
-    rc = proc.returncode
+    out, rc = (proc.stdout + proc.stderr), proc.returncode
     if rc == 0:
-        return 0
+        return 0, out[-1800:]
     if rc == 1:                                          # genuine failures -> count them (+ errors)
-        out = proc.stdout + proc.stderr
         mf, me = re.search(r"(\d+) failed", out), re.search(r"(\d+) error", out)
-        return (int(mf.group(1)) if mf else 1) + (int(me.group(1)) if me else 0)
-    return 10 ** 6                                       # 2/3/4/5 = crash / interrupted / no tests = broken
+        return (int(mf.group(1)) if mf else 1) + (int(me.group(1)) if me else 0), out[-1800:]
+    return 10 ** 6, out[-1800:]                          # 2/3/4/5 = crash / interrupted / no tests
+
+
+def _fail_count(tests, timeout=300) -> int:
+    return _run_capture(tests, timeout)[0]
 
 
 def _setup(inst: dict) -> bool:
@@ -155,7 +159,42 @@ def _repair(model: str, inst: dict, path: str, content: str, base_p2p_fail: int)
     return 1 if (f2p_ok and p2p_ok) else 0
 
 
-def run(models, instance_ids, cache_path=None) -> dict:
+def _repair_iterative(model: str, inst: dict, path: str, content: str, base_p2p_fail: int,
+                      rounds: int = 3) -> int:
+    """Agentic loop: propose a fix, RUN the tests, feed the failure back, revise — up to `rounds`.
+    This is how SWE-bench leaderboard harnesses reach ~60-70% (vs one-shot). Cumulative: the model
+    iterates on its evolving file. Question: does test feedback make opus/codex diverge MORE on the
+    harder instances, or converge?"""
+    f2p, p2p = json.loads(inst["FAIL_TO_PASS"]), json.loads(inst["PASS_TO_PASS"])[:30]
+    full, cur, feedback = os.path.join(_REPO, path), content, ""
+    for _ in range(rounds):
+        prompt = (f"You are fixing a real bug in the pytest codebase. User-reported issue:\n\n"
+                  f"{inst['problem_statement'][:2500]}\n\n"
+                  f"The file `{path}` currently contains:\n\n```python\n{cur}\n```\n\n"
+                  + (f"Your previous edit did NOT resolve it. Test output:\n\n```\n{feedback}\n```\n\n"
+                     if feedback else "")
+                  + f"Output the fix as one or more SEARCH/REPLACE blocks (exact current lines -> "
+                    f"corrected lines), EXACTLY:\n<<<<<<< SEARCH\n...\n=======\n...\n>>>>>>> REPLACE\nNo prose.")
+        new = _apply_edits(cur, _CALL(model, prompt))
+        if new is None:                                     # edit didn't parse / didn't match
+            feedback = "Your SEARCH text did not match the current file. Copy the exact current lines."
+            continue
+        cur = new
+        open(full, "w").write(cur)
+        f2p_fail, f2p_tail = _run_capture(f2p)
+        if f2p_fail == 0:
+            p2p_fail, p2p_tail = _run_capture(p2p)
+            if p2p_fail <= base_p2p_fail:
+                _git("checkout", "-q", "--", path)
+                return 1
+            feedback = "The reported bug is fixed but you BROKE other tests (regression):\n" + p2p_tail
+        else:
+            feedback = f2p_tail
+    _git("checkout", "-q", "--", path)
+    return 0
+
+
+def run(models, instance_ids, cache_path=None, rounds=1) -> dict:
     allinst = {i["instance_id"]: i for i in json.load(open(_INSTANCES_JSON, encoding="utf-8"))}
     cache = {}
     if cache_path and os.path.exists(cache_path):
@@ -177,7 +216,8 @@ def run(models, instance_ids, cache_path=None) -> dict:
             key = f"{iid}|{m}"
             if key not in cache:
                 _setup(inst)                                    # fresh bug state per model
-                cache[key] = _repair(m, inst, path, content, base_p2p_fail)
+                cache[key] = (_repair_iterative(m, inst, path, content, base_p2p_fail, rounds)
+                              if rounds > 1 else _repair(m, inst, path, content, base_p2p_fail))
                 if cache_path:
                     json.dump(cache, open(cache_path, "w"), ensure_ascii=False, indent=2, sort_keys=True)
             solved[(m, iid)] = cache[key]
@@ -196,12 +236,16 @@ def run(models, instance_ids, cache_path=None) -> dict:
             pairs.append({"pair": f"{a} + {b}", "union": union, "best_single": round(best, 3),
                           "gain": round(union - best, 3), "complementary": comp})
     return {"models": list(models), "n_solved_cells": len(done), "rows": rows,
-            "per_model": per_model, "pairs": pairs}
+            "per_model": per_model, "pairs": pairs, "rounds": rounds}
 
 
 def _md(r: dict) -> str:
     models = r["models"]
+    rounds = r.get("rounds", 1)
+    mode = f"**反復エージェント {rounds} 回**（修復→実テスト→失敗を戻して再修復）" if rounds > 1 else "**one-shot**"
     L = ["# 実証: 実 SWE-bench（pytest 実 repo）で frontier は脱相関するか",
+         "",
+         f"修復方式: {mode}。",
          "",
          "構築タスク（生成・145 意地悪ケース・微妙バグ修復）では frontier(opus/codex)は誤らず脱相関ゼロだった"
          "（PAPER §5）。ここは*実 repo の実 issue* ── pytest 7.4/8.0 の実バグを、user-issue ＋ バグのある"
@@ -252,18 +296,22 @@ def main(argv=None) -> int:
     ap.add_argument("--agent", default="mock")
     ap.add_argument("--models", default="opus,codex")
     ap.add_argument("--instances", default="")
-    ap.add_argument("--writeup-only", action="store_true", help="regen SWEBENCH.md from existing results.json")
+    ap.add_argument("--rounds", type=int, default=1, help="1=one-shot; >1=iterative agentic loop w/ test feedback")
+    ap.add_argument("--writeup-only", action="store_true", help="regen the .md from existing results.json")
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    tag = "swebench_iter" if args.rounds > 1 else "swebench"           # iterative results kept separate
+    md_name = "SWEBENCH_ITER.md" if args.rounds > 1 else "SWEBENCH.md"
     if args.writeup_only:
-        r = json.load(open(os.path.join(out_dir, "swebench_results.json"), encoding="utf-8"))
+        r = json.load(open(os.path.join(out_dir, f"{tag}_results.json"), encoding="utf-8"))
     else:
         _CALL = _mock if args.agent == "mock" else _route
         ids = [x for x in args.instances.split(",") if x] or json.load(open("/tmp/swe_pick.json"))
-        r = run(args.models.split(","), ids, cache_path=os.path.join(out_dir, "swebench_artifacts.json"))
-        with open(os.path.join(out_dir, "swebench_results.json"), "w", encoding="utf-8") as f:
+        r = run(args.models.split(","), ids, cache_path=os.path.join(out_dir, f"{tag}_artifacts.json"),
+                rounds=args.rounds)
+        with open(os.path.join(out_dir, f"{tag}_results.json"), "w", encoding="utf-8") as f:
             json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
-    with open(os.path.join(out_dir, "SWEBENCH.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, md_name), "w", encoding="utf-8") as f:
         f.write(_md(r) + "\n")
     print("per-model solve:", r["per_model"], "| solved cells:", r["n_solved_cells"])
     for row in r["rows"]:

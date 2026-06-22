@@ -1,0 +1,67 @@
+{
+  "models": [
+    "opus",
+    "codex"
+  ],
+  "n_solved_cells": 6,
+  "pairs": [
+    {
+      "best_single": 1.0,
+      "complementary": [
+        "pytest-dev__pytest-11125"
+      ],
+      "gain": 0.0,
+      "pair": "opus + codex",
+      "union": 1.0
+    }
+  ],
+  "per_model": {
+    "codex": 1.0,
+    "opus": 0.833
+  },
+  "rounds": 3,
+  "rows": [
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/config/__init__.py",
+      "instance": "pytest-dev__pytest-11125",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 1000000,
+      "codex": 1,
+      "file": "src/_pytest/assertion/rewrite.py",
+      "instance": "pytest-dev__pytest-11143",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/pathlib.py",
+      "instance": "pytest-dev__pytest-11148",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/recwarn.py",
+      "instance": "pytest-dev__pytest-11160",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/python_api.py",
+      "instance": "pytest-dev__pytest-11178",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/fixtures.py",
+      "instance": "pytest-dev__pytest-11217",
+      "opus": 1
+    }
+  ]
+}

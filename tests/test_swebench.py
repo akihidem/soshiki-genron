@@ -10,6 +10,10 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import json as _json  # noqa: E402
+import tempfile  # noqa: E402
+
+import experiments.swebench_repair as SR  # noqa: E402
 from experiments.swebench_repair import _apply_edits, _edited_file, _unfence  # noqa: E402
 
 _CONTENT = "import os\n\ndef f(x):\n    return x + 1\n\ndef g(y):\n    return y\n"
@@ -65,6 +69,52 @@ class ApplyEditsTests(unittest.TestCase):
         # a block whose replacement equals the search makes no change -> None (nothing to grade)
         sr = "<<<<<<< SEARCH\n    return y\n=======\n    return y\n>>>>>>> REPLACE"
         self.assertIsNone(_apply_edits(_CONTENT, sr))
+
+
+class IterativeLoopTests(unittest.TestCase):
+    """The agentic loop: fail -> feed the test output back -> revise -> succeed. Stubs the live repo
+    (real tmpfile I/O, no-op git, fake test verdict) so the orchestration is checked deterministically."""
+
+    def setUp(self):
+        self._save = (SR._REPO, SR._git, SR._run_capture, SR._CALL)
+        self._dir = tempfile.mkdtemp()
+        SR._REPO = self._dir
+        SR._git = lambda *a, **k: type("R", (), {"returncode": 0})()
+        # tests pass only once the file on disk contains the FIXED marker
+        SR._run_capture = lambda tests, timeout=300: (
+            (0, "") if "FIXED" in open(os.path.join(self._dir, "f.py")).read() else (1, "boom"))
+
+    def tearDown(self):
+        SR._REPO, SR._git, SR._run_capture, SR._CALL = self._save
+
+    def _inst(self):
+        return {"problem_statement": "bug", "FAIL_TO_PASS": _json.dumps(["t::a"]),
+                "PASS_TO_PASS": _json.dumps([])}
+
+    def test_feedback_then_success(self):
+        open(os.path.join(self._dir, "f.py"), "w").write(_CONTENT)
+        calls = {"n": 0}
+
+        def call(m, p):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return "no usable edit yet"                  # -> None -> feedback, loop again
+            self.assertIn("did NOT resolve", p)              # round 2 sees the failure feedback
+            return "```python\n" + _CONTENT.replace("return y", "return y  # FIXED") + "```"
+        SR._CALL = call
+        self.assertEqual(SR._repair_iterative("m", self._inst(), "f.py", _CONTENT, 0, rounds=3), 1)
+        self.assertEqual(calls["n"], 2)                      # early-exit on success, not all 3 rounds
+
+    def test_never_fixes_hits_round_cap(self):
+        open(os.path.join(self._dir, "f.py"), "w").write(_CONTENT)
+        calls = {"n": 0}
+
+        def call(m, p):
+            calls["n"] += 1
+            return "still no fix"                            # never produces a usable edit
+        SR._CALL = call
+        self.assertEqual(SR._repair_iterative("m", self._inst(), "f.py", _CONTENT, 0, rounds=3), 0)
+        self.assertEqual(calls["n"], 3)                      # exhausts exactly `rounds` attempts
 
 
 class UnfenceTests(unittest.TestCase):
