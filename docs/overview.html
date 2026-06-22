@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="hz:slide-selector" content=".infographic" />
 <meta name="hz:canvas-width" content="1120" />
-<meta name="hz:canvas-height" content="3010" />
+<meta name="hz:canvas-height" content="3360" />
 <title>組織原論 — 全体像</title>
 <style>
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -15,7 +15,7 @@
   body{ background:#22262f; padding:40px 0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif; color:var(--ink); }
   .serif{ font-family:"Yu Mincho","Hiragino Mincho ProN",serif; }
   .mono{ font-family:"SF Mono","DejaVu Sans Mono","Roboto Mono",monospace; }
-  .infographic{ width:1120px; min-height:3010px; margin:0 auto; background:var(--paper);
+  .infographic{ width:1120px; min-height:3360px; margin:0 auto; background:var(--paper);
     position:relative; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.4); }
   .infographic::before{ content:""; position:absolute; top:0; left:0; right:0; height:10px;
     background:linear-gradient(90deg,var(--amber) 0 40%, var(--teal) 40% 75%, var(--market) 75% 100%); }
@@ -160,6 +160,25 @@
       </div>
       <div class="loopnote">
         ③ で market は <b>flat-haiku の半額・flat-opus の 1/28 コスト</b>で同正しさ ＝ 解析の支配定理 <span class="mono">p*=w/s</span> と実測（0.311）が一致。さらに <b>Goodhart 実証</b>: proxy（可視テスト）最適化は真の正しさを下げる（損 0.217・難タスク集中）が、<b>明示的な「ハードコード可」licensing まで出ない閾値効果</b>（指数は同定不可と判明＝measurement-first）。
+      </div>
+    </div>
+
+    <div class="sh"><span class="bar" style="background:var(--market)"></span><h2>多モデルの組み合わせ — 「能力の縁」の組織形態</h2><span class="en">COMBINING MODELS · ORG AT THE EDGE</span></div>
+    <div class="loop">
+      <div class="loopnote" style="margin-top:0">
+        原点の問い「複数 AI の組み合わせは単一を<b>超え</b>るか」を Claude × local gemma × <b>OpenAI codex</b>（異種ベンダ）で実証。答え＝<b>「安く/確実に*迫る*」はできるが「*超える*」のは能力の縁でだけ</b>:
+      </div>
+      <div class="loopflow" style="margin-top:13px">
+        <div class="b">escalation<br><b>安く・超えない</b></div>
+        <div class="ar">·</div>
+        <div class="b">best-of-N＋検証器<br><b>信頼性を近づける</b></div>
+        <div class="ar">·</div>
+        <div class="b">異種 opus×codex<br><b>全一致・union 利得0</b></div>
+        <div class="ar">·</div>
+        <div class="b" style="border-color:var(--market)"><b style="color:#5b4b85">誤りの脱相関<br>＝mesh が単独超え</b></div>
+      </div>
+      <div class="loopnote">
+        創発の源泉は redundancy でなく <b>誤りの脱相関</b>（失敗が*別 instance* なら mesh が単一を超える＝ML アンサンブル原理）。<b>frontier(opus/codex) は LeetCode-hard でも誤らず脱相関0</b>＝mesh 不発。だが<b>弱い所では実証</b>: gemma+haiku / haiku+sonnet の <b>union=1.0 ＞ 単独最良 0.9</b>（互いの盲点を覆う）。<b>見かけの「codex が opus を救う」は opus の agentic harness artifact だった</b>（必ず生出力を見る）。→ <b style="color:#5b4b85">cross-vendor mesh は単一モデルが信頼できなくなる「能力の縁」でだけ点火する組織形態</b>。仕事が縁へ動くほど価値が上がる。
       </div>
     </div>
 
