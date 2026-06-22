@@ -270,6 +270,28 @@ _LADDER_TASKS = [
      )},
 ]
 
+# NOVEL/compound tasks to try to make the FRONTIER err (the prerequisite for cross-vendor
+# decorrelation): no-cheat hard DP + an extended-precedence parser. Run across frontier vendors.
+_TIERS_FRONTIER = (("sonnet", 3.0), ("opus", 15.0), ("codex", 20.0))
+_NOVEL_TASKS = [
+    {"id": "count_pal", "names": ["count_pal"],
+     "spec": "count_pal(s): number of DISTINCT non-empty palindromic SUBSEQUENCES of s, modulo 10**9+7 "
+             "(LeetCode 730). Subsequences (not substrings); count distinct ones.",
+     "gold": ('def gold_1(): assert count_pal("bccb") == 6\n'
+              'def gold_2(): assert count_pal("aaa") == 3\n'
+              'def gold_3(): assert count_pal("abcdabcdabcdabcdabcdabcdabcdabcd'
+              'dcbadcbadcbadcbadcbadcbadcbadcba") == 104860361\n')},
+    {"id": "calc_iv", "names": ["calc_iv"],
+     "spec": "calc_iv(s): evaluate an integer expression with + - * / , parentheses, unary minus, AND "
+             "exponentiation '**' which is RIGHT-associative and binds tighter than * / . Integer division "
+             "truncates toward zero. e.g. calc_iv('2**3**2') == 512, calc_iv('10/3') == 3.",
+     "gold": ('def gold_1(): assert calc_iv("2+3*4") == 14\n'
+              'def gold_2(): assert calc_iv("2**3**2") == 512\n'
+              'def gold_3(): assert calc_iv("(2+3)*4") == 20\n'
+              'def gold_4(): assert calc_iv("2**10") == 1024\n'
+              'def gold_5(): assert calc_iv("10/3") == 3\n')},
+]
+
 _CALL = _agent  # swapped to _mock (tests) / _route (--gap, routes gemma->ollama)
 
 
@@ -656,6 +678,147 @@ def run_ensemble(model: str = "gemma4:e2b", task_ids=_ENSEMBLE_TASKS, n: int = 6
             "artifacts": cache}
 
 
+# mesh proof-of-concept: do DIVERSE models' errors DECORRELATE? if model A fails task X
+# but B solves it (and vice versa on Y), the pair-union exceeds either single -> the ML
+# ensemble principle, the seed of a 'diversity mesh' organization. Tested where models ERR.
+_DECORR_MODELS = ("gemma4:e2b", "haiku", "sonnet")
+_DECORR_TASKS = ("roman", "calc", "atoms", "negabinary", "wildcard_plus")   # error-prone set
+
+
+def run_decorr(models=_DECORR_MODELS, task_ids=_DECORR_TASKS, trials: int = 2,
+               cache_path: str | None = None) -> dict:
+    by_id = {t["id"]: t for t in _EASY_TASKS + EXT_TASKS + _HARD_TASKS + _LADDER_TASKS}
+    cache = {}
+    if cache_path and os.path.exists(cache_path):
+        cache = json.load(open(cache_path, encoding="utf-8"))
+    solve = {}
+    for tid in task_ids:
+        t = by_id[tid]
+        for m in models:
+            cs = []
+            for k in range(trials):
+                key = f"{tid}|{m}|{k}"
+                if not (cache.get(key) and "def " in cache[key]):
+                    cache[key] = gen_impl(m, t)
+                    if cache_path:
+                        with open(cache_path, "w", encoding="utf-8") as f:
+                            json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+                cs.append(1 if (grade(cache[key], t)["correctness"] or 0) >= 1.0 else 0)
+            solve[(m, tid)] = round(sum(cs) / trials, 3)
+    per_model = {m: round(sum(solve[(m, tid)] for tid in task_ids) / len(task_ids), 3) for m in models}
+    pairs = []
+    for i, a in enumerate(models):
+        for b in models[i + 1:]:
+            union = round(sum(max(solve[(a, tid)], solve[(b, tid)]) for tid in task_ids) / len(task_ids), 3)
+            best = max(per_model[a], per_model[b])
+            comp = [tid for tid in task_ids if (solve[(a, tid)] >= 1.0) != (solve[(b, tid)] >= 1.0)]
+            pairs.append({"pair": f"{a} + {b}", "union": union, "best_single": round(best, 3),
+                          "gain": round(union - best, 3), "complementary_tasks": comp})
+    return {"models": list(models), "trials": trials,
+            "solve": {f"{m}|{tid}": solve[(m, tid)] for m in models for tid in task_ids},
+            "per_model": per_model, "pairs": pairs, "artifacts": cache}
+
+
+# open-ended mesh: where there is NO objective gold, does a cross-vendor SYNTHESIS of two
+# vendors' answers beat either single answer, as scored by LLM judges? Subjective (judge
+# bias) but the only way to probe the regime checkable coding can't reach.
+_OPEN_TASKS = [
+    "Design a token-bucket rate limiter for a web API: the public interface, the core algorithm, "
+    "thread-safety, and the 3 trickiest correctness edge cases. Be concrete and technically correct.",
+    "Cache results of an expensive idempotent function in a multi-process service. Give a concrete "
+    "caching design: key strategy, invalidation, cross-process consistency, and the main failure modes.",
+    "Design a backoff-and-retry policy for calls to a flaky downstream dependency: the algorithm, the "
+    "parameters and how to choose them, interaction with timeouts/circuit-breakers, and failure modes.",
+]
+
+
+def _parse_scores(text: str) -> dict:
+    out = {}
+    for lab in ("A", "B", "C"):
+        m = re.search(rf"\b{lab}\s*=\s*(\d+(?:\.\d+)?)", text or "")
+        if m:
+            out[lab] = float(m.group(1))
+    return out
+
+
+def run_openended(prompts=tuple(_OPEN_TASKS), gen=("opus", "codex"), judges=("opus", "codex"),
+                  cache_path: str | None = None) -> dict:
+    cache = {}
+    if cache_path and os.path.exists(cache_path):
+        cache = json.load(open(cache_path, encoding="utf-8"))
+
+    def call(key, model, prompt):
+        if not cache.get(key):
+            cache[key] = _CALL(model, prompt)
+            if cache_path:
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return cache[key]
+
+    rows = []
+    for i, p in enumerate(prompts):
+        a = call(f"{i}|genA", gen[0], p)
+        b = call(f"{i}|genB", gen[1], p)
+        syn = call(f"{i}|synth", gen[0], f"Two experts answered the task. Produce ONE answer strictly "
+                   f"better than either by merging their strengths and fixing their gaps.\nTASK: {p}\n"
+                   f"EXPERT 1:\n{a}\n\nEXPERT 2:\n{b}\n\nOutput only the merged answer.")
+        # blind labels: A=gen0, B=gen1, C=synthesis (judge doesn't know which is which)
+        jr = []
+        for jm in judges:
+            jp = (f"Score each answer to the task on correctness + completeness as integers 1-10. "
+                  f"Be critical and discriminating.\nTASK: {p}\n\nANSWER A:\n{a}\n\nANSWER B:\n{b}\n\n"
+                  f"ANSWER C:\n{syn}\n\nReply with ONLY one line: 'A=<n> B=<n> C=<n>'.")
+            jr.append(_parse_scores(call(f"{i}|judge_{jm}", jm, jp)))
+        avg = {lab: round(sum(j.get(lab, 0) for j in jr) / len(jr), 2) for lab in ("A", "B", "C")}
+        rows.append({"task": p[:60] + "...", "scores": avg, "best_single": max(avg["A"], avg["B"]),
+                     "synthesis": avg["C"], "synth_gain": round(avg["C"] - max(avg["A"], avg["B"]), 2)})
+    mean_gain = round(sum(r["synth_gain"] for r in rows) / len(rows), 3)
+    return {"gen": list(gen), "judges": list(judges), "rows": rows, "mean_synth_gain": mean_gain,
+            "artifacts": cache}
+
+
+def _md_openended(r: dict) -> str:
+    L = [f"# open-ended mesh — cross-vendor 合成は単独を超えるか（LLM-judge・gold 無し領域）",
+         "",
+         f"生成: {' + '.join(r['gen'])}／合成: {r['gen'][0]} が両者を merge／判定: {', '.join(r['judges'])}"
+         "（A=gen0, B=gen1, **C=合成**・判定者は知らない）。主観的（judge bias）だが checkable コーディングが届かない縁の代理。",
+         "",
+         f"## 平均 synthesis gain（C − max(A,B)）= **{r['mean_synth_gain']:+}**",
+         "| task | A | B | **C(合成)** | 単独最良 | gain |",
+         "|---|---|---|---|---|---|"]
+    for row in r["rows"]:
+        s = row["scores"]
+        L.append(f"| {row['task']} | {s['A']} | {s['B']} | **{s['C']}** | {row['best_single']} | {row['synth_gain']:+} |")
+    L += ["", "## 読み",
+          "- **gain>0 なら open-ended 領域で cross-vendor 合成が単独を超える**＝mesh が縁で点火（主観評価だが）。",
+          "- gain≈0/負なら合成は冗長 or judge が長さ等に釣られた可能性。**judge bias（自作びいき・長さびいき）に注意**＝この計測自体が交絡しうる（§9）。"]
+    return "\n".join(L)
+
+
+def _md_decorr(r: dict) -> str:
+    L = ["# 弱モデル mesh の概念実証 — 誤りは脱相関するか（union > 単独最良か）",
+         "",
+         "多様なモデルの誤りが*別タスク*に出れば、pair-union が単独を超える＝ML アンサンブル原理"
+         "＝『多様性 mesh』組織の種。誤りが起きる task で測る（trials=" + str(r["trials"]) + "）。",
+         "",
+         "## solve_rate 行列（どのモデルがどこで誤るか）",
+         "| task | " + " | ".join(r["models"]) + " |",
+         "|" + "---|" * (len(r["models"]) + 1)]
+    for tid in _DECORR_TASKS:
+        L.append(f"| {tid} | " + " | ".join(str(r["solve"][f'{m}|{tid}']) for m in r["models"]) + " |")
+    L += ["", "## ペア union vs 単独最良（gain>0 ＝ 脱相関で mesh が単独を超える）",
+          "| ペア | union | 単独最良 | gain | 相補タスク（片方だけ解く） |",
+          "|---|---|---|---|---|"]
+    for p in r["pairs"]:
+        L.append(f"| {p['pair']} | {p['union']} | {p['best_single']} | **{p['gain']:+}** | "
+                 f"{', '.join(p['complementary_tasks']) or '—'} |")
+    L += ["", "## 読み",
+          "- **gain>0 のペアがあれば mesh 原理は実在**：異種が互いの盲点を覆い、組み合わせが単独を超える。",
+          "- 相補タスクが在る＝誤りが*別 instance* に出る（脱相関）＝mesh の燃料。",
+          "- frontier(opus/codex) は誤らずここに出ない（§5）＝mesh は能力の縁でだけ点火（弱い所では*実在*）。"]
+    return "\n".join(L)
+
+
 def _md_ensemble(r: dict) -> str:
     n = r["n"]
     L = [f"# 弱アンサンブル — 低レベル {r['model']} を N 回試し gold で選べば高レベルに迫れるか",
@@ -740,9 +903,41 @@ def main(argv=None) -> int:
                     help="4-tier frontier difficulty ladder -> classify tasks (barely-opus / impossible)")
     ap.add_argument("--ensemble", action="store_true",
                     help="weak best-of-N: does N gemma attempts + gold selection approach a higher tier?")
+    ap.add_argument("--decorr", action="store_true",
+                    help="mesh proof-of-concept: do diverse weak models' errors decorrelate (union>best)?")
+    ap.add_argument("--novel", action="store_true",
+                    help="novel/compound hard tasks across frontier vendors (try to make the frontier err)")
+    ap.add_argument("--openended", action="store_true",
+                    help="open-ended mesh: does cross-vendor synthesis beat single answers (LLM-judged)?")
     ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.openended:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_openended_artifacts.json")
+        r = run_openended(cache_path=cache)
+        with open(os.path.join(out_dir, "market_openended_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_OPENENDED.md"), "w", encoding="utf-8") as f:
+            f.write(_md_openended(r) + "\n")
+        print(f"mean synthesis gain (C - best single) = {r['mean_synth_gain']:+}")
+        for row in r["rows"]:
+            print(f"  {row['scores']}  gain={row['synth_gain']:+}  {row['task']}")
+        print("\nwrote market_openended_results.json and MARKET_OPENENDED.md")
+        return 0
+    if args.decorr:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_decorr_artifacts.json")
+        r = run_decorr(trials=max(2, args.trials if args.trials <= 3 else 2), cache_path=cache)
+        with open(os.path.join(out_dir, "market_decorr_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_DECORR.md"), "w", encoding="utf-8") as f:
+            f.write(_md_decorr(r) + "\n")
+        print("per-model:", r["per_model"])
+        for p in r["pairs"]:
+            print(f"  {p['pair']:<24} union={p['union']} best={p['best_single']} gain={p['gain']:+} comp={p['complementary_tasks']}")
+        print("\nwrote market_decorr_results.json and MARKET_DECORR.md")
+        return 0
     if args.ensemble:
         _CALL = _mock if args.agent == "mock" else _route
         cache = os.path.join(out_dir, "market_ensemble_artifacts.json")
@@ -755,6 +950,19 @@ def main(argv=None) -> int:
         for row in r["rows"]:
             print(f"  {row['task']:<14} single={row['single_shot']:<5} best-of-{r['n']}={row['best_of_k'][-1]} {row['per_trial']}")
         print("\nwrote market_ensemble_results.json and MARKET_ENSEMBLE.md")
+        return 0
+    if args.novel:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_novel_artifacts.json")
+        r = run_ladder(tasks=tuple(_NOVEL_TASKS), tiers=_TIERS_FRONTIER,
+                       trials=max(1, args.trials), cache_path=cache)
+        with open(os.path.join(out_dir, "market_novel_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_NOVEL.md"), "w", encoding="utf-8") as f:
+            f.write(_md_ladder(r) + "\n")
+        for row in r["tasks"]:
+            print(f"  {row['task']:<12} {row['class']:<13} solve_rate={row['solve_rate']}")
+        print("\nwrote market_novel_results.json and MARKET_NOVEL.md")
         return 0
     if args.ladder:
         _CALL = _mock if args.agent == "mock" else _route
