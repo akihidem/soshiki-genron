@@ -197,6 +197,63 @@ _HARD_TASKS = [
      )},
 ]
 
+# FRONTIER LADDER: genuinely hard tasks spanning opus's edge (barely-opus) to beyond it
+# (impossible). Measured across ALL tiers (incl. sonnet) so the frontier gradient and the
+# no-tier-solves regime can appear. Includes non-standard TWISTS that break memorized
+# solutions. Gold verified by reference impls; output unambiguous.
+_TIERS_LADDER = (("gemma4:e2b", 0.2), ("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
+
+_LADDER_TASKS = [
+    {"id": "calc3", "names": ["calc3"],
+     "spec": "calc3(s): evaluate an expression with non-negative integers, + - * /, parentheses and spaces. "
+             "Standard precedence; integer division truncates toward zero (LeetCode 772 with parens).",
+     "gold": (
+         'def gold_c1(): assert calc3("3+2*2") == 7\n'
+         'def gold_c2(): assert calc3(" 3/2 ") == 1\n'
+         'def gold_c3(): assert calc3(" 3+5 / 2 ") == 5\n'
+         'def gold_c4(): assert calc3("2*(5+5*2)+3") == 33\n'
+         'def gold_c5(): assert calc3("14-3/2") == 13\n'
+         'def gold_c6(): assert calc3("(2+6*3)") == 20\n'
+     )},
+    {"id": "atoms", "names": ["atoms"],
+     "spec": "atoms(formula): parse a chemical formula with element names (uppercase then optional lowercase), "
+             "counts, and parentheses with multipliers; return the count string with elements sorted "
+             "alphabetically, counts >1 shown (LeetCode 726). e.g. 'K4(ON(SO3)2)2' -> 'K4N2O14S4'.",
+     "gold": (
+         'def gold_t1(): assert atoms("H2O") == "H2O"\n'
+         'def gold_t2(): assert atoms("Mg(OH)2") == "H2MgO2"\n'
+         'def gold_t3(): assert atoms("K4(ON(SO3)2)2") == "K4N2O14S4"\n'
+         'def gold_t4(): assert atoms("Be32") == "Be32"\n'
+     )},
+    {"id": "wildcard_plus", "names": ["wp"],
+     "spec": "wp(s, p): NON-STANDARD wildcard. '*' matches ONE OR MORE characters (NOT zero), '?' matches "
+             "EXACTLY one character, other chars match literally. Match the ENTIRE string. (Read carefully: "
+             "'*' is one-or-more, unlike the usual zero-or-more.)",
+     "gold": (
+         'def gold_w1(): assert wp("a","*") == True\n'
+         'def gold_w2(): assert wp("","*") == False\n'
+         'def gold_w3(): assert wp("ab","a?") == True\n'
+         'def gold_w4(): assert wp("a","?") == True\n'
+         'def gold_w5(): assert wp("","") == True\n'
+         'def gold_w6(): assert wp("abc","*c") == True\n'
+         'def gold_w7(): assert wp("","?") == False\n'
+         'def gold_w8(): assert wp("abc","a*") == True\n'
+         'def gold_w9(): assert wp("ac","a*c") == False\n'
+     )},
+    {"id": "negabinary", "names": ["negabinary"],
+     "spec": "negabinary(n): represent the integer n in base -2 as a string of '0'/'1' (no leading zeros "
+             "except n==0 -> '0'). Base -2 digits weight (-2)**k. e.g. negabinary(3) == '111' (4-2+1).",
+     "gold": (
+         'def gold_n1(): assert negabinary(0) == "0"\n'
+         'def gold_n2(): assert negabinary(2) == "110"\n'
+         'def gold_n3(): assert negabinary(3) == "111"\n'
+         'def gold_n4(): assert negabinary(4) == "100"\n'
+         'def gold_n5(): assert negabinary(-1) == "11"\n'
+         'def gold_n6(): assert negabinary(-3) == "1101"\n'
+         'def gold_n7(): assert negabinary(6) == "11010"\n'
+     )},
+]
+
 _CALL = _agent  # swapped to _mock (tests) / _route (--gap, routes gemma->ollama)
 
 
@@ -457,6 +514,95 @@ def _md_calib(r: dict) -> str:
     return "\n".join(L)
 
 
+def run_ladder(tasks=tuple(_LADDER_TASKS), tiers=_TIERS_LADDER, trials: int = 2,
+               cache_path: str | None = None) -> dict:
+    """4-tier ladder (gemma<haiku<sonnet<opus) on hard tasks -> classify each task by the
+    strongest tier that solves it (easy / gemma-gap / frontier-gap / barely-opus / impossible)."""
+    cache = {}
+    if cache_path and os.path.exists(cache_path):
+        cache = json.load(open(cache_path, encoding="utf-8"))
+    order = [m for m, _ in tiers]
+    grid = {}
+    for t in tasks:
+        for model, _w in tiers:
+            corrs = []
+            for k in range(trials):
+                key = f"{t['id']}|{model}|{k}"
+                if not (cache.get(key) and "def " in cache[key]):
+                    cache[key] = gen_impl(model, t)
+                    if cache_path:
+                        with open(cache_path, "w", encoding="utf-8") as f:
+                            json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+                corrs.append(grade(cache[key], t)["correctness"])
+            grid[(t["id"], model)] = {"solve_rate": round(sum(1 for c in corrs if c >= 1.0) / trials, 3),
+                                      "mean_corr": round(sum(corrs) / len(corrs), 3)}
+    rows = []
+    for t in tasks:
+        sr = {m: grid[(t["id"], m)]["solve_rate"] for m in order}
+        solved = [m for m in order if sr[m] >= 0.5]            # tiers that (mostly) solve
+        if not solved:
+            cls = "impossible"                                  # even opus fails
+        elif solved[0] == order[0]:
+            cls = "easy"                                        # gemma already solves
+        elif solved[0] == order[-1]:
+            cls = "barely-opus"                                 # only opus solves
+        elif order[1] not in solved:                           # haiku fails -> needs sonnet/opus
+            cls = "frontier-gap"
+        else:
+            cls = "gemma-gap"                                   # gemma fails, haiku+ solve
+        rows.append({"task": t["id"], "solve_rate": sr, "mean_corr": {m: grid[(t["id"], m)]["mean_corr"] for m in order},
+                     "cheapest_solver": solved[0] if solved else None, "class": cls})
+    mkt = []
+    for t in tasks:
+        cost, best_corr, solved_at, ladder = 0.0, 0.0, None, []
+        for model, w in tiers:
+            g = grid[(t["id"], model)]
+            cost += w
+            ladder.append([model, g["solve_rate"]])
+            best_corr = max(best_corr, g["mean_corr"])
+            if g["solve_rate"] >= 1.0:
+                solved_at = model
+                break
+        mkt.append({"task": t["id"], "cost": round(cost, 1), "best_corr": round(best_corr, 3),
+                    "solved_at": solved_at, "ladder": ladder})
+    return {"trials": trials, "tiers": [[m, w] for m, w in tiers], "tasks": rows, "market": mkt,
+            "artifacts": cache}
+
+
+def _md_ladder(r: dict) -> str:
+    order = [m for m, _ in r["tiers"]]
+    L = ["# 難易度ラダー — 能力レンジ全体で帯を実測分類（barely-opus / impossible まで）",
+         "",
+         f"4ティア（{' < '.join(order)}）を検算済み難タスクに当て、各タスクを *最強の解けるティア* で分類"
+         f"（trials={r['trials']}・gold は外部正解）。市場の支配定理は強ティアが解ける(p_strong=1)前提 ── "
+         "impossible 帯はその前提が崩れる所。",
+         "",
+         "## タスク別 solve_rate（1.0到達率）と帯",
+         "| task | " + " | ".join(order) + " | 最安の解き手 | 帯 |",
+         "|" + "---|" * (len(order) + 3)]
+    for row in r["tasks"]:
+        cells = " | ".join(str(row["solve_rate"][m]) for m in order)
+        L.append(f"| {row['task']} | {cells} | {row['cheapest_solver'] or '—'} | **{row['class']}** |")
+    L += ["",
+          "## エスカレーション市場の挙動（特に誰も解けない時）",
+          "| task | 梯子（model:solve_rate） | 市場コスト | 解けたティア | 最良正しさ |",
+          "|---|---|---|---|---|"]
+    for m in r["market"]:
+        ladder = " → ".join(f"{mm}:{sr}" for mm, sr in m["ladder"])
+        L.append(f"| {m['task']} | {ladder} | {m['cost']} | {m['solved_at'] or '**誰も**'} | {m['best_corr']} |")
+    L += ["",
+          "## 読み",
+          "- **barely-opus** 帯が存在すれば、frontier 内に勾配があり ②（frontier 異種）でも市場が効きうる（haiku/sonnet で試し opus へ）。",
+          "- **impossible** 帯では市場は全ティアを払い（最大コスト）正しさ<1 ── **支配定理の p_strong=1 前提が崩れ、市場は高コストで未解決**。"
+          "＝「能力の天井を越えた仕事は、どの組織構造でも金を捨てるだけ」。",
+          "- 非標準ツイスト（wildcard+ の 1-or-more・negabinary）は memorized 解を壊す ── frontier を分離できるか。",
+          "",
+          "## 妥当性",
+          "- gold は固定外部正解（参照実装で検算済）。少標本（trials 小）・gemma の cold-start は trials で緩和。"
+          "コスト比は定価の代理。"]
+    return "\n".join(L)
+
+
 def main(argv=None) -> int:
     global _CALL
     ap = argparse.ArgumentParser(description="heterogeneity re-test on an external gold suite")
@@ -469,9 +615,23 @@ def main(argv=None) -> int:
                     help="dominance map over several local weak models (gemma e2b/latest/chat)")
     ap.add_argument("--hard", action="store_true",
                     help="use the HARD task set (drives weak p down toward the boundary p*=w/s)")
+    ap.add_argument("--ladder", action="store_true", dest="ladder",
+                    help="4-tier frontier difficulty ladder -> classify tasks (barely-opus / impossible)")
     ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.ladder:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_ladder_artifacts.json")
+        r = run_ladder(trials=max(1, args.trials), cache_path=cache)
+        with open(os.path.join(out_dir, "market_ladder_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_LADDER.md"), "w", encoding="utf-8") as f:
+            f.write(_md_ladder(r) + "\n")
+        for row in r["tasks"]:
+            print(f"  {row['task']:<14} {row['class']:<13} solve_rate={row['solve_rate']}")
+        print("\nwrote market_ladder_results.json and MARKET_LADDER.md")
+        return 0
     if args.domap:
         _CALL = _mock if args.agent == "mock" else _route
         cache = os.path.join(out_dir, "market_calib_artifacts.json")   # shares the calibrate cache
