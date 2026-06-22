@@ -201,7 +201,9 @@ _HARD_TASKS = [
 # (impossible). Measured across ALL tiers (incl. sonnet) so the frontier gradient and the
 # no-tier-solves regime can appear. Includes non-standard TWISTS that break memorized
 # solutions. Gold verified by reference impls; output unambiguous.
-_TIERS_LADDER = (("gemma4:e2b", 0.2), ("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
+# includes codex (OpenAI, cross-vendor) -> the ladder's non-monotonic check now catches
+# CROSS-VENDOR divergence (a task one vendor solves and the other fails = genuine union gain).
+_TIERS_LADDER = (("gemma4:e2b", 0.2), ("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0), ("codex", 20.0))
 
 _LADDER_TASKS = [
     {"id": "calc3", "names": ["calc3"],
@@ -252,13 +254,55 @@ _LADDER_TASKS = [
          'def gold_n6(): assert negabinary(-3) == "1101"\n'
          'def gold_n7(): assert negabinary(6) == "11010"\n'
      )},
+    {"id": "fraction_to_decimal", "names": ["fraction_to_decimal"],
+     "spec": "fraction_to_decimal(num, den): the fraction num/den as a string; if the fractional part "
+             "repeats, enclose the repeating cycle in parentheses (LeetCode 166). e.g. 2/3 -> '0.(6)', "
+             "4/333 -> '0.(012)', 1/6 -> '0.1(6)'. Handle sign and exact division.",
+     "gold": (
+         'def gold_f1(): assert fraction_to_decimal(1,2) == "0.5"\n'
+         'def gold_f2(): assert fraction_to_decimal(2,1) == "2"\n'
+         'def gold_f3(): assert fraction_to_decimal(2,3) == "0.(6)"\n'
+         'def gold_f4(): assert fraction_to_decimal(4,333) == "0.(012)"\n'
+         'def gold_f5(): assert fraction_to_decimal(1,6) == "0.1(6)"\n'
+         'def gold_f6(): assert fraction_to_decimal(-50,8) == "-6.25"\n'
+         'def gold_f7(): assert fraction_to_decimal(0,5) == "0"\n'
+         'def gold_f8(): assert fraction_to_decimal(1,333) == "0.(003)"\n'
+     )},
 ]
 
 _CALL = _agent  # swapped to _mock (tests) / _route (--gap, routes gemma->ollama)
 
 
+_OPENAI_ENV = os.path.expanduser("~/.openai_env")
+
+
+def _codex(model: str, prompt: str, timeout: int = 300) -> str:
+    """OpenAI Codex (cross-vendor) via `codex exec`. metered -> use sparingly. _extract_code
+    later pulls the python block out of codex's session-wrapped output."""
+    env = dict(os.environ)
+    if os.path.exists(_OPENAI_ENV):                      # load OPENAI_API_KEY
+        for ln in open(_OPENAI_ENV, encoding="utf-8"):
+            ln = ln.strip()
+            ln = ln[7:] if ln.startswith("export ") else ln
+            if "=" in ln and not ln.startswith("#"):
+                k, v = ln.split("=", 1)
+                env[k] = v.strip().strip('"').strip("'")
+    cmd = ["codex", "exec", "--skip-git-repo-check", "--color", "never", "-s", "read-only"]
+    if model.startswith("codex:"):                       # optional codex:<model> override
+        cmd += ["-m", model.split(":", 1)[1]]
+    for _ in range(2):                                   # transient retry
+        try:
+            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True,
+                                  timeout=timeout, env=env)
+            if "```" in proc.stdout or "def " in proc.stdout:
+                return proc.stdout
+        except Exception:
+            pass
+    return ""
+
+
 def _route(model: str, prompt: str, timeout: int | None = None) -> str:
-    """Route by model name: gemma -> local ollama, everything else -> claude runner."""
+    """Route by model name: gemma -> local ollama, codex -> OpenAI, else -> claude runner."""
     if model.startswith("gemma"):
         for _ in range(2):                               # ollama can hiccup; one retry
             try:
@@ -268,6 +312,8 @@ def _route(model: str, prompt: str, timeout: int | None = None) -> str:
             except Exception:
                 pass
         return ""                                        # tiny model failed -> empty -> scored 0
+    if model.startswith("codex"):
+        return _codex(model, prompt)                     # OpenAI cross-vendor (metered)
     return _agent(model, prompt)                         # claude (has its own retry/backoff)
 
 # Runs ONLY gold_* functions -> the model's own test_* (if any leaked in) are ignored.
