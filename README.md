@@ -6,7 +6,7 @@
 
 このリポジトリは、その問いを主張で終わらせず、**機能から再導出 →（部分的に）実証**するための研究の土台である。
 
-> 📄 **研究全体の論証は [`PAPER.md`](PAPER.md)** ── 問い・方法・機能からの再導出・6モデルの計測・実証較正・AI-2027・限界を一本に束ねた consolidation（まずこれを読めば全体が掴める）。🗺️ 1枚の全体像は [`docs/overview.html`](docs/overview.html):
+> 📄 **研究全体の論証は [`PAPER.md`](PAPER.md)** ── 問い・方法・機能からの再導出・7モデルの計測・実証（監督/レース/構造/市場3レジーム/Goodhart）・市場支配定理 p\*=w/s・実測較正・AI-2027・限界を一本に束ねた consolidation（まずこれを読めば全体が掴める）。🗺️ 1枚の全体像は [`docs/overview.html`](docs/overview.html):
 
 ![全体像：問い→方法→再導出→6モデル計測→実証較正→統合・テーゼ](docs/overview.png)
 
@@ -69,6 +69,23 @@
 - **recall crux も実測**: opus が*自分の水準で*生成した巧妙欠陥（subtlety3×6）に対し、**最弱 e2b は半分見逃す（oversight_error=0.5）**／haiku 以上は全部捕捉。＝「十分に弱い監督は強いモデルの巧妙な誤りを見逃す」を実測（ただし崩壊→1 には超人 producer が要り未到達）。
 - **B 実装済み**: precision 失敗モードを `governance.py` に項として還流。over-flag 率↑で最適膜は薄くなり、**実測の opus 率 0.33 では m\*=0（膜が消える）**＝強い監督ほど厚い膜が良いとは限らない。詳細: [`docs/oversight-pilot.md`](docs/oversight-pilot.md)。
 
+### 実証: 構造 F3 — flat vs hierarchy vs market（解析の構造軸を実エージェントで接地）
+実 LLM（sonnet）に相互依存タスク（設計→実装→テスト）を3構造で組織させ、コスト（コール数）・静的品質・**正しさ（sandbox 実行）** を測った（`experiments/org_sim.py`）。
+- コスト flat3<market4<hierarchy5（構造的）／静的品質は全構造 1.0＝**弁別不能**／実行正しさは高く（0.89–1.0）**コストに比例しない** ＝ flat は hierarchy の 60%コストで同等品質。
+- 正しさハーネスは **3交絡を潰して初めて** 真の正しさを測れた（pytest形式→shim・多ファイルimport→drop・main()削除の宙ぶらりblock→pass化）＝measurement-first（§9）。
+
+### 市場という組織軸 — 「市場型組織」の価値は能力差に条件付き（3レジーム＋閾値定理）
+「市場（競売）型の配分は単一モデルより良いか」を3レジームで実証し、解析で統一した。
+- **① 均質（全 sonnet）→ market 最下位**（活かす能力差なし）／**② frontier 異種（haiku/sonnet/opus）→ 勾配ゼロ（全員満点）→ market = flat-haiku**（利得なし）／**③ 大能力差（gemma 2–8B × frontier）→ market が Pareto 支配**（flat-haiku の半額・flat-opus の 1/28 コストで同正しさ）。
+- 機構＝**検証ルーティング型エスカレーション**: 安いモデルで試し、外部 gold で落ちた所だけ上位へ。配分は自己申告でなく *実行検証*（外部錨）。
+- **支配定理**（`model/market.py`）: market が単一モデルを Pareto 支配 ⟺ **p > w/s**（安いティアの完全解率 > コスト比）。実測③（market 0.311）と解析が厳密一致。trials=3 較正で p=0.889（gap の "leap 失敗" はノイズと判明）・3ローカルモデルの支配地図も実測（`--map`）。
+- → **「AIにとって組織とは何か」への答え: 能力が均質なら flat、能力差があれば *検証ルーティング市場*（＝flat＋検証＋オンデマンド agent の最適な呼び出し方）**。詳細: [`experiments/MARKET_GAP.md`](experiments/MARKET_GAP.md)／[`model/MARKET.md`](model/MARKET.md)。
+
+### 実証: レース・Goodhart・通信コスト較正
+- **レース**（`experiments/race_game.py`）: LLM を競争主体に見立て安全水準 S を選ばせた。**中立フレーミングで liability が効く**（賠償責任で S 0.3→0.73 回復）＝race.py を実エージェントで支持。AI安全フレーミングは交絡し de-confound が前の結論（mandate≫liability）を**修正**した。
+- **Goodhart**（`experiments/goodhart.py`）: proxy（可視テスト）最適化が真の正しさを下げるか。**損 0.217・難タスク集中**（roman 0.6/wildcard 0.7）＝alignment.py の Goodhart 項を実証。圧スイープでは **指数は同定不可・効果は閾値的**（frontier は明示「ハードコード可」まで overfit しない・§9-8）。
+- **通信コスト較正**（`experiments/calibrate_coord.py`）: org_sim から **mgr_overhead = hierarchy−flat = 2コール（coordination.py 既定 2.0 と厳密一致）／c_comm（コール単位）≈0 → flat 勝ち** を接地。
+
 ## 走らせ方
 ```bash
 python3 -m model.sweep         # ① 通信コスト→構造        → model/RESULTS.md
@@ -78,9 +95,16 @@ python3 -m model.design_map    # 合成: タスク条件→推奨設計   → mo
 python3 -m model.joint         # 結合: 構造×膜（分離可能性の反証） → model/JOINT.md
 python3 -m model.race          # レース外部性（AI-2027 動機）      → model/RACE.md
 python3 -m model.alignment     # F7 整合（仕様+検証が能力を上限）   → model/ALIGNMENT.md
+python3 -m model.market        # 市場支配定理 p*=w/s（3レジーム統一） → model/MARKET.md
 python3 -m experiments.oversight.calibrate   # 実測較正: 測った oversight_error を両モデルへ → CALIBRATION.md
 python3 -m experiments.oversight.run         # 実証: 監督スケーリング（mock即時／--backend ollama で実測）
-python3 -m unittest discover -s tests -t .   # テスト（64本・決定的mock・全green）
+python3 -m experiments.org_sim --agent claude:sonnet --tasks 3   # 実証: 構造 F3（flat/hierarchy/market・正しさ）
+python3 -m experiments.market_external --gap --agent claude:real # 実証: 大能力差で market が Pareto 支配（gemma×frontier）
+python3 -m experiments.market_external --map --trials 2          # 支配地図（複数ローカルモデルの p_weak）
+python3 -m experiments.goodhart --agent claude:sonnet            # 実証: Goodhart（proxy 最適化 vs 真の正しさ）
+python3 -m experiments.race_game --players claude:haiku,claude:sonnet --framing neutral  # 実証: レース外部性
+python3 -m experiments.calibrate_coord       # 較正: 通信コスト（org_sim → mgr_overhead/c_comm）
+python3 -m unittest discover -s tests -t .   # テスト（95本・決定的mock・全green）
 ```
 
 ## リポジトリ地図
@@ -90,20 +114,24 @@ python3 -m unittest discover -s tests -t .   # テスト（64本・決定的mock
 - `docs/literature.md` — 文献調査アジェンダ（形式モデル・計算組織論・MAS・近年LLM＝要一次確認）
 - `docs/first-measurement.md` / `docs/second-measurement.md` — 計測の解釈・位置づけ
 - `docs/ai-2027.md` — AI-2027（実存リスクのシナリオ予測）と本研究の対応・レース計測の動機
-- `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）＋生成 `*.md`
-- `experiments/oversight/` — 実証ハーネス（弱↔強監督で oversight_error を実測）＋ `calibrate.py`（測定値を governance/alignment へ還す実測較正）／`docs/oversight-pilot.md`
-- `tests/` — 決定的テスト（64本）
+- `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）／`market.py`（市場支配定理 p\*=w/s）＋生成 `*.md`
+- `experiments/oversight/` — 監督スケーリング実証＋ `calibrate.py`（測定値を governance/alignment へ還す実測較正）／`docs/oversight-pilot.md`
+- `experiments/` — 実証ハーネス群: `org_sim.py`（構造 F3・sandbox 正しさ）／`race_game.py`（レース外部性・2フレーミング）／`market_external.py`（市場3レジーム・外部 gold・`--gap`/`--map`/`--calibrate`）／`goodhart.py`（code-overfitting・`--curve`）／`calibrate_coord.py`（通信コスト較正）＋生成 `*.md`
+- `tests/` — 決定的テスト（95本・全 mock・green）
 
-## 到達点（2026-06-21 着手・初日）
+## 到達点（2026-06-21 着手〜）
 - **③ 概念**: 最小定義 + 原始機能 F1–F8 + 拘束系譜 + 2フロンティア（整合の変質 / 統治の残存）+ テーゼ。
 - **第一原理**: モデルと実験による計測を最上位規則化。各主張に反証手段を併記。
 - **① 文献**: 3件を二次確認・記録（Marschak&Radner チーム理論 / Malone 電子市場 / Carley 計算組織論）。
-- **② 計測 3本 + 合成**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適・しきい値）／容量→分解粒度（高容量ほど粗い）／処方マップ（タスク条件→推奨）。決定的・**64 tests green**・図あり。
-- テーゼの**両半分が測れる対象**になった（機構の効率 と 膜の厚み）。tehai の A/B と独立経路で同じ向き。
+- **② 解析モデル 7本**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適）／容量→分解粒度／処方マップ／構造×膜の結合／レース外部性＋制度内部化／F7 整合（Goodhart）／**市場支配定理 p\*=w/s**。
+- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配）**／Goodhart（損 0.217・指数は閾値的で同定不可）。決定的部分 **95 tests green**。
+- **実測較正**: oversight_error・過剰flag・mgr_overhead（=2コール）・市場閾値 p（trials=3）・spec_quality（0.57–0.78）を実エージェントで接地。
+- **方法論**: 計測過程で結論が3度自己修正＋8つの転移可能な教訓（n=1/フレーミング/harness 交絡/自己評価のモデル依存/外部基準の誤り/係数の非同定性…）＝measurement-first が外部錨として機能（PAPER §9）。
 
 ## 次の計測（ranked・externally recorded）
-1. **一次精読** — 3文献の本文で cost 係数を正当化／反証（Carley の実験データ較正含む）。
-2. **統計強化** — 監督実証 N↑/trials↑で oversight_error(能力差) 曲線を精緻化。
+1. **能力差の連続スイープ** — 市場が前線を支配し始める能力差の閾値を、より弱いモデル/難タスクで境界(p≈w/s)に寄せて実測。
+2. **統計強化** — trials>1 を全実証へ（n=1 ノイズの分離・cold-start artifact 対策）。
+3. **一次精読** — 3文献の本文で cost 係数を正当化／反証（Carley の実験データ較正含む）。
 
 > 計測済み: 容量制約 F1（[`model/CAPACITY.md`](model/CAPACITY.md)）／人間の誤判定（`oversight_error` 軸）／軸の相互作用（[`model/JOINT.md`](model/JOINT.md)・分離可能性は高 stakes で破れる）／**レース外部性**（[`model/RACE.md`](model/RACE.md)）／**F7 整合**（[`model/ALIGNMENT.md`](model/ALIGNMENT.md)・仕様+検証が能力 p\* を上限づけ・超えると Goodhart）／**制度内部化**（[`model/RACE.md`](model/RACE.md)・race gap を賠償責任λ=0.25で82%・規制標準・共有検証で回復＝Race↔Slowdown の定量分岐）／**実測較正**（測った oversight_error 0〜0.5・過剰flag 0.33 を governance/alignment に還元 → 大能力差で膜 0.73→0.50、過剰flag で m\*=0、安全な能力 p\* 2.05→1.61）。
 

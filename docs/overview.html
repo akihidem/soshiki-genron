@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="hz:slide-selector" content=".infographic" />
 <meta name="hz:canvas-width" content="1120" />
-<meta name="hz:canvas-height" content="2540" />
+<meta name="hz:canvas-height" content="3010" />
 <title>組織原論 — 全体像</title>
 <style>
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -15,7 +15,7 @@
   body{ background:#22262f; padding:40px 0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif; color:var(--ink); }
   .serif{ font-family:"Yu Mincho","Hiragino Mincho ProN",serif; }
   .mono{ font-family:"SF Mono","DejaVu Sans Mono","Roboto Mono",monospace; }
-  .infographic{ width:1120px; min-height:2540px; margin:0 auto; background:var(--paper);
+  .infographic{ width:1120px; min-height:3010px; margin:0 auto; background:var(--paper);
     position:relative; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.4); }
   .infographic::before{ content:""; position:absolute; top:0; left:0; right:0; height:10px;
     background:linear-gradient(90deg,var(--amber) 0 40%, var(--teal) 40% 75%, var(--market) 75% 100%); }
@@ -105,9 +105,9 @@
       <div class="ar">→</div>
       <div class="step"><div class="n">③</div><div class="t">再導出</div><div class="d">F1–F8 を拘束系譜で</div></div>
       <div class="ar">→</div>
-      <div class="step"><div class="n">④</div><div class="t">計測</div><div class="d">6モデル</div></div>
+      <div class="step"><div class="n">④</div><div class="t">計測</div><div class="d">7モデル</div></div>
       <div class="ar">→</div>
-      <div class="step"><div class="n">⑤</div><div class="t">実証+較正</div><div class="d">oversight 実測</div></div>
+      <div class="step"><div class="n">⑤</div><div class="t">実証+較正</div><div class="d">監督/構造/市場/Goodhart</div></div>
       <div class="ar">→</div>
       <div class="step"><div class="n">⑥</div><div class="t">統合・テーゼ</div><div class="d">統治膜が中心</div></div>
     </div>
@@ -120,7 +120,7 @@
       <div class="cell c-gov"><h3>残り荷重部材（フロンティア2）</h3><p>F8 統治・可読性 ── 人間が主権を保つため。<b>最適性 vs 可読性</b>の中心的緊張。</p></div>
     </div>
 
-    <div class="sh"><span class="bar"></span><h2>6モデルの計測（全て決定的・反証可能）</h2><span class="en">SIX MEASURED MODELS</span></div>
+    <div class="sh"><span class="bar"></span><h2>7モデルの計測（全て決定的・反証可能）</h2><span class="en">SEVEN MEASURED MODELS</span></div>
     <div class="models">
       <div class="mod"><div class="h"><span class="f">F3</span>通信 → 構造</div><div class="r">交差点 c_comm≈1.12。安くすると勝者は <b>hierarchy → market → flat</b>。管理者OHが大きいほど階層は狭い。</div></div>
       <div class="mod"><div class="h"><span class="f">F1</span>容量 → 粒度</div><div class="r">最適粒度 g*=⌈W/κ⌉。<b>容量↑で粗い分解</b>＝AIは"人の職サイズ"でなく → flat 後押し。</div></div>
@@ -128,6 +128,7 @@
       <div class="mod"><div class="h"><span class="f">F7</span>整合</div><div class="r">安全な最適化圧 p*=1.84。<b>仕様+検証が能力を上限づける</b>。超えると Goodhart で真の目的が悪化。</div></div>
       <div class="mod"><div class="h"><span class="f">結合</span>構造×膜</div><div class="r">分離可能でない。<b>高 stakes で効率最適 market が統治しやすい hierarchy に負ける</b>（1/9）。</div></div>
       <div class="mod"><div class="h"><span class="f">競争</span>レース外部性</div><div class="r">均衡膜 m_eq=0.21 ＜ 社会最適 0.84。<b>競争が安全を削る</b>（race-to-the-bottom）＝AI-2027 の Race。</div></div>
+      <div class="mod" style="grid-column:1/-1; border:1.5px solid var(--market)"><div class="h" style="color:#5b4b85"><span class="f" style="background:var(--market)">市場</span>支配定理 — 「市場型組織」はいつ有効か</div><div class="r">エスカレーション市場の期待コスト C=w+(1−p)s。<b style="color:#5b4b85">支配定理 p*=w/s</b> ── 安いティアの完全解率 p がコスト比 w/s を超えると市場が単一モデルを <b>Pareto 支配</b>。§実証の3レジーム（均質/frontier異種/大能力差）を統一し、実測（market 0.311）と厳密一致。</div></div>
     </div>
 
     <div class="sh"><span class="bar"></span><h2>実証ループ — 仮定を実測へ、実測を理論へ</h2><span class="en">MEASURE → CALIBRATE</span></div>
@@ -142,6 +143,23 @@
       <div class="loopnote">
         実測: oversight_error ＝ <b>~0（capable な監督）〜 0.5（大能力差 opus→e2b ~2B）</b>。haiku 以上は opus の巧妙欠陥も全捕捉 → 崩壊には大能力差が要り <b>→1（超人/neuralese）は測定可能モデルの外への外挿</b>。併せて <b>強い監督ほど過剰flag</b>（FP haiku 0→opus 0.33・能力は監督を単調に改善しない）。
         <br>較正の効果: 統治膜 m* <b>0.73 → 0.50</b>（大能力差）→ <b>0</b>（過剰flag）／安全な能力 p* <b>2.05 → 1.61</b>。＝測った監督の限界が、最適な膜厚と"安全に上げられる能力"を直接動かす。
+      </div>
+    </div>
+
+    <div class="sh"><span class="bar" style="background:var(--market)"></span><h2>実証: 構造と市場 — 「市場型組織」の価値は能力差に条件付き</h2><span class="en">STRUCTURE &amp; MARKET</span></div>
+    <div class="loop">
+      <div class="loopnote" style="margin-top:0">
+        実 LLM に相互依存タスクを組織させ <b>正しさ（sandbox 実行）</b> で測った。構造 F3: コスト flat&lt;market&lt;hierarchy・<b>flat は hierarchy の 60%コストで同等品質</b>。市場（<b>検証ルーティング型エスカレーション</b>＝安いモデルで試し、外部 gold で落ちた所だけ上位へ）の価値は <b>agent 間の能力差</b>に条件付き:
+      </div>
+      <div class="loopflow" style="margin-top:13px">
+        <div class="b">① 均質（全 sonnet）<br><b>market 最下位</b></div>
+        <div class="ar">→</div>
+        <div class="b">② frontier 異種（勾配0）<br><b>market = flat</b></div>
+        <div class="ar">→</div>
+        <div class="b" style="border-color:var(--market)">③ 大能力差（gemma×frontier）<br><b style="color:#5b4b85">market が Pareto 支配</b></div>
+      </div>
+      <div class="loopnote">
+        ③ で market は <b>flat-haiku の半額・flat-opus の 1/28 コスト</b>で同正しさ ＝ 解析の支配定理 <span class="mono">p*=w/s</span> と実測（0.311）が一致。さらに <b>Goodhart 実証</b>: proxy（可視テスト）最適化は真の正しさを下げる（損 0.217・難タスク集中）が、<b>明示的な「ハードコード可」licensing まで出ない閾値効果</b>（指数は同定不可と判明＝measurement-first）。
       </div>
     </div>
 
@@ -165,8 +183,8 @@
   </div>
 
   <footer>
-    <div style="margin-bottom:8px;"><b>限界</b>: 決定的トイモデル（oversight_error と過剰flag だけ実測較正済・他は仮定）／実証は N 小・trials=1／→1 は外挿／完全なエージェント組織シミュレータではない。テーゼは論証＋部分計測であって証明でない。</div>
-    <div class="row"><span class="mono">soshiki-genron · 6 models + 実証 + 較正 · 61 tests green · PAPER.md</span><span class="mono">github.com/akihidem/soshiki-genron (public)</span></div>
+    <div style="margin-bottom:8px;"><b>限界</b>: 決定的トイモデル（oversight_error・過剰flag・mgr_overhead・市場閾値 p・spec_quality を実測較正済）／実証は N 小・trials 少／→1 は外挿／goodhart_exp は同定不可（効果は閾値的）。テーゼは論証＋部分計測であって証明でない。</div>
+    <div class="row"><span class="mono">soshiki-genron · 7 models + 実証6軸 + 較正 · 95 tests green · PAPER.md</span><span class="mono">github.com/akihidem/soshiki-genron (public)</span></div>
   </footer>
 
 </div>
