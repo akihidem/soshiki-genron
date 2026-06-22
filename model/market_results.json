@@ -1,0 +1,239 @@
+{
+  "base": {
+    "flat_strong_cost": 1.0,
+    "flat_weak_correctness": 0.6667,
+    "flat_weak_cost": 0.2,
+    "market_cost": 0.5333,
+    "market_dominates_flat_strong": true,
+    "p_star": 0.2
+  },
+  "empirical_regimes": [
+    {
+      "dominates": false,
+      "market_cost": 1.0,
+      "note": "weak=strong(勾配なし)→p*=1→p>1 不可能→市場勝てず（実測: market 最下位）",
+      "p": 1.0,
+      "p_star": 1.0,
+      "regime": "①homogeneous (all sonnet)",
+      "s": 1.0,
+      "w": 1.0
+    },
+    {
+      "dominates": false,
+      "market_cost": 1.0,
+      "note": "最安 haiku が全解(p=1)→市場=flat-haiku＝最良単一モデルに*厳密な*利得なし（実測一致。素朴に opus を選ぶ flat-opus には勝つが、最良単一モデルは超えない）",
+      "p": 1.0,
+      "p_star": 1.0,
+      "regime": "②frontier-hetero (haiku/sonnet/opus)",
+      "s": 1.0,
+      "w": 1.0
+    },
+    {
+      "dominates": true,
+      "market_cost": 0.5333,
+      "note": "gemma 4/6 完全解→市場 0.533<flat-haiku 1.0→Pareto 支配（実測 0.533 と厳密一致）",
+      "p": 0.6667,
+      "p_star": 0.2,
+      "regime": "③large-gap (gemma×haiku)",
+      "s": 1.0,
+      "w": 0.2
+    }
+  ],
+  "falsifier": "実測 market コストが w+(1−p)s から系統的に外れる、または p>w/s でも市場が支配しないなら本モデルは偽。実測③ (0.533) は解析 (0.533) と一致＝現状は支持。",
+  "finding": "安いほど（w/s 小）市場が勝つバーは低い。均質(w=s)では p>1 が要り不可能＝市場は勝てない。大能力差では安いティアが*そこそこ*解けば（p>w/s）市場が単一モデルを支配する。",
+  "gap_ladder_3tier": {
+    "correctness": 1.0,
+    "cost": 0.5333
+  },
+  "params": {
+    "p": 0.6667,
+    "s": 1.0,
+    "w": 0.2
+  },
+  "ratio_sweep": [
+    {
+      "market_cost_by_p": [
+        {
+          "C": 1.05,
+          "dominates": false,
+          "p": 0.0
+        },
+        {
+          "C": 0.95,
+          "dominates": true,
+          "p": 0.1
+        },
+        {
+          "C": 0.85,
+          "dominates": true,
+          "p": 0.2
+        },
+        {
+          "C": 0.75,
+          "dominates": true,
+          "p": 0.3
+        },
+        {
+          "C": 0.65,
+          "dominates": true,
+          "p": 0.4
+        },
+        {
+          "C": 0.55,
+          "dominates": true,
+          "p": 0.5
+        },
+        {
+          "C": 0.45,
+          "dominates": true,
+          "p": 0.6
+        },
+        {
+          "C": 0.35,
+          "dominates": true,
+          "p": 0.7
+        },
+        {
+          "C": 0.25,
+          "dominates": true,
+          "p": 0.8
+        },
+        {
+          "C": 0.15,
+          "dominates": true,
+          "p": 0.9
+        },
+        {
+          "C": 0.05,
+          "dominates": true,
+          "p": 1.0
+        }
+      ],
+      "p_star": 0.05,
+      "w_over_s": 0.05
+    },
+    {
+      "market_cost_by_p": [
+        {
+          "C": 1.2,
+          "dominates": false,
+          "p": 0.0
+        },
+        {
+          "C": 1.1,
+          "dominates": false,
+          "p": 0.1
+        },
+        {
+          "C": 1.0,
+          "dominates": false,
+          "p": 0.2
+        },
+        {
+          "C": 0.9,
+          "dominates": true,
+          "p": 0.3
+        },
+        {
+          "C": 0.8,
+          "dominates": true,
+          "p": 0.4
+        },
+        {
+          "C": 0.7,
+          "dominates": true,
+          "p": 0.5
+        },
+        {
+          "C": 0.6,
+          "dominates": true,
+          "p": 0.6
+        },
+        {
+          "C": 0.5,
+          "dominates": true,
+          "p": 0.7
+        },
+        {
+          "C": 0.4,
+          "dominates": true,
+          "p": 0.8
+        },
+        {
+          "C": 0.3,
+          "dominates": true,
+          "p": 0.9
+        },
+        {
+          "C": 0.2,
+          "dominates": true,
+          "p": 1.0
+        }
+      ],
+      "p_star": 0.2,
+      "w_over_s": 0.2
+    },
+    {
+      "market_cost_by_p": [
+        {
+          "C": 1.5,
+          "dominates": false,
+          "p": 0.0
+        },
+        {
+          "C": 1.4,
+          "dominates": false,
+          "p": 0.1
+        },
+        {
+          "C": 1.3,
+          "dominates": false,
+          "p": 0.2
+        },
+        {
+          "C": 1.2,
+          "dominates": false,
+          "p": 0.3
+        },
+        {
+          "C": 1.1,
+          "dominates": false,
+          "p": 0.4
+        },
+        {
+          "C": 1.0,
+          "dominates": false,
+          "p": 0.5
+        },
+        {
+          "C": 0.9,
+          "dominates": true,
+          "p": 0.6
+        },
+        {
+          "C": 0.8,
+          "dominates": true,
+          "p": 0.7
+        },
+        {
+          "C": 0.7,
+          "dominates": true,
+          "p": 0.8
+        },
+        {
+          "C": 0.6,
+          "dominates": true,
+          "p": 0.9
+        },
+        {
+          "C": 0.5,
+          "dominates": true,
+          "p": 1.0
+        }
+      ],
+      "p_star": 0.5,
+      "w_over_s": 0.5
+    }
+  ],
+  "threshold_theorem": "市場が flat-strong を Pareto 支配 ⟺ p > w/s（安いティアの完全解率 > コスト比）"
+}
