@@ -122,6 +122,47 @@ _EASY_TASKS = [
      )},
 ]
 
+# HARD tasks to drive the weak model's p DOWN toward the gemma->haiku threshold (w/s=0.2),
+# so the dominance boundary p*=w/s can be crossed empirically. Gold verified by reference impls.
+_HARD_TASKS = [
+    {"id": "edit_distance", "names": ["edit_distance"],
+     "spec": "edit_distance(a, b): Levenshtein distance — min single-char insertions, deletions, "
+             "or substitutions to turn a into b.",
+     "gold": (
+         'def gold_e1(): assert edit_distance("","") == 0\n'
+         'def gold_e2(): assert edit_distance("abc","abc") == 0\n'
+         'def gold_e3(): assert edit_distance("","abc") == 3\n'
+         'def gold_e4(): assert edit_distance("kitten","sitting") == 3\n'
+         'def gold_e5(): assert edit_distance("horse","ros") == 3\n'
+         'def gold_e6(): assert edit_distance("sunday","saturday") == 3\n'
+     )},
+    {"id": "decode_ways", "names": ["decode_ways"],
+     "spec": "decode_ways(s): number of ways to decode a digit string where '1'..'26' map to 'A'..'Z'. "
+             "A leading zero or an invalid pair yields 0; empty string yields 0.",
+     "gold": (
+         'def gold_d1(): assert decode_ways("12") == 2\n'
+         'def gold_d2(): assert decode_ways("226") == 3\n'
+         'def gold_d3(): assert decode_ways("0") == 0\n'
+         'def gold_d4(): assert decode_ways("06") == 0\n'
+         'def gold_d5(): assert decode_ways("10") == 1\n'
+         'def gold_d6(): assert decode_ways("100") == 0\n'
+         'def gold_d7(): assert decode_ways("11106") == 2\n'
+         'def gold_d8(): assert decode_ways("") == 0\n'
+     )},
+    {"id": "re_match", "names": ["re_match"],
+     "spec": "re_match(s, p): whether pattern p matches the ENTIRE string s, where '.' matches any single "
+             "character and '*' matches zero or more of the PRECEDING element (regex semantics, LeetCode 10).",
+     "gold": (
+         'def gold_x1(): assert re_match("aa","a") == False\n'
+         'def gold_x2(): assert re_match("aa","a*") == True\n'
+         'def gold_x3(): assert re_match("ab",".*") == True\n'
+         'def gold_x4(): assert re_match("aab","c*a*b") == True\n'
+         'def gold_x5(): assert re_match("mississippi","mis*is*p*.") == False\n'
+         'def gold_x6(): assert re_match("","") == True\n'
+         'def gold_x7(): assert re_match("","a*") == True\n'
+     )},
+]
+
 _CALL = _agent  # swapped to _mock (tests) / _route (--gap, routes gemma->ollama)
 
 
@@ -392,6 +433,8 @@ def main(argv=None) -> int:
                     help="trials>1 calibration of the weak model's full-solve rate p (gemma only)")
     ap.add_argument("--map", action="store_true", dest="domap",
                     help="dominance map over several local weak models (gemma e2b/latest/chat)")
+    ap.add_argument("--hard", action="store_true",
+                    help="use the HARD task set (drives weak p down toward the boundary p*=w/s)")
     ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
@@ -425,7 +468,10 @@ def main(argv=None) -> int:
         return 0
     if args.gap:
         _CALL = _mock if args.agent == "mock" else _route
-        tasks, tiers, stem = _EASY_TASKS + EXT_TASKS, _TIERS_GAP, "market_gap"
+        if args.hard:                                   # boundary probe: hard tasks drop weak p
+            tasks, tiers, stem = _HARD_TASKS, _TIERS_GAP, "market_gap_hard"
+        else:
+            tasks, tiers, stem = _EASY_TASKS + EXT_TASKS, _TIERS_GAP, "market_gap"
     else:
         _CALL = _mock if args.agent == "mock" else _agent
         tasks, tiers, stem = EXT_TASKS, _TIERS, "market_external"
