@@ -569,6 +569,72 @@ def run_ladder(tasks=tuple(_LADDER_TASKS), tiers=_TIERS_LADDER, trials: int = 2,
             "artifacts": cache}
 
 
+# weak-ensemble: can N cheap attempts of a LOW-level model, filtered by the external gold,
+# approach a HIGHER-level model? best-of-k = solved if ANY of the first k attempts passes gold
+# (the verifier is the selector -> the project's external-anchor thesis). cost = k * w_weak.
+_ENSEMBLE_TASKS = ("roman", "calc", "wildcard_plus", "negabinary")   # gemma partial -> room to rise
+
+
+def run_ensemble(model: str = "gemma4:e2b", task_ids=_ENSEMBLE_TASKS, n: int = 6,
+                 cache_path: str | None = None) -> dict:
+    by_id = {t["id"]: t for t in _EASY_TASKS + EXT_TASKS + _HARD_TASKS + _LADDER_TASKS}
+    cache = {}
+    if cache_path and os.path.exists(cache_path):
+        cache = json.load(open(cache_path, encoding="utf-8"))
+    rows = []
+    for tid in task_ids:
+        t = by_id[tid]
+        solved = []
+        for k in range(n):
+            key = f"{tid}|{model}|{k}"
+            if not (cache.get(key) and "def " in cache[key]):
+                cache[key] = gen_impl(model, t)
+                if cache_path:
+                    with open(cache_path, "w", encoding="utf-8") as f:
+                        json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+            solved.append(1 if (grade(cache[key], t)["correctness"] or 0) >= 1.0 else 0)
+        best_of_k = [1 if any(solved[:k]) else 0 for k in range(1, n + 1)]   # gold picks any passing attempt
+        rows.append({"task": tid, "per_trial": solved, "best_of_k": best_of_k,
+                     "single_shot": round(sum(solved) / n, 3)})
+    bok = [round(sum(r["best_of_k"][k] for r in rows) / len(rows), 3) for k in range(n)]
+    w = dict(_TIERS_LADDER).get(model, 0.2)
+    return {"model": model, "n": n, "w_weak": w, "rows": rows, "best_of_k_avg": bok,
+            "cost_of_k": [round(w * (k + 1), 2) for k in range(n)], "artifacts": cache}
+
+
+def _md_ensemble(r: dict) -> str:
+    n = r["n"]
+    L = [f"# 弱アンサンブル — 低レベル {r['model']} を N 回試し gold で選べば高レベルに迫れるか",
+         "",
+         "外部検証器（gold）が選択器: best-of-k = 最初の k 回のどれかが gold を通れば solved。"
+         f"コスト = k × w_weak（{r['w_weak']}）。frontier 単発は全タスク 1.0（既測）＝比較基準。",
+         "",
+         "## best-of-k（k 回試したときの平均 solved 率）と コスト",
+         "| k | best-of-k 正しさ | コスト (k×w) | vs haiku単発(1.0, cost1) |",
+         "|---|---|---|---|"]
+    for k in range(n):
+        bo, c = r["best_of_k_avg"][k], r["cost_of_k"][k]
+        cmp = "**追いついた**" if bo >= 1.0 else ("接近" if bo >= 0.9 else "—")
+        L.append(f"| {k + 1} | {bo} | {c} | {cmp}{'・haikuより高い' if c > 1.0 and bo >= 1.0 else ''} |")
+    L += ["",
+          "## タスク別（single-shot → best-of-N）",
+          "| task | single-shot | best-of-" + str(n) + " | per-trial |",
+          "|---|---|---|---|"]
+    for row in r["rows"]:
+        L.append(f"| {row['task']} | {row['single_shot']} | {row['best_of_k'][-1]} | {row['per_trial']} |")
+    L += ["",
+          "## 読み",
+          "- best-of-k が k とともに上がり frontier(1.0) に**迫る/追いつく**なら → **検証器付きの弱モデル反復が高レベル機能を近似**"
+          "（＝低レベルの組み合わせで higher-level に迫る・原点の問いに部分 YES）。",
+          "- ただし追いつく k での**コスト k×w が strong 単発コストを超える**なら → 「近似はできるが安くはない」"
+          "＝能力は反復で買えるが、検証器とコストが代償。",
+          "- 上がらない（single-shot ≈ best-of-N）タスク → 弱モデルの**系統的**な無能（反復で消えない＝真の能力差）。",
+          "",
+          "## 妥当性",
+          "- gold は固定外部正解（参照実装で検算済）。best-of-k は gold をオラクルに使う（検証器が前提）。少標本。"]
+    return "\n".join(L)
+
+
 def _md_ladder(r: dict) -> str:
     order = [m for m, _ in r["tiers"]]
     L = ["# 難易度ラダー — 能力レンジ全体で帯を実測分類（barely-opus / impossible まで）",
@@ -617,9 +683,24 @@ def main(argv=None) -> int:
                     help="use the HARD task set (drives weak p down toward the boundary p*=w/s)")
     ap.add_argument("--ladder", action="store_true", dest="ladder",
                     help="4-tier frontier difficulty ladder -> classify tasks (barely-opus / impossible)")
+    ap.add_argument("--ensemble", action="store_true",
+                    help="weak best-of-N: does N gemma attempts + gold selection approach a higher tier?")
     ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.ensemble:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_ensemble_artifacts.json")
+        r = run_ensemble(n=max(2, args.trials if args.trials > 3 else 6), cache_path=cache)
+        with open(os.path.join(out_dir, "market_ensemble_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_ENSEMBLE.md"), "w", encoding="utf-8") as f:
+            f.write(_md_ensemble(r) + "\n")
+        print(f"best-of-k avg ({r['model']}, n={r['n']}): {r['best_of_k_avg']}")
+        for row in r["rows"]:
+            print(f"  {row['task']:<14} single={row['single_shot']:<5} best-of-{r['n']}={row['best_of_k'][-1]} {row['per_trial']}")
+        print("\nwrote market_ensemble_results.json and MARKET_ENSEMBLE.md")
+        return 0
     if args.ladder:
         _CALL = _mock if args.agent == "mock" else _route
         cache = os.path.join(out_dir, "market_ladder_artifacts.json")
