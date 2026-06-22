@@ -1,0 +1,151 @@
+{
+  "models": [
+    {
+      "p_weak": 0.8333,
+      "pairs": [
+        {
+          "dominates": true,
+          "flat_strong_cost": 1.0,
+          "market_cost": 0.3667,
+          "p_weak": 0.8333,
+          "s": 1.0,
+          "strong": "haiku",
+          "w": 0.2,
+          "w_over_s": 0.2
+        },
+        {
+          "dominates": true,
+          "flat_strong_cost": 3.0,
+          "market_cost": 0.7001,
+          "p_weak": 0.8333,
+          "s": 3.0,
+          "strong": "sonnet",
+          "w": 0.2,
+          "w_over_s": 0.0667
+        },
+        {
+          "dominates": true,
+          "flat_strong_cost": 15.0,
+          "market_cost": 2.7005,
+          "p_weak": 0.8333,
+          "s": 15.0,
+          "strong": "opus",
+          "w": 0.2,
+          "w_over_s": 0.0133
+        }
+      ],
+      "per_task": {
+        "clamp": 1.0,
+        "intervals": 1.0,
+        "leap": 1.0,
+        "revwords": 1.0,
+        "roman": 0.0,
+        "wildcard": 1.0
+      },
+      "weak": "gemma4:e2b"
+    },
+    {
+      "p_weak": 0.5,
+      "pairs": [
+        {
+          "dominates": true,
+          "flat_strong_cost": 1.0,
+          "market_cost": 0.7,
+          "p_weak": 0.5,
+          "s": 1.0,
+          "strong": "haiku",
+          "w": 0.2,
+          "w_over_s": 0.2
+        },
+        {
+          "dominates": true,
+          "flat_strong_cost": 3.0,
+          "market_cost": 1.7,
+          "p_weak": 0.5,
+          "s": 3.0,
+          "strong": "sonnet",
+          "w": 0.2,
+          "w_over_s": 0.0667
+        },
+        {
+          "dominates": true,
+          "flat_strong_cost": 15.0,
+          "market_cost": 7.7,
+          "p_weak": 0.5,
+          "s": 15.0,
+          "strong": "opus",
+          "w": 0.2,
+          "w_over_s": 0.0133
+        }
+      ],
+      "per_task": {
+        "clamp": 0.5,
+        "intervals": 0.5,
+        "leap": 0.5,
+        "revwords": 0.5,
+        "roman": 0.5,
+        "wildcard": 0.5
+      },
+      "weak": "gemma4:latest"
+    },
+    {
+      "p_weak": 0.4167,
+      "pairs": [
+        {
+          "dominates": true,
+          "flat_strong_cost": 1.0,
+          "market_cost": 0.7833,
+          "p_weak": 0.4167,
+          "s": 1.0,
+          "strong": "haiku",
+          "w": 0.2,
+          "w_over_s": 0.2
+        },
+        {
+          "dominates": true,
+          "flat_strong_cost": 3.0,
+          "market_cost": 1.9499,
+          "p_weak": 0.4167,
+          "s": 3.0,
+          "strong": "sonnet",
+          "w": 0.2,
+          "w_over_s": 0.0667
+        },
+        {
+          "dominates": true,
+          "flat_strong_cost": 15.0,
+          "market_cost": 8.9495,
+          "p_weak": 0.4167,
+          "s": 15.0,
+          "strong": "opus",
+          "w": 0.2,
+          "w_over_s": 0.0133
+        }
+      ],
+      "per_task": {
+        "clamp": 0.5,
+        "intervals": 0.5,
+        "leap": 0.5,
+        "revwords": 0.5,
+        "roman": 0.5,
+        "wildcard": 0.0
+      },
+      "weak": "gemma4-chat:latest"
+    }
+  ],
+  "strong": [
+    [
+      "haiku",
+      1.0
+    ],
+    [
+      "sonnet",
+      3.0
+    ],
+    [
+      "opus",
+      15.0
+    ]
+  ],
+  "trials": 2
+}
