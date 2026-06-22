@@ -1,0 +1,67 @@
+{
+  "c_comm_in_calls": 0.0,
+  "falsifier": "測定 mgr_overhead が model 既定から大きく外れる、または c_comm≈0 で winner が flat 以外なら本接地は崩れる（coordination.py の AI レジーム想定が偽）。",
+  "finding": "org_sim が mgr_overhead を 2.0 と接地（model 既定 2.0 と一致）。c_comm（コール単位）≈0（共有文脈調整）→ winner(flat) が org_sim の flat 勝ちと一致。",
+  "market_overhead_measured": 1.0,
+  "measured_calls": {
+    "flat": 3.0,
+    "hierarchy": 5.0,
+    "market": 4.0
+  },
+  "mgr_overhead": {
+    "match": true,
+    "measured": 2.0,
+    "model_default": 2.0
+  },
+  "sweep": [
+    {
+      "c_comm": 0.0,
+      "flat": 2.4,
+      "hierarchy": 8.4,
+      "market": 3.6,
+      "total": 2.4,
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.01,
+      "flat": 2.664,
+      "hierarchy": 8.546,
+      "market": 3.84,
+      "total": 2.664,
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.05,
+      "flat": 3.72,
+      "hierarchy": 9.132,
+      "market": 4.8,
+      "total": 3.72,
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.1,
+      "flat": 5.04,
+      "hierarchy": 9.864,
+      "market": 6.0,
+      "total": 5.04,
+      "winner": "flat"
+    },
+    {
+      "c_comm": 0.3,
+      "flat": 10.32,
+      "hierarchy": 12.792,
+      "market": 10.8,
+      "total": 10.32,
+      "winner": "flat"
+    },
+    {
+      "c_comm": 1.0,
+      "flat": 28.8,
+      "hierarchy": 23.04,
+      "market": 27.6,
+      "total": 23.04,
+      "winner": "hierarchy"
+    }
+  ],
+  "winner_at_c_comm_0": "flat"
+}
