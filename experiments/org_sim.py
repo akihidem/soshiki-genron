@@ -44,7 +44,7 @@ TASKS = [
 # --------------------------------------------------------------------------- #
 # agent caller (free quota) + deterministic mock
 # --------------------------------------------------------------------------- #
-def _agent(model: str, prompt: str, timeout: int = 150, retries: int = 3) -> str:
+def _agent(model: str, prompt: str, timeout: int = 300, retries: int = 2) -> str:
     m = _CLAUDE_MODEL_ALIAS.get(model, model)
     cmd = (["python3", _CLAUDE_RUNNER, "--model", m, "--no-sentinel"]
            if _CLAUDE_RUNNER and os.path.exists(_CLAUDE_RUNNER)
