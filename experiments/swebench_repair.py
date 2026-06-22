@@ -37,9 +37,11 @@ if _ROOT not in sys.path:
 
 from experiments.market_external import _agent, _mock, _route  # noqa: E402
 
-_REPO = "/tmp/pytest_repo"
-_PY = "/tmp/pyt_venv/bin/python"
-_INSTANCES_JSON = "/tmp/swe_instances.json"
+# per-repo via env so the SAME harness runs against pytest / sympy / ... (each needs its own
+# editable checkout + venv; Docker-less means only interpreter-matching instances run anyway).
+_REPO = os.environ.get("SWE_REPO", "/tmp/pytest_repo")
+_PY = os.environ.get("SWE_PY", "/tmp/pyt_venv/bin/python")
+_INSTANCES_JSON = os.environ.get("SWE_INSTANCES", "/tmp/swe_instances.json")
 _CALL = _agent
 
 
@@ -48,8 +50,11 @@ def _git(*args, timeout=120):
 
 
 def _edited_file(patch: str) -> str | None:
+    """The single non-test .py file the gold patch edits (src/_pytest/... for pytest, sympy/... for
+    sympy). Multi-file or test-only patches -> None (this harness rewrites one source file)."""
     m = re.findall(r"^\+\+\+ b/(\S+)", patch, re.M)
-    src = [f for f in m if f.startswith("src/")]
+    src = [f for f in m if f.endswith(".py") and "/tests/" not in f and "/test/" not in f
+           and not os.path.basename(f).startswith("test_") and not f.startswith("test")]
     return src[0] if len(src) == 1 else None
 
 
@@ -92,6 +97,19 @@ def _apply_edits(content: str, text: str) -> str | None:
     return new if new != content else None
 
 
+def _to_pytest_args(inst: dict, test_ids):
+    """Normalize a SWE-bench test list to pytest args. pytest-repo ids are full node ids
+    (`path::Class::test`) -> pass through. sympy ids are BARE function names (its bin/test style)
+    -> run `pytest <test-patch dirs> -k "a or b"`. The gold gate validates the result either way,
+    so an imperfect mapping skips an instance rather than misgrading it."""
+    ids = list(test_ids)
+    if not ids or all("::" in t for t in ids):
+        return ids
+    tfiles = [f for f in re.findall(r"^\+\+\+ b/(\S+)", inst.get("test_patch", ""), re.M) if f.endswith(".py")]
+    dirs = sorted({os.path.dirname(f) or "." for f in tfiles}) or ["."]
+    return dirs + ["-k", " or ".join(ids)]
+
+
 def _run_capture(tests, timeout=300):
     """(fail_count, output_tail). Failing tests by pytest EXIT CODE (the source of truth);
     10**6 = broken run (do NOT misread a crash/collection-interrupt as 0 — the first all-zero
@@ -122,7 +140,7 @@ def _setup(inst: dict) -> bool:
     open("/tmp/_tp.patch", "w").write(inst["test_patch"])
     if _git("apply", "/tmp/_tp.patch").returncode != 0:
         return False
-    return _fail_count(json.loads(inst["FAIL_TO_PASS"])) > 0   # must currently FAIL = bug present
+    return _fail_count(_to_pytest_args(inst, json.loads(inst["FAIL_TO_PASS"]))) > 0  # currently FAIL = bug present
 
 
 def _gold_validates(inst: dict, path: str, base_p2p_fail: int) -> bool:
@@ -133,8 +151,8 @@ def _gold_validates(inst: dict, path: str, base_p2p_fail: int) -> bool:
     if _git("apply", "/tmp/_gold.patch").returncode != 0:
         _git("checkout", "-q", "--", path)
         return False
-    ok = (_fail_count(json.loads(inst["FAIL_TO_PASS"])) == 0 and
-          _fail_count(json.loads(inst["PASS_TO_PASS"])[:30]) <= base_p2p_fail)
+    ok = (_fail_count(_to_pytest_args(inst, json.loads(inst["FAIL_TO_PASS"]))) == 0 and
+          _fail_count(_to_pytest_args(inst, json.loads(inst["PASS_TO_PASS"])[:30])) <= base_p2p_fail)
     _git("checkout", "-q", "--", path)
     return ok
 
@@ -153,8 +171,8 @@ def _repair(model: str, inst: dict, path: str, content: str, base_p2p_fail: int)
     if new is None:                                             # unparseable / no hunk applied
         return 0
     open(os.path.join(_REPO, path), "w").write(new)
-    f2p_ok = _fail_count(json.loads(inst["FAIL_TO_PASS"])) == 0          # the bug is fixed
-    p2p_ok = _fail_count(json.loads(inst["PASS_TO_PASS"])[:30]) <= base_p2p_fail  # no NEW regressions
+    f2p_ok = _fail_count(_to_pytest_args(inst, json.loads(inst["FAIL_TO_PASS"]))) == 0   # bug fixed
+    p2p_ok = _fail_count(_to_pytest_args(inst, json.loads(inst["PASS_TO_PASS"])[:30])) <= base_p2p_fail
     _git("checkout", "-q", "--", path)                          # reset the file
     return 1 if (f2p_ok and p2p_ok) else 0
 
@@ -165,7 +183,8 @@ def _repair_iterative(model: str, inst: dict, path: str, content: str, base_p2p_
     This is how SWE-bench leaderboard harnesses reach ~60-70% (vs one-shot). Cumulative: the model
     iterates on its evolving file. Question: does test feedback make opus/codex diverge MORE on the
     harder instances, or converge?"""
-    f2p, p2p = json.loads(inst["FAIL_TO_PASS"]), json.loads(inst["PASS_TO_PASS"])[:30]
+    f2p = _to_pytest_args(inst, json.loads(inst["FAIL_TO_PASS"]))
+    p2p = _to_pytest_args(inst, json.loads(inst["PASS_TO_PASS"])[:30])
     full, cur, feedback = os.path.join(_REPO, path), content, ""
     for _ in range(rounds):
         prompt = (f"You are fixing a real bug in the pytest codebase. User-reported issue:\n\n"
@@ -207,7 +226,7 @@ def run(models, instance_ids, cache_path=None, rounds=1) -> dict:
             rows.append({"instance": iid, "status": "skipped (setup/bug-repro failed)"})
             continue
         content = open(os.path.join(_REPO, path), encoding="utf-8", errors="replace").read()
-        base_p2p_fail = _fail_count(json.loads(inst["PASS_TO_PASS"])[:30])   # env baseline (bug present)
+        base_p2p_fail = _fail_count(_to_pytest_args(inst, json.loads(inst["PASS_TO_PASS"])[:30]))  # env baseline
         if not _gold_validates(inst, path, base_p2p_fail):
             rows.append({"instance": iid, "status": "skipped (env-incompatible: gold patch fails here)"})
             continue

@@ -14,7 +14,7 @@ import json as _json  # noqa: E402
 import tempfile  # noqa: E402
 
 import experiments.swebench_repair as SR  # noqa: E402
-from experiments.swebench_repair import _apply_edits, _edited_file, _unfence  # noqa: E402
+from experiments.swebench_repair import _apply_edits, _edited_file, _to_pytest_args, _unfence  # noqa: E402
 
 _CONTENT = "import os\n\ndef f(x):\n    return x + 1\n\ndef g(y):\n    return y\n"
 
@@ -32,6 +32,29 @@ class EditedFileTests(unittest.TestCase):
     def test_non_src_ignored(self):
         patch = "+++ b/testing/test_x.py\n@@ @@\n-x\n+y\n"
         self.assertIsNone(_edited_file(patch))
+
+    def test_sympy_layout_no_src_prefix(self):
+        # sympy edits sympy/<module>/foo.py (no src/ prefix); the test file is excluded
+        patch = ("--- a/sympy/physics/units/unitsystem.py\n+++ b/sympy/physics/units/unitsystem.py\n@@ @@\n-x\n+y\n"
+                 "--- a/sympy/physics/units/tests/test_quantities.py\n+++ b/sympy/physics/units/tests/test_quantities.py\n@@ @@\n-a\n+b\n")
+        self.assertEqual(_edited_file(patch), "sympy/physics/units/unitsystem.py")
+
+
+class PytestArgsTests(unittest.TestCase):
+    def test_node_ids_pass_through(self):
+        ids = ["testing/test_mark.py::TestX::test_a", "testing/x.py::test_b"]
+        self.assertEqual(_to_pytest_args({"test_patch": ""}, ids), ids)
+
+    def test_bare_names_become_dir_plus_dash_k(self):
+        # sympy bare function names -> scope to the test-patch dirs + `-k "a or b"`
+        inst = {"test_patch": "+++ b/sympy/physics/units/tests/test_quantities.py\n@@ @@\n+def test_issue_24211(): pass\n"}
+        args = _to_pytest_args(inst, ["test_issue_24211", "test_other"])
+        self.assertEqual(args[0], "sympy/physics/units/tests")
+        self.assertIn("-k", args)
+        self.assertEqual(args[-1], "test_issue_24211 or test_other")
+
+    def test_empty(self):
+        self.assertEqual(_to_pytest_args({"test_patch": ""}, []), [])
 
 
 class ApplyEditsTests(unittest.TestCase):
