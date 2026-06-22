@@ -1,0 +1,115 @@
+{
+  "blackboard": {
+    "crit": "<<NEEDS_HUMAN>>",
+    "easy": "SOLN:easy",
+    "edge": "A\nB\nC",
+    "hard": "SOLN:hard",
+    "mid1": "SOLN:mid1"
+  },
+  "human_gate_rate": 0.2,
+  "rows": [
+    {
+      "attempts": [
+        {
+          "score": 1.0,
+          "tier": "cheap"
+        }
+      ],
+      "cost": 0.2,
+      "human": false,
+      "resolved_by": "cheap",
+      "score": 1.0,
+      "task": "easy"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.0,
+          "tier": "cheap"
+        },
+        {
+          "score": 1.0,
+          "tier": "mid"
+        }
+      ],
+      "cost": 1.2,
+      "human": false,
+      "resolved_by": "mid",
+      "score": 1.0,
+      "task": "mid1"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.0,
+          "tier": "cheap"
+        },
+        {
+          "score": 0.0,
+          "tier": "mid"
+        },
+        {
+          "score": 1.0,
+          "tier": "strong"
+        }
+      ],
+      "cost": 6.2,
+      "human": false,
+      "resolved_by": "strong",
+      "score": 1.0,
+      "task": "hard"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.5,
+          "tier": "cheap"
+        },
+        {
+          "score": 0.5,
+          "tier": "mid"
+        },
+        {
+          "score": 0.5,
+          "tier": "strong"
+        },
+        {
+          "score": 1.0,
+          "tier": "mesh"
+        }
+      ],
+      "cost": 6.7,
+      "human": false,
+      "resolved_by": "mesh",
+      "score": 1.0,
+      "task": "edge"
+    },
+    {
+      "attempts": [
+        {
+          "score": 0.0,
+          "tier": "cheap"
+        },
+        {
+          "score": 0.0,
+          "tier": "mid"
+        },
+        {
+          "score": 0.0,
+          "tier": "strong"
+        },
+        {
+          "score": 0.0,
+          "tier": "mesh"
+        }
+      ],
+      "cost": 6.7,
+      "human": true,
+      "resolved_by": null,
+      "score": 0.0,
+      "task": "crit"
+    }
+  ],
+  "total_cost": 21.0,
+  "verified_rate": 0.8
+}

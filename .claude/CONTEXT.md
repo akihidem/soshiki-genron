@@ -1,5 +1,5 @@
 # Project Context Snapshot
-<!-- Auto-updated by save-project-context.sh — 2026-06-22 17:23 -->
+<!-- Auto-updated by save-project-context.sh — 2026-06-22 17:36 -->
 <!-- セッション開始時はこのファイルを読むだけで OK。詳細は各ファイルを Read すること。 -->
 
 ## Remote
@@ -9,6 +9,7 @@
 - main
 
 ## Recent Commits (last 10)
+- be650f9 session wrap: commit gap_hard boundary-probe outputs + auto CONTEXT snapshot
 - 950e4ad PAPER S6.5 + overview: the PRESCRIBED org chart (what to adopt, from the evidence)
 - b536a99 docs: add relations.md — map the sibling repos this research theorizes
 - 4bbc04b xvs result: cross-vendor diversity adds ~0 -> the mesh's fuel is capability complementarity, not vendor brand
@@ -18,16 +19,12 @@
 - 904275f novel result: opus & codex still agree; the edge sits at sonnet (calc_iv)
 - aa218e7 decorr result: the mesh principle is REAL where models err (union > best single)
 - 490c28a README: multi-model combination thread (escalation/best-of-N/cross-vendor/edge mesh)
-- ca0b098 add 3 parallel mesh probes: decorr (weak-model error decorrelation), novel (make frontier err), openended (cross-vendor synthesis judged)
 
 ## Open PRs
 - (none)
 
 ## Git Status
 -  M .claude/CONTEXT.md
-- ?? experiments/MARKET_GAP_HARD.md
-- ?? experiments/market_gap_hard_artifacts.json
-- ?? experiments/market_gap_hard_results.json
 
 ## Top-level Structure
 - PAPER.md
