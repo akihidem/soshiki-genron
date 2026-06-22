@@ -1,0 +1,225 @@
+{
+  "baselines": {
+    "gemma4:e2b": {
+      "avg_correctness": 0.767,
+      "avg_cost": 0.2,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "clamp",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 0.0,
+          "cost": 0.2,
+          "task": "leap",
+          "tests": "0/0"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "revwords",
+          "tests": "4/4"
+        },
+        {
+          "correctness": 0.6,
+          "cost": 0.2,
+          "task": "roman",
+          "tests": "6/10"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "intervals",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "wildcard",
+          "tests": "10/10"
+        }
+      ]
+    },
+    "haiku": {
+      "avg_correctness": 1.0,
+      "avg_cost": 1.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "clamp",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "leap",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "revwords",
+          "tests": "4/4"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "roman",
+          "tests": "10/10"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "intervals",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "wildcard",
+          "tests": "10/10"
+        }
+      ]
+    },
+    "opus": {
+      "avg_correctness": 1.0,
+      "avg_cost": 15.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "clamp",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "leap",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "revwords",
+          "tests": "4/4"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "roman",
+          "tests": "10/10"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "intervals",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "wildcard",
+          "tests": "10/10"
+        }
+      ]
+    }
+  },
+  "market": {
+    "avg_correctness": 1.0,
+    "avg_cost": 0.533,
+    "rows": [
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "clamp"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 1.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            0.0
+          ],
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "leap"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "revwords"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 1.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            0.6
+          ],
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "roman"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "intervals"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "wildcard"
+      }
+    ]
+  },
+  "n_tasks": 6,
+  "tiers": [
+    [
+      "gemma4:e2b",
+      0.2
+    ],
+    [
+      "haiku",
+      1.0
+    ],
+    [
+      "opus",
+      15.0
+    ]
+  ]
+}
