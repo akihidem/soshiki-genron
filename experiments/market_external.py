@@ -161,6 +161,40 @@ _HARD_TASKS = [
          'def gold_x6(): assert re_match("","") == True\n'
          'def gold_x7(): assert re_match("","a*") == True\n'
      )},
+    {"id": "my_atoi", "names": ["my_atoi"],
+     "spec": "my_atoi(s): string to 32-bit signed integer (LeetCode 8). Skip leading spaces, optional +/-, "
+             "read digits until a non-digit, ignore the rest; no digits -> 0; clamp to [-2**31, 2**31-1].",
+     "gold": (
+         'def gold_a1(): assert my_atoi("42") == 42\n'
+         'def gold_a2(): assert my_atoi("   -42") == -42\n'
+         'def gold_a3(): assert my_atoi("4193 with words") == 4193\n'
+         'def gold_a4(): assert my_atoi("words and 987") == 0\n'
+         'def gold_a5(): assert my_atoi("-91283472332") == -2147483648\n'
+         'def gold_a6(): assert my_atoi("2147483648") == 2147483647\n'
+         'def gold_a7(): assert my_atoi("+1") == 1\n'
+         'def gold_a8(): assert my_atoi("  +0 123") == 0\n'
+     )},
+    {"id": "calc", "names": ["calc"],
+     "spec": "calc(s): evaluate an arithmetic expression string with non-negative integers, '+', '-', "
+             "parentheses '(' ')' and spaces (LeetCode 224). Standard left-to-right with parentheses.",
+     "gold": (
+         'def gold_k1(): assert calc("1 + 1") == 2\n'
+         'def gold_k2(): assert calc(" 2-1 + 2 ") == 3\n'
+         'def gold_k3(): assert calc("(1+(4+5+2)-3)+(6+8)") == 23\n'
+         'def gold_k4(): assert calc("2-(5-6)") == 3\n'
+         'def gold_k5(): assert calc("(7)-(0)+(4)") == 11\n'
+     )},
+    {"id": "simplify_path", "names": ["simplify_path"],
+     "spec": "simplify_path(path): canonical Unix absolute path (LeetCode 71). Collapse '//', resolve '.' "
+             "(current) and '..' (parent, never above root); result has no trailing slash except root '/'.",
+     "gold": (
+         'def gold_s1(): assert simplify_path("/home/") == "/home"\n'
+         'def gold_s2(): assert simplify_path("/../") == "/"\n'
+         'def gold_s3(): assert simplify_path("/home//foo/") == "/home/foo"\n'
+         'def gold_s4(): assert simplify_path("/a/./b/../../c/") == "/c"\n'
+         'def gold_s5(): assert simplify_path("/") == "/"\n'
+         'def gold_s6(): assert simplify_path("/...") == "/..."\n'
+     )},
 ]
 
 _CALL = _agent  # swapped to _mock (tests) / _route (--gap, routes gemma->ollama)
