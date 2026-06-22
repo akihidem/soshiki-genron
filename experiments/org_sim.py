@@ -44,7 +44,7 @@ TASKS = [
 # --------------------------------------------------------------------------- #
 # agent caller (free quota) + deterministic mock
 # --------------------------------------------------------------------------- #
-def _agent(model: str, prompt: str, timeout: int = 360, retries: int = 3) -> str:
+def _agent(model: str, prompt: str, timeout: int = 150, retries: int = 3) -> str:
     m = _CLAUDE_MODEL_ALIAS.get(model, model)
     cmd = (["python3", _CLAUDE_RUNNER, "--model", m, "--no-sentinel"]
            if _CLAUDE_RUNNER and os.path.exists(_CLAUDE_RUNNER)
@@ -321,16 +321,27 @@ def run(model: str, tasks: list[dict], structures=tuple(STRUCTURES),
 _TIERS = (("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
 
 
-def run_hetero(tasks: list[dict], tiers=_TIERS) -> dict:
+def run_hetero(tasks: list[dict], tiers=_TIERS, cache_path: str | None = None) -> dict:
     # compute flat (artifact, correctness) for every (model, task) ONCE; both the
     # homogeneous baselines and the escalation market are derived from this grid.
+    # RESUMABLE: each cell's artifact is cached to disk as it completes, so a flaky-runner
+    # hang/kill never loses progress — relaunching skips cells already in the cache.
     grid, arts = {}, {}
+    if cache_path and os.path.exists(cache_path):
+        arts = json.load(open(cache_path, encoding="utf-8"))
     for model, _w in tiers:
         for t in tasks:
-            art, calls = run_flat(model, t)
-            if "def " not in art:                       # transient non-code -> one retry
+            key = f"{t['id']}|{model}"
+            if arts.get(key) and "def " in arts[key]:    # resume: reuse cached cell
+                art, calls = arts[key], _CALLS["flat"]
+            else:
                 art, calls = run_flat(model, t)
-            arts[f"{t['id']}|{model}"] = art
+                if "def " not in art:                    # transient non-code -> one retry
+                    art, calls = run_flat(model, t)
+                arts[key] = art
+                if cache_path:                           # incremental save after each LLM cell
+                    with open(cache_path, "w", encoding="utf-8") as f:
+                        json.dump(arts, f, ensure_ascii=False, indent=2, sort_keys=True)
             corr = correctness(art).get("correctness")
             grid[(model, t["id"])] = {"calls": calls, "corr": corr if corr is not None else 0.0}
 
@@ -442,7 +453,8 @@ def main(argv=None) -> int:
     out_dir = os.path.dirname(os.path.abspath(__file__))
     if args.hetero:                                     # does allocation across DIFFERENT agents beat one model?
         _CALL = _mock if args.agent == "mock" else _agent
-        r = run_hetero(TASKS[:max(1, args.tasks)])
+        cache = os.path.join(out_dir, "org_sim_hetero_artifacts.json")   # resumable cell cache
+        r = run_hetero(TASKS[:max(1, args.tasks)], cache_path=cache)
         arts = r.pop("artifacts", {})
         with open(os.path.join(out_dir, "org_sim_hetero_artifacts.json"), "w", encoding="utf-8") as f:
             json.dump(arts, f, ensure_ascii=False, indent=2, sort_keys=True)
