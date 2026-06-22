@@ -1,0 +1,196 @@
+{
+  "models": [
+    "opus",
+    "codex"
+  ],
+  "n_solved_cells": 24,
+  "pairs": [
+    {
+      "best_single": 0.75,
+      "complementary": [
+        "pytest-dev__pytest-11148",
+        "sympy__sympy-24325",
+        "sympy__sympy-24443",
+        "sympy__sympy-24661"
+      ],
+      "gain": 0.042,
+      "pair": "opus + codex",
+      "union": 0.792
+    }
+  ],
+  "per_model": {
+    "codex": 0.75,
+    "opus": 0.667
+  },
+  "rounds": 1,
+  "rows": [
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "src/_pytest/config/__init__.py",
+      "instance": "pytest-dev__pytest-11125",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 1000000,
+      "codex": 1,
+      "file": "src/_pytest/assertion/rewrite.py",
+      "instance": "pytest-dev__pytest-11143",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/pathlib.py",
+      "instance": "pytest-dev__pytest-11148",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "src/_pytest/recwarn.py",
+      "instance": "pytest-dev__pytest-11160",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/python_api.py",
+      "instance": "pytest-dev__pytest-11178",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "src/_pytest/fixtures.py",
+      "instance": "pytest-dev__pytest-11217",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 1,
+      "codex": 1,
+      "file": "sympy/solvers/diophantine/diophantine.py",
+      "instance": "sympy__sympy-23808",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/hep/gamma_matrices.py",
+      "instance": "sympy__sympy-23824",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/sets/contains.py",
+      "instance": "sympy__sympy-23950",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/units/unitsystem.py",
+      "instance": "sympy__sympy-24066",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "sympy/parsing/mathematica.py",
+      "instance": "sympy__sympy-24102",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/quantum/tensorproduct.py",
+      "instance": "sympy__sympy-24152",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/units/unitsystem.py",
+      "instance": "sympy__sympy-24213",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/physics/units/systems/cgs.py",
+      "instance": "sympy__sympy-24325",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "setup.py",
+      "instance": "sympy__sympy-24353",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 1,
+      "codex": 1,
+      "file": "sympy/core/numbers.py",
+      "instance": "sympy__sympy-24370",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "sympy/combinatorics/homomorphisms.py",
+      "instance": "sympy__sympy-24443",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/combinatorics/perm_groups.py",
+      "instance": "sympy__sympy-24455",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/polys/rings.py",
+      "instance": "sympy__sympy-24539",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 1,
+      "codex": 1,
+      "file": "sympy/core/numbers.py",
+      "instance": "sympy__sympy-24562",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/tensor/array/expressions/arrayexpr_derivatives.py",
+      "instance": "sympy__sympy-24638",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 3,
+      "codex": 1,
+      "file": "sympy/parsing/sympy_parser.py",
+      "instance": "sympy__sympy-24661",
+      "opus": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 1,
+      "file": "sympy/stats/matrix_distributions.py",
+      "instance": "sympy__sympy-24723",
+      "opus": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "codex": 0,
+      "file": "sympy/physics/units/prefixes.py",
+      "instance": "sympy__sympy-24909",
+      "opus": 0
+    }
+  ]
+}

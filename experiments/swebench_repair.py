@@ -316,11 +316,13 @@ def main(argv=None) -> int:
     ap.add_argument("--models", default="opus,codex")
     ap.add_argument("--instances", default="")
     ap.add_argument("--rounds", type=int, default=1, help="1=one-shot; >1=iterative agentic loop w/ test feedback")
+    ap.add_argument("--tag", default="", help="output basename override (e.g. swebench_sympy) so repos don't clobber")
     ap.add_argument("--writeup-only", action="store_true", help="regen the .md from existing results.json")
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
-    tag = "swebench_iter" if args.rounds > 1 else "swebench"           # iterative results kept separate
-    md_name = "SWEBENCH_ITER.md" if args.rounds > 1 else "SWEBENCH.md"
+    tag = args.tag or ("swebench_iter" if args.rounds > 1 else "swebench")   # per-repo / per-mode separation
+    md_name = tag.upper().replace("SWEBENCH", "SWEBENCH") + ".md" if args.tag else \
+        ("SWEBENCH_ITER.md" if args.rounds > 1 else "SWEBENCH.md")
     if args.writeup_only:
         r = json.load(open(os.path.join(out_dir, f"{tag}_results.json"), encoding="utf-8"))
     else:
