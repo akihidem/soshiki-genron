@@ -274,14 +274,97 @@ def _md(r: dict) -> str:
     return "\n".join(L)
 
 
+# threshold calibration: the only quantity that was noisy (trials=1) is the WEAK
+# model's full-solve rate p. Frontier tiers have p=1 (established) -> assume strong
+# always solves and only re-measure the weak model with trials>1 (gemma only, no
+# flaky claude path). Maps the weak->strong pairs onto the dominance plane p > w/s.
+_STRONG_TIERS = (("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
+
+
+def calibrate(weak_model: str, tasks=_EASY_TASKS + EXT_TASKS, strong=_STRONG_TIERS,
+              trials: int = 3, w: float = 0.2, cache_path: str | None = None) -> dict:
+    cache = {}
+    if cache_path and os.path.exists(cache_path):
+        cache = json.load(open(cache_path, encoding="utf-8"))
+    per_task = []
+    for t in tasks:
+        corrs = []
+        for k in range(trials):
+            key = f"{t['id']}|{weak_model}|{k}"
+            if cache.get(key) is not None and "def " in cache[key]:
+                impl = cache[key]
+            else:
+                impl = gen_impl(weak_model, t)
+                cache[key] = impl
+                if cache_path:
+                    with open(cache_path, "w", encoding="utf-8") as f:
+                        json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+            corrs.append(grade(impl, t)["correctness"])
+        per_task.append({"task": t["id"],
+                         "solve_rate": round(sum(1 for c in corrs if c >= 1.0) / trials, 3),
+                         "mean_correctness": round(sum(corrs) / len(corrs), 3),
+                         "trials": [round(c, 3) for c in corrs]})
+    p = round(sum(x["solve_rate"] for x in per_task) / len(per_task), 4)
+    pairs = [{"strong": sm, "w": w, "s": s, "w_over_s": round(w / s, 4), "p_weak": p,
+              "dominates": p > w / s, "market_cost": round(w + (1 - p) * s, 4), "flat_strong_cost": s}
+             for sm, s in strong]
+    return {"weak": weak_model, "trials": trials, "p_weak": p, "per_task": per_task, "pairs": pairs}
+
+
+def _md_calib(r: dict) -> str:
+    L = ["# 閾値の実測較正 — 弱モデルの完全解率 p を trials>1 で固める",
+         "",
+         f"支配定理 p\\*=w/s（[`../model/MARKET.md`](../model/MARKET.md)）の唯一 noisy な量＝弱ティアの完全解率 "
+         f"p を **{r['weak']} × trials={r['trials']}** で較正。frontier は p=1 既知なので strong は解析(コストのみ)。",
+         "",
+         f"## 較正された p_weak = **{r['p_weak']}**（タスク別 solve_rate の平均）",
+         "| task | solve_rate (= 1.0 到達率) | 平均正しさ | trials |",
+         "|---|---|---|---|"]
+    for x in r["per_task"]:
+        L.append(f"| {x['task']} | {x['solve_rate']} | {x['mean_correctness']} | {x['trials']} |")
+    L += ["",
+          "## 支配地図：弱→強ペアが p_weak > w/s に入るか",
+          "| 強ティア | w/s | p_weak | 支配(p>w/s) | market コスト | flat-strong コスト |",
+          "|---|---|---|---|---|---|"]
+    for pr in r["pairs"]:
+        L.append(f"| {pr['strong']} | {pr['w_over_s']} | {pr['p_weak']} | "
+                 f"{'**支配**' if pr['dominates'] else '—'} | {pr['market_cost']} | {pr['flat_strong_cost']} |")
+    L += ["",
+          "## 読み",
+          "- p_weak が安定して w/s を超えるペアでは、エスカレーション市場が単一モデルを Pareto 支配（解析と整合）。",
+          "- trials で solve_rate が 0/1 に張り付くなら gemma の能力は*構造的*（タスク依存）・中間値ならノイズ。",
+          "",
+          "## 妥当性",
+          f"- gemma は ollama サンプリング（温度>0）で trials 変動。strong は p=1 既知で解析。w={r['pairs'][0]['w']}・"
+          "コスト比は定価の代理。少標本（trials 小）。"]
+    return "\n".join(L)
+
+
 def main(argv=None) -> int:
     global _CALL
     ap = argparse.ArgumentParser(description="heterogeneity re-test on an external gold suite")
     ap.add_argument("--agent", default="mock", help="'mock' or claude:<anything> (frontier tiers fixed)")
     ap.add_argument("--gap", action="store_true",
                     help="LARGE capability gap: tiny gemma tier + easy/hard spread (routes gemma->ollama)")
+    ap.add_argument("--calibrate", action="store_true",
+                    help="trials>1 calibration of the weak model's full-solve rate p (gemma only)")
+    ap.add_argument("--trials", type=int, default=3)
     args = ap.parse_args(argv)
     out_dir = os.path.dirname(os.path.abspath(__file__))
+    if args.calibrate:
+        _CALL = _mock if args.agent == "mock" else _route
+        cache = os.path.join(out_dir, "market_calib_artifacts.json")
+        r = calibrate("gemma4:e2b", trials=max(1, args.trials), cache_path=cache)
+        with open(os.path.join(out_dir, "market_calib_results.json"), "w", encoding="utf-8") as f:
+            json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+        with open(os.path.join(out_dir, "MARKET_CALIB.md"), "w", encoding="utf-8") as f:
+            f.write(_md_calib(r) + "\n")
+        print(f"calibrated p_weak({r['weak']}, trials={r['trials']}) = {r['p_weak']}")
+        for pr in r["pairs"]:
+            print(f"  vs {pr['strong']:<7} w/s={pr['w_over_s']:<7} dominates={pr['dominates']} "
+                  f"market={pr['market_cost']}")
+        print("\nwrote market_calib_results.json and MARKET_CALIB.md")
+        return 0
     if args.gap:
         _CALL = _mock if args.agent == "mock" else _route
         tasks, tiers, stem = _EASY_TASKS + EXT_TASKS, _TIERS_GAP, "market_gap"

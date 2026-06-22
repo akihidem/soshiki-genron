@@ -47,6 +47,15 @@ class MarketExternalTests(unittest.TestCase):
         g = grade("def int_to_roman(n): return undefined_name\n", EXT_TASKS[0])
         self.assertEqual(g["correctness"], 0.0)
 
+    def test_calibrate_mock_zero_solve_no_domination(self):
+        if not self._sandbox_ok():
+            self.skipTest("sandbox unavailable in this environment")
+        MX._CALL = MX._mock                              # mock -> None impls -> never solves gold
+        r = MX.calibrate("gemma4:e2b", trials=2)
+        self.assertEqual(r["p_weak"], 0.0)
+        self.assertTrue(all(not pr["dominates"] for pr in r["pairs"]))   # p=0 -> below every w/s
+        self.assertAlmostEqual(r["pairs"][0]["market_cost"], 0.2 + r["pairs"][0]["s"], places=3)
+
     def test_mock_all_fail_escalates_through_every_tier(self):
         if not self._sandbox_ok():
             self.skipTest("sandbox unavailable in this environment")
