@@ -334,9 +334,12 @@ _GOLD_HARNESS = (
 
 def gen_impl(model: str, task: dict) -> str:
     names = ", ".join(task["names"])
-    return _CALL(model, f"Implement these Python functions to satisfy the spec EXACTLY, handling ALL edge "
-                        f"cases. Spec: {task['spec']}\nRequired functions: {names}.\n"
-                        f"Output ONLY runnable Python code — no tests, no explanation, no prose.")
+    # "no existing file ... code block only" suppresses the agentic glitch where the most
+    # agentic models (opus via the TUI) reply 'the file already contains...' with no code.
+    return _CALL(model, f"There is NO existing file or prior code — write from scratch. Implement these "
+                        f"Python functions to satisfy the spec EXACTLY, handling ALL edge cases. "
+                        f"Spec: {task['spec']}\nRequired functions: {names}.\n"
+                        f"Respond with ONLY a single python code block — no tests, no prose, no preamble.")
 
 
 def grade(impl: str, task: dict, timeout: int = 12) -> dict:
