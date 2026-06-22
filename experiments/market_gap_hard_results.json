@@ -1,0 +1,221 @@
+{
+  "baselines": {
+    "gemma4:e2b": {
+      "avg_correctness": 0.867,
+      "avg_cost": 0.2,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "edit_distance",
+          "tests": "6/6"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "decode_ways",
+          "tests": "8/8"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "re_match",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "my_atoi",
+          "tests": "8/8"
+        },
+        {
+          "correctness": 0.2,
+          "cost": 0.2,
+          "task": "calc",
+          "tests": "1/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 0.2,
+          "task": "simplify_path",
+          "tests": "6/6"
+        }
+      ]
+    },
+    "haiku": {
+      "avg_correctness": 1.0,
+      "avg_cost": 1.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "edit_distance",
+          "tests": "6/6"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "decode_ways",
+          "tests": "8/8"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "re_match",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "my_atoi",
+          "tests": "8/8"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "calc",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 1.0,
+          "task": "simplify_path",
+          "tests": "6/6"
+        }
+      ]
+    },
+    "opus": {
+      "avg_correctness": 1.0,
+      "avg_cost": 15.0,
+      "rows": [
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "edit_distance",
+          "tests": "6/6"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "decode_ways",
+          "tests": "8/8"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "re_match",
+          "tests": "7/7"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "my_atoi",
+          "tests": "8/8"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "calc",
+          "tests": "5/5"
+        },
+        {
+          "correctness": 1.0,
+          "cost": 15.0,
+          "task": "simplify_path",
+          "tests": "6/6"
+        }
+      ]
+    }
+  },
+  "market": {
+    "avg_correctness": 1.0,
+    "avg_cost": 0.367,
+    "rows": [
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "edit_distance"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "decode_ways"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "re_match"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "my_atoi"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 1.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            0.2
+          ],
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "task": "calc"
+      },
+      {
+        "correctness": 1.0,
+        "cost": 0.2,
+        "ladder": [
+          [
+            "gemma4:e2b",
+            1.0
+          ]
+        ],
+        "task": "simplify_path"
+      }
+    ]
+  },
+  "n_tasks": 6,
+  "tiers": [
+    [
+      "gemma4:e2b",
+      0.2
+    ],
+    [
+      "haiku",
+      1.0
+    ],
+    [
+      "opus",
+      15.0
+    ]
+  ]
+}
