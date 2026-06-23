@@ -1,0 +1,121 @@
+{
+  "models": [
+    "sonnet"
+  ],
+  "n_solved_cells": 18,
+  "pairs": [],
+  "per_model": {
+    "sonnet": 0.667
+  },
+  "rounds": 1,
+  "rows": [
+    {
+      "base_p2p_fail": 1,
+      "file": "sympy/solvers/diophantine/diophantine.py",
+      "instance": "sympy__sympy-23808",
+      "sonnet": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/physics/hep/gamma_matrices.py",
+      "instance": "sympy__sympy-23824",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/sets/contains.py",
+      "instance": "sympy__sympy-23950",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/physics/units/unitsystem.py",
+      "instance": "sympy__sympy-24066",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/parsing/mathematica.py",
+      "instance": "sympy__sympy-24102",
+      "sonnet": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/physics/quantum/tensorproduct.py",
+      "instance": "sympy__sympy-24152",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/physics/units/unitsystem.py",
+      "instance": "sympy__sympy-24213",
+      "sonnet": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/physics/units/systems/cgs.py",
+      "instance": "sympy__sympy-24325",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "setup.py",
+      "instance": "sympy__sympy-24353",
+      "sonnet": 0
+    },
+    {
+      "base_p2p_fail": 1,
+      "file": "sympy/core/numbers.py",
+      "instance": "sympy__sympy-24370",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/combinatorics/homomorphisms.py",
+      "instance": "sympy__sympy-24443",
+      "sonnet": 0
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/combinatorics/perm_groups.py",
+      "instance": "sympy__sympy-24455",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/polys/rings.py",
+      "instance": "sympy__sympy-24539",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 1,
+      "file": "sympy/core/numbers.py",
+      "instance": "sympy__sympy-24562",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/tensor/array/expressions/arrayexpr_derivatives.py",
+      "instance": "sympy__sympy-24638",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 3,
+      "file": "sympy/parsing/sympy_parser.py",
+      "instance": "sympy__sympy-24661",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/stats/matrix_distributions.py",
+      "instance": "sympy__sympy-24723",
+      "sonnet": 1
+    },
+    {
+      "base_p2p_fail": 0,
+      "file": "sympy/physics/units/prefixes.py",
+      "instance": "sympy__sympy-24909",
+      "sonnet": 0
+    }
+  ]
+}
