@@ -31,6 +31,16 @@
       ]
     },
     {
+      "task": "pytest-dev__pytest-11125",
+      "group": "test_loop",
+      "file": "src/_pytest/config/__init__.py",
+      "mean_score": 1.0,
+      "mean_cost": 30.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
       "task": "pytest-dev__pytest-11143",
       "group": "solo",
       "file": "src/_pytest/assertion/rewrite.py",
@@ -56,6 +66,16 @@
       "file": "src/_pytest/assertion/rewrite.py",
       "mean_score": 1.0,
       "mean_cost": 18.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11143",
+      "group": "test_loop",
+      "file": "src/_pytest/assertion/rewrite.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
       "scores": [
         1.0
       ]
@@ -91,6 +111,16 @@
       ]
     },
     {
+      "task": "pytest-dev__pytest-11148",
+      "group": "test_loop",
+      "file": "src/_pytest/pathlib.py",
+      "mean_score": 1.0,
+      "mean_cost": 30.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
       "task": "pytest-dev__pytest-11160",
       "group": "solo",
       "file": "src/_pytest/recwarn.py",
@@ -121,6 +151,16 @@
       ]
     },
     {
+      "task": "pytest-dev__pytest-11160",
+      "group": "test_loop",
+      "file": "src/_pytest/recwarn.py",
+      "mean_score": 1.0,
+      "mean_cost": 45.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
       "task": "pytest-dev__pytest-11178",
       "group": "solo",
       "file": "src/_pytest/python_api.py",
@@ -151,6 +191,16 @@
       ]
     },
     {
+      "task": "pytest-dev__pytest-11178",
+      "group": "test_loop",
+      "file": "src/_pytest/python_api.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
       "task": "pytest-dev__pytest-11217",
       "group": "solo",
       "file": "src/_pytest/fixtures.py",
@@ -176,6 +226,16 @@
       "file": "src/_pytest/fixtures.py",
       "mean_score": 1.0,
       "mean_cost": 18.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11217",
+      "group": "test_loop",
+      "file": "src/_pytest/fixtures.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
       "scores": [
         1.0
       ]
@@ -186,12 +246,14 @@
     "group_score": {
       "solo": 0.667,
       "role_same": 0.5,
-      "role_cross": 0.5
+      "role_cross": 0.5,
+      "test_loop": 1.0
     },
     "group_cost": {
       "solo": 15.0,
       "role_same": 37.5,
-      "role_cross": 18.5
+      "role_cross": 18.5,
+      "test_loop": 25.0
     },
     "structure_gain (role_same - solo)": -0.167,
     "diversity_gain (role_cross - role_same)": 0.0,

@@ -25,7 +25,7 @@ import os
 
 import experiments.swebench_repair as SR
 from experiments.role_division import (
-    LGTM, Roles, Substrate, _TAGS, _cached_real_call, _deconfound, _mean,
+    LGTM, Roles, Substrate, _TAGS, _cached_real_call, _deconfound, _mean, _w,
     run_role_division, run_solo,
 )
 
@@ -79,10 +79,13 @@ def _r_solo(inst: dict) -> str:
 _REPAIR_SUB = Substrate(_r_thinker, _r_worker, _r_verifier, _r_solo)
 
 
-def _arms() -> dict:
-    return {"solo": "opus",
-            "role_same": Roles("opus", "opus", "opus"),
-            "role_cross": Roles("opus", "sonnet", "haiku")}
+def _arms(test_loop: bool = False) -> dict:
+    a = {"solo": "opus",
+         "role_same": Roles("opus", "opus", "opus"),
+         "role_cross": Roles("opus", "sonnet", "haiku")}
+    if test_loop:                                            # Phase 1.6: 単一 opus ＋実テスト feedback
+        a["test_loop"] = "opus"
+    return a
 
 
 # --------------------------------------------------------------------------- #
@@ -112,11 +115,60 @@ def make_repair_grade(inst: dict, path: str, content: str, base_p2p_fail: int):
     return grade
 
 
-def run_repair(instance_ids: list, n_iter: int, trials: int, call, out_path: str | None = None) -> dict:
-    """各 instance を _setup→gold 検証し、3 群を role_division の pipeline で回して de-confound。"""
+# --------------------------------------------------------------------------- #
+# test_loop arm（Phase 1.6）— role 分業の「gold 非開示 model verifier ループ」と対照する
+# 「単一モデル＋*実テスト出力 feedback* の累積ループ」（swebench `_repair_iterative` 型）。
+# test_loop > solo なら「価値は役割分業でなく test-grounded 反復」を直接示す。ここでは verifier も
+# thinker も無く、feedback は実テスト（gold 非開示の H3 制約は role 分業の Verifier 役にのみ課す）。
+# --------------------------------------------------------------------------- #
+def _r_test_worker(inst: dict, cur: str, feedback: str) -> str:
+    s = (f"{_TAGS['worker']} You are fixing a real bug in the pytest codebase. User-reported issue:\n"
+         f"{_issue(inst)}\n\nThe file `{inst['_rd_path']}` currently contains:\n```python\n{cur}\n```\n")
+    if feedback:
+        s += f"\nYour previous edit did NOT resolve it. REAL test output:\n```\n{feedback}\n```\n"
+    return s + "\n" + _FMT + " No prose, no explanation."
+
+
+def run_test_loop(model: str, inst: dict, path: str, content: str, base_p2p_fail: int,
+                  n_iter: int, call, seed: int = 0) -> dict:
+    """初期＋最大 n_iter の test-grounded 修復（累積・実テスト feedback）。score(0/1)＋cost を返す。"""
+    f2p = SR._to_pytest_args(inst, json.loads(inst["FAIL_TO_PASS"]))
+    p2p = SR._to_pytest_args(inst, json.loads(inst["PASS_TO_PASS"])[:30])
+    full = os.path.join(SR._REPO, path)
+    cur, feedback, n_calls, score = content, "", 0, 0.0
+    iters = []
+    try:
+        for it in range(n_iter + 1):
+            out = call(model, _r_test_worker(inst, cur, feedback), seed)
+            n_calls += 1
+            new = SR._apply_edits(cur, out)                  # 累積（cur に積む）
+            if new is None:
+                feedback = "Your SEARCH text did not match the current file. Copy the exact current lines."
+                iters.append({"iter": it, "stage": "no-apply", "score": 0.0}); continue
+            cur = new
+            with open(full, "w", encoding="utf-8") as f:
+                f.write(cur)
+            f2p_fail, f2p_tail = SR._run_capture(f2p)
+            if f2p_fail == 0:
+                p2p_fail, p2p_tail = SR._run_capture(p2p)
+                if p2p_fail <= base_p2p_fail:
+                    score = 1.0; iters.append({"iter": it, "stage": "resolved", "score": 1.0}); break
+                feedback = "The bug is fixed but you BROKE other tests (regression):\n" + p2p_tail
+            else:
+                feedback = f2p_tail
+            iters.append({"iter": it, "stage": "repair", "score": 0.0})
+    finally:
+        SR._git("checkout", "-q", "--", path)
+    return {"group": "test_loop", "score": score, "cost": round(_w(model) * n_calls, 3),
+            "iters": iters, "calls": [("worker", model)] * n_calls}
+
+
+def run_repair(instance_ids: list, n_iter: int, trials: int, call, out_path: str | None = None,
+               test_loop: bool = False) -> dict:
+    """各 instance を _setup→gold 検証し、各群を role_division の pipeline で回して de-confound。"""
     allinst = {i["instance_id"]: i for i in json.load(open(SR._INSTANCES_JSON, encoding="utf-8"))}
     cells, skipped = [], []
-    arms = _arms()
+    arms = _arms(test_loop)
     for iid in instance_ids:
         inst = allinst.get(iid)
         if inst is None:
@@ -135,6 +187,8 @@ def run_repair(instance_ids: list, n_iter: int, trials: int, call, out_path: str
             for t in range(trials):
                 if group == "solo":
                     r = run_solo(spec, task, call, grade, seed=t, sub=_REPAIR_SUB)
+                elif group == "test_loop":
+                    r = run_test_loop(spec, task, path, content, base_p2p_fail, n_iter, call, seed=t)
                 else:
                     r = run_role_division(spec, task, call, grade, n_iter, group, seed=t, sub=_REPAIR_SUB)
                 runs.append(r)
@@ -171,13 +225,15 @@ def main(argv=None) -> int:
         instance_ids = [i["instance_id"] for i in json.load(open(SR._INSTANCES_JSON, encoding="utf-8"))]
     trials = int(os.environ.get("RD_TRIALS", "1"))
     n_iter = int(os.environ.get("RD_ITERS", "2"))
+    test_loop = os.environ.get("RD_TEST_LOOP") == "1"        # Phase 1.6: 単一opus＋実テストfeedback arm
     cp = os.path.join(here, "role_division_repair_artifacts.json")
     cache = json.load(open(cp, encoding="utf-8")) if os.path.exists(cp) else {}
     call = _cached_real_call(cache, cp)
     out_path = os.path.join(here, "role_division_repair_real.json")
     print(f"role_division_repair --real (metered Claude + real pytest): instances={instance_ids} "
-          f"trials={trials} n_iter={n_iter}  arms=solo:opus / same:opus×3 / cross:opus/sonnet/haiku")
-    res = run_repair(instance_ids, n_iter, trials, call, out_path)
+          f"trials={trials} n_iter={n_iter} test_loop={test_loop}  "
+          f"arms=solo:opus / same:opus×3 / cross:opus/sonnet/haiku" + (" / test_loop:opus+realtests" if test_loop else ""))
+    res = run_repair(instance_ids, n_iter, trials, call, out_path, test_loop=test_loop)
     s = res["summary"]
     print("\n=== REPAIR (real pytest gold, sub-ceiling) ===")
     print(f"  group_score={s.get('group_score')}  group_cost={s.get('group_cost')}")
@@ -188,6 +244,10 @@ def main(argv=None) -> int:
     print(f"  skipped={[x['instance'] for x in res['skipped']]}")
     print("\nverdict: H1 (role_cross > solo) =", s.get("total_gain (role_cross - solo)", 0.0),
           "| H2 (cross > same) =", s.get("diversity_gain (role_cross - role_same)", 0.0))
+    gs = s.get("group_score", {})
+    if "test_loop" in gs and "solo" in gs:                  # Phase 1.6: 価値の所在
+        print(f"  test_grounding_gain (test_loop - solo) = {round(gs['test_loop'] - gs['solo'], 3)}  "
+              f"(test_loop={gs['test_loop']} vs solo={gs['solo']}, role_cross={gs.get('role_cross')})")
     print(f"wrote {out_path}")
     return 0
 

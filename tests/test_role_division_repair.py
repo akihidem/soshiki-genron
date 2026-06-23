@@ -124,6 +124,81 @@ class RepairGradeTests(unittest.TestCase):
         self.assertEqual(called["fc"], 0)                 # 適用不能なら採点もしない
 
 
+class TestLoopArmTests(unittest.TestCase):
+    """test_loop（単一opus＋実テスト feedback）を SR stub で検品（実 pytest 不要）。"""
+
+    def setUp(self):
+        from experiments import role_division_repair as RDR
+        self.RDR = RDR
+        self._orig = (SR._apply_edits, SR._run_capture, SR._git, SR._to_pytest_args, SR._REPO)
+        self._tmp = tempfile.mkdtemp()
+        SR._REPO = self._tmp
+        os.makedirs(os.path.join(self._tmp, "src/_pytest"), exist_ok=True)
+        open(os.path.join(self._tmp, "src/_pytest/buggy.py"), "w").write("buggy")
+        SR._git = lambda *a, **k: None
+        SR._to_pytest_args = lambda inst, ids: ids
+        self.calls = []
+
+    def tearDown(self):
+        SR._apply_edits, SR._run_capture, SR._git, SR._to_pytest_args, SR._REPO = self._orig
+
+    def _inst(self):
+        return {"instance_id": "i", "problem_statement": "ISSUE", "_rd_path": "src/_pytest/buggy.py",
+                "FAIL_TO_PASS": json.dumps(["F2P"]), "PASS_TO_PASS": json.dumps(["P2P"])}
+
+    def _run(self, f2p_seq, p2p_fail, base, n_iter, applied="NEW"):
+        SR._apply_edits = lambda content, code: applied
+        fc = {"i": 0}
+
+        def rc(tests, timeout=300):
+            if tests and tests[0] == "P2P":
+                return (p2p_fail, "ptail")
+            r = f2p_seq[min(fc["i"], len(f2p_seq) - 1)]; fc["i"] += 1
+            return (r, "ftail")
+        SR._run_capture = rc
+        call = lambda m, p, s=0: self.calls.append((m, p)) or "DIFF"
+        inst = self._inst()
+        return self.RDR.run_test_loop("opus", inst, inst["_rd_path"], "ORIG", base, n_iter, call)
+
+    def test_resolves_first_try_costs_one_call(self):
+        r = self._run(f2p_seq=[0], p2p_fail=0, base=0, n_iter=2)
+        self.assertEqual(r["score"], 1.0)
+        self.assertEqual(r["cost"], 15.0)                    # opus × 1
+        self.assertEqual(len(self.calls), 1)
+
+    def test_resolves_after_feedback(self):
+        r = self._run(f2p_seq=[1, 0], p2p_fail=0, base=0, n_iter=2)   # fail then pass
+        self.assertEqual(r["score"], 1.0)
+        self.assertEqual(len(self.calls), 2)                 # initial + 1 test-grounded repair
+        self.assertEqual(r["cost"], 30.0)
+
+    def test_never_resolves_respects_budget(self):
+        r = self._run(f2p_seq=[1, 1, 1], p2p_fail=0, base=0, n_iter=2)
+        self.assertEqual(r["score"], 0.0)
+        self.assertEqual(len(self.calls), 3)                 # initial + n_iter(2) — 上限尊重
+        self.assertEqual(r["cost"], 45.0)
+
+    def test_regression_not_resolved(self):
+        r = self._run(f2p_seq=[0, 0, 0], p2p_fail=5, base=0, n_iter=2)  # f2p pass but p2p regress
+        self.assertEqual(r["score"], 0.0)                    # 新規 regression は未解決
+
+    def test_unapplied_diff_skips_test_run(self):
+        ran = {"n": 0}
+        SR._apply_edits = lambda content, code: None
+        SR._run_capture = lambda tests, timeout=300: ran.__setitem__("n", ran["n"] + 1) or (0, "")
+        call = lambda m, p, s=0: "garbage"
+        inst = self._inst()
+        r = self.RDR.run_test_loop("opus", inst, inst["_rd_path"], "ORIG", 0, 1, call)
+        self.assertEqual(r["score"], 0.0)
+        self.assertEqual(ran["n"], 0)                        # 適用不能ならテストも走らせない
+
+    def test_test_worker_prompt_uses_real_feedback(self):
+        p = self.RDR._r_test_worker(self._inst(), "CURRENT_FILE", "REAL_TEST_TAIL")
+        self.assertTrue(p.startswith(_TAGS["worker"]))
+        self.assertIn("CURRENT_FILE", p)
+        self.assertIn("REAL_TEST_TAIL", p)                   # test_loop は実テスト出力を渡す（意図的）
+
+
 class RepairWiringTests(unittest.TestCase):
     def test_arms_assignment(self):
         from experiments.role_division import Roles
@@ -131,6 +206,8 @@ class RepairWiringTests(unittest.TestCase):
         self.assertEqual(arms["solo"], "opus")
         self.assertEqual(arms["role_same"], Roles("opus", "opus", "opus"))
         self.assertEqual(arms["role_cross"], Roles("opus", "sonnet", "haiku"))
+        self.assertNotIn("test_loop", arms)                  # 既定では off
+        self.assertIn("test_loop", _arms(test_loop=True))    # フラグで on
 
     def test_substrate_uses_repair_prompts(self):
         self.assertIs(_REPAIR_SUB.solo_prompt, _r_solo)
