@@ -56,3 +56,25 @@ threshold: 市場が flat-strong を Pareto 支配 ⟺ p > w/s（安いティア
 - soshiki 側: 解析モデルは一次（実走）。肯定レジームの実 LLM 実証は n 小・trials=1・非有意（自認）。
 - TRINITY 側: 数値は arXiv HTML（要約モデル経由）＝図表 eyeball 未。「open 切捨て収束」「0.465 vs 0.838 の config 差」は PDF 表確認まで断定保留。
 - この検証は retrodiction の構造一致であり、因果や ex-ante 予測の証明ではない。
+
+---
+
+## 追記 (実測 2026-06-23): 精度を上げる lever の検証 — [`../experiments/config_mesh.py`](../experiments/config_mesh.py)
+「cost度外視で生成物の質を上げるなら frontier 並列 mesh / loop はどうか」を local model（qwen2.5-coder:7b ほか）で matched-budget A/B ＋ held-out 採点で実測。
+
+- **blind config 散らし(B) vs 同 config 反復(A) = gain 0**。盲目反復に上乗せ無し（各試行が前の失敗を見ないから）。
+- **粗 feedback loop（p/n だけ返す）= むしろ悪化**。前の壊れたコードを次に渡し、誤りが連鎖して 0 に固着（negabinary 0.143→0.0、calc3 0.667→0.0）。
+- **rich feedback loop（失敗した可視ケースの「入力==期待」を返す）＋ held-out 採点 = genuine に効く**。negabinary が 0.25→1.0(iter4) に登り **held-out も同時に 1.0**＝ごまかしでない。同じタスクが粗→悪化・rich→解決＝**feedback の質だけで「壊す→解く」が反転**。
+- **Goodhart = 実 0 件**。可視を1.0にした全タスクで held-out も1.0（gap=0）。「可視は通すが held-out で落ちる」は皆無＝rich feedback は Goodhart-safe（この規模・タスク型では）。
+- **律速は feedback でなく能力天井**。calc（式パーサ）・wildcard_plus は「入力==期待」を見せても平ら＝rich feedback は*直せる間違い*を直すだけで能力は足さない。
+
+→ **総合**: rich-loop（agent の潜在能力を引き出す＝§9「検証の質」）⊕ escalation（天井超えで上位 agent へ＝§5）が、loop の*内側/外側*として相補。＝meshflow の within-tier/across-tier の実証的裏付け。ユーザ案「分解片ごとに /goal+/loop で再帰改善」は **rich feedback 前提なら成立**・粗 feedback では害。
+
+- 限界: 1モデル・trials=1・ollama 非決定。clean な feedback-rescue は negabinary 1件（要追試）。raw: `config_mesh_results.json`(blind) / `config_mesh_rich_results.json`(rich+held-out)。
+
+### 続報（実測完了 2026-06-23）— escalation で天井超え、3段で実証
+Mac Studio MLX（Devstral-24B / Qwen3.5-122B-A10B）に同じ rich-loop を当てた:
+- **wildcard_plus**: 7B 不可 → **24B で解決**（0.8→1.0・held追従・Goodhart 0）。
+- **calc**: 7B も 24B も不可 → **122B で解決**（0.0→1.0 @iter1・held追従・Goodhart 0）。
+
+→ **3段の梯子**（easy=7B / wildcard_plus=24B / calc=122B）: 各能力天井は「上位 agent ＋ rich-loop」で超えられ、全段で held-out 確認・**Goodhart 0**。**meshflow の loop(within-tier・潜在能力)×escalation(across-tier・天井超え) が実モデルで end-to-end 実証完了**。運用記録= local-llm-lab `experiments/2026-06-23-config-mesh-escalation.md`。

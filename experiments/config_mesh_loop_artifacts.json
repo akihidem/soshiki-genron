@@ -1,0 +1,172 @@
+[
+  {
+    "model": "qwen2.5-coder:7b",
+    "task": "calc",
+    "iters": [
+      {
+        "iter": 0,
+        "correctness": 0.4,
+        "ran": true
+      },
+      {
+        "iter": 1,
+        "correctness": 0.4,
+        "ran": true
+      },
+      {
+        "iter": 2,
+        "correctness": 0.4,
+        "ran": true
+      },
+      {
+        "iter": 3,
+        "correctness": 0.4,
+        "ran": true
+      },
+      {
+        "iter": 4,
+        "correctness": 0.4,
+        "ran": true
+      },
+      {
+        "iter": 5,
+        "correctness": 0.4,
+        "ran": true
+      }
+    ],
+    "C_final": 0.4,
+    "C_best": 0.4,
+    "resolved_iter": null
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "task": "calc3",
+    "iters": [
+      {
+        "iter": 0,
+        "correctness": 0.667,
+        "ran": true
+      },
+      {
+        "iter": 1,
+        "correctness": 0.167,
+        "ran": true
+      },
+      {
+        "iter": 2,
+        "correctness": 0.0,
+        "ran": true
+      },
+      {
+        "iter": 3,
+        "correctness": 0.0,
+        "ran": true
+      },
+      {
+        "iter": 4,
+        "correctness": 0.0,
+        "ran": true
+      },
+      {
+        "iter": 5,
+        "correctness": 0.0,
+        "ran": true
+      }
+    ],
+    "C_final": 0.0,
+    "C_best": 0.667,
+    "resolved_iter": null
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "task": "wildcard_plus",
+    "iters": [
+      {
+        "iter": 0,
+        "correctness": 0.667,
+        "ran": true
+      },
+      {
+        "iter": 1,
+        "correctness": 0.778,
+        "ran": true
+      },
+      {
+        "iter": 2,
+        "correctness": 0.778,
+        "ran": true
+      },
+      {
+        "iter": 3,
+        "correctness": 0.778,
+        "ran": true
+      },
+      {
+        "iter": 4,
+        "correctness": 0.778,
+        "ran": true
+      },
+      {
+        "iter": 5,
+        "correctness": 0.778,
+        "ran": true
+      }
+    ],
+    "C_final": 0.778,
+    "C_best": 0.778,
+    "resolved_iter": null
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "task": "negabinary",
+    "iters": [
+      {
+        "iter": 0,
+        "correctness": 0.143,
+        "ran": true
+      },
+      {
+        "iter": 1,
+        "correctness": 0.0,
+        "ran": false
+      },
+      {
+        "iter": 2,
+        "correctness": 0.0,
+        "ran": false
+      },
+      {
+        "iter": 3,
+        "correctness": 0.0,
+        "ran": false
+      },
+      {
+        "iter": 4,
+        "correctness": 0.0,
+        "ran": false
+      },
+      {
+        "iter": 5,
+        "correctness": 0.0,
+        "ran": false
+      }
+    ],
+    "C_final": 0.0,
+    "C_best": 0.143,
+    "resolved_iter": null
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "task": "wildcard",
+    "iters": [
+      {
+        "iter": 0,
+        "correctness": 1.0,
+        "ran": true
+      }
+    ],
+    "C_final": 1.0,
+    "C_best": 1.0,
+    "resolved_iter": 0
+  }
+]

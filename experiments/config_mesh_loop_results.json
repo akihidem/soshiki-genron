@@ -1,0 +1,75 @@
+{
+  "rows": [
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "calc",
+      "C_final": 0.4,
+      "C_best": 0.4,
+      "resolved_iter": null,
+      "trajectory": [
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "calc3",
+      "C_final": 0.0,
+      "C_best": 0.667,
+      "resolved_iter": null,
+      "trajectory": [
+        0.667,
+        0.167,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "wildcard_plus",
+      "C_final": 0.778,
+      "C_best": 0.778,
+      "resolved_iter": null,
+      "trajectory": [
+        0.667,
+        0.778,
+        0.778,
+        0.778,
+        0.778,
+        0.778
+      ]
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "negabinary",
+      "C_final": 0.0,
+      "C_best": 0.143,
+      "resolved_iter": null,
+      "trajectory": [
+        0.143,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "wildcard",
+      "C_final": 1.0,
+      "C_best": 1.0,
+      "resolved_iter": 0,
+      "trajectory": [
+        1.0
+      ]
+    }
+  ],
+  "n_iter": 6
+}

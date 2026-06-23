@@ -1,0 +1,308 @@
+{
+  "rows": [
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "edit_distance",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "decode_ways",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "re_match",
+      "single": 0.857,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "edgefirst"
+      ],
+      "B_solved_only_by_nondefault": true
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "my_atoi",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "calc",
+      "single": 0.4,
+      "A_union": 0.6,
+      "B_union": 0.6,
+      "A_solved": false,
+      "B_solved": false,
+      "B_solvers": [],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "simplify_path",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "calc3",
+      "single": 0.667,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "decompose",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": true
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "atoms",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "edgefirst"
+      ],
+      "B_solved_only_by_nondefault": true
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "wildcard_plus",
+      "single": 0.778,
+      "A_union": 0.778,
+      "B_union": 0.778,
+      "A_solved": false,
+      "B_solved": false,
+      "B_solvers": [],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "negabinary",
+      "single": 0.143,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "decompose"
+      ],
+      "B_solved_only_by_nondefault": true
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "fraction_to_decimal",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "roman",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "intervals",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "task": "wildcard",
+      "single": 0.9,
+      "A_union": 0.9,
+      "B_union": 0.9,
+      "A_solved": false,
+      "B_solved": false,
+      "B_solvers": [],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "edit_distance",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "decode_ways",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "algorithmic"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "re_match",
+      "single": 0.571,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "decompose",
+        "edgefirst"
+      ],
+      "B_solved_only_by_nondefault": true
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "my_atoi",
+      "single": 0.0,
+      "A_union": 0.0,
+      "B_union": 0.0,
+      "A_solved": false,
+      "B_solved": false,
+      "B_solvers": [],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "calc",
+      "single": 0.0,
+      "A_union": 0.8,
+      "B_union": 1.0,
+      "A_solved": false,
+      "B_solved": true,
+      "B_solvers": [
+        "decompose"
+      ],
+      "B_solved_only_by_nondefault": true
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "simplify_path",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose",
+        "edgefirst"
+      ],
+      "B_solved_only_by_nondefault": false
+    },
+    {
+      "model": "gemma4:latest",
+      "task": "calc3",
+      "single": 1.0,
+      "A_union": 1.0,
+      "B_union": 1.0,
+      "A_solved": true,
+      "B_solved": true,
+      "B_solvers": [
+        "direct",
+        "decompose"
+      ],
+      "B_solved_only_by_nondefault": false
+    }
+  ],
+  "summary": {
+    "n": 21,
+    "single_shot_rate": 0.571,
+    "A_union_rate (同config反復)": 0.762,
+    "B_union_rate (config散らし)": 0.81,
+    "gain_diversity (B-A)": 0.048,
+    "tasks_solved_only_by_B": 1,
+    "tasks_solved_only_by_A": 0,
+    "tasks_where_nondefault_framing_was_decisive": 6
+  }
+}

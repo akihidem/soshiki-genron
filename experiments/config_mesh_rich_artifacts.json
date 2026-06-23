@@ -1,0 +1,48 @@
+[
+  {
+    "model": "qwen122",
+    "task": "calc",
+    "iters": [
+      {
+        "iter": 0,
+        "visible": 0.0,
+        "heldout": 0.0,
+        "failing_vis": [
+          "gold_k1",
+          "gold_k2",
+          "gold_k3"
+        ]
+      },
+      {
+        "iter": 1,
+        "visible": 1.0,
+        "heldout": 1.0,
+        "failing_vis": []
+      }
+    ]
+  },
+  {
+    "model": "qwen122",
+    "task": "wildcard_plus",
+    "iters": [
+      {
+        "iter": 0,
+        "visible": 0.0,
+        "heldout": 0.0,
+        "failing_vis": [
+          "gold_w1",
+          "gold_w2",
+          "gold_w3",
+          "gold_w4",
+          "gold_w5"
+        ]
+      },
+      {
+        "iter": 1,
+        "visible": 1.0,
+        "heldout": 1.0,
+        "failing_vis": []
+      }
+    ]
+  }
+]
