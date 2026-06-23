@@ -35,6 +35,32 @@
     }
   ],
   "critical_point": "利得 > 0 ⟺ ρ < 1（脱相関がある）。ρ=1（入れ子/共通 hard core）で利得 0 ＝ 市場支配。",
+  "empirical_real": {
+    "opus×codex full-24 (cross-vendor)": {
+      "best_single": 0.75,
+      "failure_rho": 0.6124,
+      "gain": 0.0417,
+      "ignites": true,
+      "note": "cross-vendor は ρ≈0.61<1 で脱相関＝real frontier で初の点火(gain+0.042)。相互相補(codex が opus の落とす 3件・opus が codex の落とす 1件を拾う)。残る hard core 5/24 は両者失敗(ρ の正体)。",
+      "per_model": [
+        0.6667,
+        0.75
+      ],
+      "union": 0.7917
+    },
+    "opus×codex pytest-6 subset": {
+      "best_single": 0.6667,
+      "failure_rho": 0.7071,
+      "gain": 0.0,
+      "ignites": false,
+      "note": "ρ≈0.71<1 でも gain 0＝codex が opus を*入れ子*に包む(非対称)。点火には脱相関だけでなく*相互*相補が要る、の実例。",
+      "per_model": [
+        0.5,
+        0.6667
+      ],
+      "union": 0.6667
+    }
+  },
   "empirical_regimes": [
     {
       "gain": 0.0,

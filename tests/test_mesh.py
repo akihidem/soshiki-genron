@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from model.mesh import (  # noqa: E402
     MeshParams, mesh_correctness, mesh_gain, ignites, mesh_cost,
     dominates_strong, min_agents_to_match_strong, p_all_fail, run,
+    failure_correlation, union_solve, empirical_mesh,
 )
 
 
@@ -71,6 +72,38 @@ class MeshModelTests(unittest.TestCase):
         # fully correlated -> union capped at p=0.5 -> never reaches 0.99
         rc = min_agents_to_match_strong(p=0.5, rho=1.0, w=0.2, s=1.0, verify=0.1, target=0.99)
         self.assertIsNone(rc["n"])
+
+    def test_failure_correlation_endpoints(self):
+        # 同一の解パターン → 失敗 comonotone → ρ=1
+        self.assertAlmostEqual(failure_correlation([[1, 0, 1, 0], [1, 0, 1, 0]]), 1.0, places=4)
+        # 反相関（片方解く＝他方落とす） → ρ=-1
+        self.assertAlmostEqual(failure_correlation([[1, 0, 1, 0], [0, 1, 0, 1]]), -1.0, places=4)
+
+    def test_union_solve(self):
+        self.assertEqual(union_solve([[1, 0, 0], [0, 1, 0]]), round(2 / 3, 4))   # どちらか解けた=2/3
+
+    def test_empirical_mesh_ignites_only_with_mutual_complementarity(self):
+        # 相互相補（各自が相手の落とす所を拾う）→ union>best → 点火
+        e = empirical_mesh([[1, 1, 0], [0, 1, 1]])
+        self.assertEqual(e["union"], 1.0)
+        self.assertGreater(e["gain"], 0.0)
+        self.assertTrue(e["ignites"])
+        # 入れ子（B が A を包む・非対称）→ union=best → 利得 0（ρ<1 でも点火しない）
+        e2 = empirical_mesh([[0, 1, 0], [0, 1, 1]])
+        self.assertEqual(e2["gain"], 0.0)
+        self.assertFalse(e2["ignites"])
+        self.assertLess(e2["failure_rho"], 1.0)              # 脱相関はしている
+
+    def test_real_swebench_crossover_in_run(self):
+        # 実測接地：opus×codex full-24 は点火(+0.042, ρ≈0.61)、pytest-6 は非対称で gain 0(ρ≈0.71)
+        er = run()["empirical_real"]
+        full = er["opus×codex full-24 (cross-vendor)"]
+        self.assertTrue(full["ignites"])
+        self.assertAlmostEqual(full["gain"], 0.0417, places=3)
+        self.assertAlmostEqual(full["failure_rho"], 0.612, places=2)
+        sub = er["opus×codex pytest-6 subset"]
+        self.assertFalse(sub["ignites"])                    # ρ<1 でも非対称で点火せず
+        self.assertLess(sub["failure_rho"], 1.0)
 
     def test_empirical_regimes_and_determinism(self):
         r1 = run()
