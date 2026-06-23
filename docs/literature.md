@@ -64,6 +64,7 @@
     - **F2 反例テスト＝半答**: 役割*構造*は荷重（"pure projection" 説は弱まる）が、*特定の人間役割意味*が効くか（任意の3分化で足りるか）は未証明。
     - 次に測る: random-role 対照／プールを均質フロンティアに固定したときの gain 消失曲線（soshiki gain≈0 と定量照合）。
   - 信頼度: **一次（arXiv HTML 全文）／ただし数値は要約モデル経由＝図表 eyeball 未**。特に「open 切捨て収束」「standard の 0.465 vs GPT-5 単体 0.838 の config 差」は PDF の表で確認するまで断定保留。
+  - 詳細検証: [`trinity-vs-soshiki.md`](trinity-vs-soshiki.md) ── 後者(soshiki)の予測力の優位を `market.py` 実走で検証（説明レイヤー限定で支持・"予測"は retrodiction に格下げ）。
 
 ## 記録フォーマット（読んだら追記）
 ```
