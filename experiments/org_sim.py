@@ -53,9 +53,9 @@ def _agent(model: str, prompt: str, timeout: int = 300, retries: int = 2) -> str
     for attempt in range(retries):                      # free-quota TUI launch / rate hiccups are transient
         try:
             proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout)
-            if proc.returncode == 0:
-                return proc.stdout
-            last = (proc.stderr or "").strip()[:200]
+            if proc.returncode == 0 and proc.stdout.strip():   # rc 0 + empty stdout = TUI launch hiccup -> retry
+                return proc.stdout                             # (codex/ollama already guard empties; claude didn't)
+            last = (proc.stderr or proc.stdout or "").strip()[:200] or f"empty stdout (rc={proc.returncode})"
         except subprocess.TimeoutExpired:
             last = f"timeout>{timeout}s"
         time.sleep(3 * (attempt + 1))                   # brief backoff before retry

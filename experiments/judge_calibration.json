@@ -1,0 +1,134 @@
+{
+  "haiku": {
+    "detail": [
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 1.0,
+          "B": 9.0
+        },
+        "task": "Explain why the daytime sky is"
+      },
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 2.0,
+          "B": 9.0
+        },
+        "task": "What causes the seasons on Ear"
+      },
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 2.0
+        },
+        "s2": {
+          "A": 1.0,
+          "B": 9.0
+        },
+        "task": "Explain what a hash table is."
+      }
+    ],
+    "discrimination": 1.0
+  },
+  "opus": {
+    "detail": [
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 2.0,
+          "B": 9.0
+        },
+        "task": "Explain why the daytime sky is"
+      },
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 10.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 1.0,
+          "B": 10.0
+        },
+        "task": "What causes the seasons on Ear"
+      },
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 2.0,
+          "B": 10.0
+        },
+        "task": "Explain what a hash table is."
+      }
+    ],
+    "discrimination": 1.0
+  },
+  "sonnet": {
+    "detail": [
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 1.0,
+          "B": 10.0
+        },
+        "task": "Explain why the daytime sky is"
+      },
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 1.0,
+          "B": 10.0
+        },
+        "task": "What causes the seasons on Ear"
+      },
+      {
+        "ok_A": true,
+        "ok_swap": true,
+        "s1": {
+          "A": 9.0,
+          "B": 1.0
+        },
+        "s2": {
+          "A": 1.0,
+          "B": 9.0
+        },
+        "task": "Explain what a hash table is."
+      }
+    ],
+    "discrimination": 1.0
+  }
+}

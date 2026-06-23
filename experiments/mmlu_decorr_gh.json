@@ -1,0 +1,17 @@
+{
+  "best_single": 1.0,
+  "bidirectional": false,
+  "cat": "physics",
+  "gemma_only": [],
+  "gemma_p": 0.6,
+  "haiku_only": [
+    "mmlu_9044",
+    "mmlu_9045",
+    "mmlu_9050",
+    "mmlu_9053"
+  ],
+  "haiku_p": 1.0,
+  "mesh_net": 0.0,
+  "trials": 2,
+  "union": 1.0
+}
