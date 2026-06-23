@@ -54,7 +54,7 @@ def _prompt(task: dict, framing: str) -> str:
 # Mac Studio MLX servers via SSH tunnel (OpenAI-compatible /v1/chat/completions).
 _MLX = {"devstral": (8080, "mlx-community/Devstral-Small-2-24B-Instruct-2512-4bit", 1800),
         "mac-qwen": (8082, "mlx-community/Qwen2.5-Coder-7B-Instruct-4bit", 1800),
-        "qwen122": (8081, "mlx-community/Qwen3.5-122B-A10B-4bit", 8192)}  # reasoning -> high max_tokens
+        "qwen122": (8081, "mlx-community/Qwen3.5-122B-A10B-4bit", 32768)}  # reasoning: 8192 truncates thinking on some tasks (calc3) -> 32768
 
 
 def _mlx_chat(model: str, prompt: str, seed: int, temperature: float = 0.7, timeout: int = 600) -> str:
