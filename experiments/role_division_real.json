@@ -1,0 +1,111 @@
+{
+  "cells": [
+    {
+      "group": "solo",
+      "mean_cost": 15.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "calc3"
+    },
+    {
+      "group": "role_same",
+      "mean_cost": 37.5,
+      "mean_score": 0.916,
+      "scores": [
+        0.833,
+        1.0
+      ],
+      "task": "calc3"
+    },
+    {
+      "group": "role_cross",
+      "mean_cost": 18.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "calc3"
+    },
+    {
+      "group": "solo",
+      "mean_cost": 15.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "negabinary"
+    },
+    {
+      "group": "role_same",
+      "mean_cost": 30.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "negabinary"
+    },
+    {
+      "group": "role_cross",
+      "mean_cost": 18.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "negabinary"
+    },
+    {
+      "group": "solo",
+      "mean_cost": 15.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "fraction_to_decimal"
+    },
+    {
+      "group": "role_same",
+      "mean_cost": 30.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "fraction_to_decimal"
+    },
+    {
+      "group": "role_cross",
+      "mean_cost": 18.0,
+      "mean_score": 1.0,
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "task": "fraction_to_decimal"
+    }
+  ],
+  "n_iter": 2,
+  "summary": {
+    "diversity_gain (role_cross - role_same)": 0.028,
+    "group_cost": {
+      "role_cross": 18.0,
+      "role_same": 32.5,
+      "solo": 15.0
+    },
+    "group_score": {
+      "role_cross": 1.0,
+      "role_same": 0.972,
+      "solo": 1.0
+    },
+    "structure_gain (role_same - solo)": -0.028,
+    "total_gain (role_cross - solo)": 0.0
+  },
+  "trials": 2
+}
