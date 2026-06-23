@@ -100,6 +100,20 @@
 - **judge 選定の作法**：hard calibration（微妙な質差）＋ trials（非決定を均す）＋ correctness-first プロンプト。easy/単発では opus も良く見えるので不可。**単発測定は強モデルを不当に過小評価する**（opus 3/6→trials 0.83）。
 - これで「judge も使い自由記述も」の土台が完成＝信頼できる judge を外部錨で特定。openended の judge confound（+0.83→−0.08）を踏まずに自由記述 mesh へ進める。
 
+## 9. 自由記述 mesh の決着：多様性の寄与は負（2026-06-23）
+
+calibrated judge（haiku・correctness-first・trials=3）で自由記述（設計問い）の synthesis gain を測定：
+
+- 生 gain：synth(sonnet が opus+gemma を統合) vs best_single = **+0.333**（点火に見えた）
+- **de-confound（cross vs same-vendor merge）**：
+  - cross(opus+gemma) gain = **+0.056**
+  - same(opus+opus, 2ドラフト) gain = **+0.389**
+  - **diversity effect (cross − same) = −0.333（負）**
+- **結論**：+0.333 は **merge/再編集効果**（2ドラフトを統合し直すと少し上がる＝best-of-N）で、**多様性(mesh)の寄与はゼロ以下**。むしろ**弱い gemma を混ぜると gain が下がる（多様性は有害）**。openended `+0.83→−0.08` を再現・強化。**自由記述でも mesh は点火しない**。組み合わせる価値は「多様性」でなく「同じ強いモデルをもう一度引いて統合」（best-of-N）。
+
+### 今日の総括：mesh 点火を5角度で探して全敗
+古典アルゴ escalation／opus×haiku(math)／physics／gemma×haiku／自由記述 mesh——すべて純利得 ≈0 以下。**市場支配（単一最強モデルが最適）が checkable と自由記述の両方で独立に確認された**。mesh 燃料＝脱相関は (1)同系統で相関 (2)弱モデルは包含 (3)不公平測定で捏造 (4)自由記述で多様性有害——どの経路でも点火しない。
+
 ## Sources
 - The 2026 LLM Benchmark Reference: 17 Benchmarks — https://benchmarkingagents.com/benchmarks-list/
 - Knowledge Benchmarks 2026 (GPQA/HLE) — https://benchlm.ai/knowledge

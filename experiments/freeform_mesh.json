@@ -1,0 +1,36 @@
+{
+  "gen": [
+    "opus",
+    "gemma4:e2b"
+  ],
+  "judge": "haiku",
+  "mean_mesh_gain": 0.333,
+  "rows": [
+    {
+      "best_single": 9.0,
+      "gemma": 4.0,
+      "mesh_gain": 0.5,
+      "opus": 9.0,
+      "synth": 9.5,
+      "task": "Design a token-bucket rate limiter for a web API: "
+    },
+    {
+      "best_single": 9.0,
+      "gemma": 8.33,
+      "mesh_gain": 0.5,
+      "opus": 9.0,
+      "synth": 9.5,
+      "task": "Cache results of an expensive idempotent function "
+    },
+    {
+      "best_single": 8.33,
+      "gemma": 8.0,
+      "mesh_gain": 0.0,
+      "opus": 8.33,
+      "synth": 8.33,
+      "task": "Design a backoff-and-retry policy for calls to a f"
+    }
+  ],
+  "synth": "sonnet",
+  "trials": 3
+}
