@@ -1,0 +1,202 @@
+{
+  "cells": [
+    {
+      "task": "pytest-dev__pytest-11125",
+      "group": "solo",
+      "file": "src/_pytest/config/__init__.py",
+      "mean_score": 0.0,
+      "mean_cost": 15.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11125",
+      "group": "role_same",
+      "file": "src/_pytest/config/__init__.py",
+      "mean_score": 0.0,
+      "mean_cost": 45.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11125",
+      "group": "role_cross",
+      "file": "src/_pytest/config/__init__.py",
+      "mean_score": 0.0,
+      "mean_cost": 19.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11143",
+      "group": "solo",
+      "file": "src/_pytest/assertion/rewrite.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11143",
+      "group": "role_same",
+      "file": "src/_pytest/assertion/rewrite.py",
+      "mean_score": 1.0,
+      "mean_cost": 30.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11143",
+      "group": "role_cross",
+      "file": "src/_pytest/assertion/rewrite.py",
+      "mean_score": 1.0,
+      "mean_cost": 18.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11148",
+      "group": "solo",
+      "file": "src/_pytest/pathlib.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11148",
+      "group": "role_same",
+      "file": "src/_pytest/pathlib.py",
+      "mean_score": 0.0,
+      "mean_cost": 45.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11148",
+      "group": "role_cross",
+      "file": "src/_pytest/pathlib.py",
+      "mean_score": 0.0,
+      "mean_cost": 19.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11160",
+      "group": "solo",
+      "file": "src/_pytest/recwarn.py",
+      "mean_score": 0.0,
+      "mean_cost": 15.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11160",
+      "group": "role_same",
+      "file": "src/_pytest/recwarn.py",
+      "mean_score": 0.0,
+      "mean_cost": 45.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11160",
+      "group": "role_cross",
+      "file": "src/_pytest/recwarn.py",
+      "mean_score": 0.0,
+      "mean_cost": 19.0,
+      "scores": [
+        0.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11178",
+      "group": "solo",
+      "file": "src/_pytest/python_api.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11178",
+      "group": "role_same",
+      "file": "src/_pytest/python_api.py",
+      "mean_score": 1.0,
+      "mean_cost": 30.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11178",
+      "group": "role_cross",
+      "file": "src/_pytest/python_api.py",
+      "mean_score": 1.0,
+      "mean_cost": 18.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11217",
+      "group": "solo",
+      "file": "src/_pytest/fixtures.py",
+      "mean_score": 1.0,
+      "mean_cost": 15.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11217",
+      "group": "role_same",
+      "file": "src/_pytest/fixtures.py",
+      "mean_score": 1.0,
+      "mean_cost": 30.0,
+      "scores": [
+        1.0
+      ]
+    },
+    {
+      "task": "pytest-dev__pytest-11217",
+      "group": "role_cross",
+      "file": "src/_pytest/fixtures.py",
+      "mean_score": 1.0,
+      "mean_cost": 18.0,
+      "scores": [
+        1.0
+      ]
+    }
+  ],
+  "skipped": [],
+  "summary": {
+    "group_score": {
+      "solo": 0.667,
+      "role_same": 0.5,
+      "role_cross": 0.5
+    },
+    "group_cost": {
+      "solo": 15.0,
+      "role_same": 37.5,
+      "role_cross": 18.5
+    },
+    "structure_gain (role_same - solo)": -0.167,
+    "diversity_gain (role_cross - role_same)": 0.0,
+    "total_gain (role_cross - solo)": -0.167
+  },
+  "n_iter": 2,
+  "trials": 1
+}

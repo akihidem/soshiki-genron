@@ -99,34 +99,51 @@ def _is_lgtm(critique: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
+# substrate — prompt 群を差し替え可能にする seam。default は上の codegen（実装課題）。
+# 別 substrate（例: 実バグ修復 swebench）は同じ pipeline を再利用しつつ prompt だけ替える。
+# grade は呼び出し側が渡す（基盤ごとに外部 gold が違うため）。挙動は default で Phase 1 と不変。
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class Substrate:
+    thinker_prompt: "callable"     # (task) -> str
+    worker_prompt: "callable"      # (task, plan, prev_code=None, critique=None) -> str
+    verifier_prompt: "callable"    # (task, code) -> str
+    solo_prompt: "callable"        # (task) -> str
+
+
+_CODEGEN_SUB = Substrate(_thinker_prompt, _worker_prompt, _verifier_prompt, _solo_prompt)
+
+
+# --------------------------------------------------------------------------- #
 # pipeline — 1 群 × 1 タスク × 1 試行を回す。外部 gold が背骨（採点＋停止ゲート）。
 # --------------------------------------------------------------------------- #
-def run_solo(model: str, task: dict, call, grade, seed: int = 0) -> dict:
+def run_solo(model: str, task: dict, call, grade, seed: int = 0, sub: Substrate = _CODEGEN_SUB) -> dict:
     """単一最強 baseline：1 呼びで plan+implement（role 分離も repair も無し）。"""
-    code = call(model, _solo_prompt(task), seed)
+    code = call(model, sub.solo_prompt(task), seed)
     score = grade(code, task)
     return {"group": "solo", "score": score, "cost": round(_w(model), 3),
             "iters": [{"iter": 0, "stage": "solo", "score": score}], "code": code,
             "calls": [("worker", model)]}
 
 
-def run_role_division(roles: Roles, task: dict, call, grade, n_iter: int, group: str, seed: int = 0) -> dict:
+def run_role_division(roles: Roles, task: dict, call, grade, n_iter: int, group: str, seed: int = 0,
+                      sub: Substrate = _CODEGEN_SUB) -> dict:
     """Thinker→Worker→(Verifier→Worker)* の分業パイプライン。各 code 版を gold で1回だけ採点。"""
     calls = []
-    plan = call(roles.thinker, _thinker_prompt(task), seed); calls.append(("thinker", roles.thinker))
-    code = call(roles.worker, _worker_prompt(task, plan), seed); calls.append(("worker", roles.worker))
+    plan = call(roles.thinker, sub.thinker_prompt(task), seed); calls.append(("thinker", roles.thinker))
+    code = call(roles.worker, sub.worker_prompt(task, plan), seed); calls.append(("worker", roles.worker))
     cost = _w(roles.thinker) + _w(roles.worker)
     score = grade(code, task)
     iters = [{"iter": 0, "stage": "initial", "score": score}]
     it = 0
     while score < 1.0 and it < n_iter:                       # verify→repair ループ
-        critique = call(roles.verifier, _verifier_prompt(task, code), seed)
+        critique = call(roles.verifier, sub.verifier_prompt(task, code), seed)
         calls.append(("verifier", roles.verifier))
         cost += _w(roles.verifier)
         if _is_lgtm(critique):                               # Verifier が「直す所なし」→ 停止
             iters.append({"iter": it + 1, "stage": "lgtm", "score": score})
             break
-        code = call(roles.worker, _worker_prompt(task, plan, code, critique), seed)
+        code = call(roles.worker, sub.worker_prompt(task, plan, code, critique), seed)
         calls.append(("worker", roles.worker))
         cost += _w(roles.worker)
         score = grade(code, task)
@@ -136,26 +153,28 @@ def run_role_division(roles: Roles, task: dict, call, grade, n_iter: int, group:
             "iters": iters, "code": code, "calls": calls, "plan": plan}
 
 
-def _run_one(group: str, spec, task: dict, call, grade, n_iter: int, seed: int) -> dict:
+def _run_one(group: str, spec, task: dict, call, grade, n_iter: int, seed: int,
+             sub: Substrate = _CODEGEN_SUB) -> dict:
     if group == "solo":
-        return run_solo(spec, task, call, grade, seed)       # spec = model str
-    return run_role_division(spec, task, call, grade, n_iter, group, seed)  # spec = Roles
+        return run_solo(spec, task, call, grade, seed, sub)       # spec = model str
+    return run_role_division(spec, task, call, grade, n_iter, group, seed, sub)  # spec = Roles
 
 
 def _tid(task: dict) -> str:
-    return task["id"]
+    return task.get("id") or task.get("instance_id")             # codegen は id / repair は instance_id
 
 
 def _mean(xs: list) -> float:
     return round(sum(xs) / len(xs), 3) if xs else 0.0
 
 
-def run_groups(tasks: list, arms: dict, call, grade, n_iter: int = 2, trials: int = 1) -> dict:
+def run_groups(tasks: list, arms: dict, call, grade, n_iter: int = 2, trials: int = 1,
+               sub: Substrate = _CODEGEN_SUB) -> dict:
     """全 (task × group × trial) を回し、群ごとの平均スコア/コストと de-confound を返す。"""
     cells = []
     for task in tasks:
         for group, spec in arms.items():
-            runs = [_run_one(group, spec, task, call, grade, n_iter, seed=t) for t in range(trials)]
+            runs = [_run_one(group, spec, task, call, grade, n_iter, seed=t, sub=sub) for t in range(trials)]
             cells.append({"task": _tid(task), "group": group,
                           "mean_score": _mean([r["score"] for r in runs]),
                           "mean_cost": _mean([r["cost"] for r in runs]),
