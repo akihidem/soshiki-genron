@@ -1,0 +1,113 @@
+{
+  "baselines": {
+    "gemma": {
+      "cost": 0.2,
+      "p": 0.5
+    },
+    "haiku": {
+      "cost": 1.0,
+      "p": 1.0
+    },
+    "opus": {
+      "cost": 15.0,
+      "p": 0.833
+    },
+    "sonnet": {
+      "cost": 3.0,
+      "p": 1.0
+    }
+  },
+  "category": "physics",
+  "escalation": {
+    "avg_cost": 0.7,
+    "escalated_rate": 0.5,
+    "rows": [
+      {
+        "category": "physics",
+        "cost": 1.2,
+        "id": "mmlu_9044",
+        "ladder": [
+          [
+            "gemma",
+            0.0
+          ],
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "solved_by": "haiku"
+      },
+      {
+        "category": "physics",
+        "cost": 1.2,
+        "id": "mmlu_9045",
+        "ladder": [
+          [
+            "gemma",
+            0.0
+          ],
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "solved_by": "haiku"
+      },
+      {
+        "category": "physics",
+        "cost": 1.2,
+        "id": "mmlu_9046",
+        "ladder": [
+          [
+            "gemma",
+            0.0
+          ],
+          [
+            "haiku",
+            1.0
+          ]
+        ],
+        "solved_by": "haiku"
+      },
+      {
+        "category": "physics",
+        "cost": 0.2,
+        "id": "mmlu_9047",
+        "ladder": [
+          [
+            "gemma",
+            1.0
+          ]
+        ],
+        "solved_by": "gemma"
+      },
+      {
+        "category": "physics",
+        "cost": 0.2,
+        "id": "mmlu_9048",
+        "ladder": [
+          [
+            "gemma",
+            1.0
+          ]
+        ],
+        "solved_by": "gemma"
+      },
+      {
+        "category": "physics",
+        "cost": 0.2,
+        "id": "mmlu_9049",
+        "ladder": [
+          [
+            "gemma",
+            1.0
+          ]
+        ],
+        "solved_by": "gemma"
+      }
+    ],
+    "solve_rate": 1.0
+  },
+  "n": 6
+}

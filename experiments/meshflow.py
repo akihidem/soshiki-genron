@@ -176,10 +176,11 @@ def _llm_agent(model, cache, cache_path):
     return agent
 
 
-def llm_demo(cache, cache_path):
+def llm_demo(cache, cache_path, chosen=None):
     import experiments.market_external as MX
     by_id = {t["id"]: t for t in MX._EASY_TASKS + MX.EXT_TASKS + MX._HARD_TASKS + MX._LADDER_TASKS}
-    chosen = ["clamp", "roman", "atoms", "calc"]     # gemma solves clamp; fails roman/atoms/calc -> escalate
+    if chosen is None:
+        chosen = ["clamp", "roman", "atoms", "calc"]     # gemma solves clamp; fails roman/atoms/calc -> escalate
     tiers = [Tier(m, w, _llm_agent(mm, cache, cache_path))
              for m, mm, w in (("gemma", "gemma4:e2b", 0.2), ("haiku", "haiku", 1.0),
                               ("sonnet", "sonnet", 3.0), ("opus", "opus", 15.0))]
@@ -202,7 +203,9 @@ def main(argv=None) -> int:
         out_dir = os.path.dirname(os.path.abspath(__file__))
         cp = os.path.join(out_dir, "meshflow_real_artifacts.json")
         cache = json.load(open(cp, encoding="utf-8")) if os.path.exists(cp) else {}
-        tasks, tiers = llm_demo(cache, cp)
+        _av = argv if argv is not None else sys.argv[1:]
+        _chosen = _av[_av.index("--tasks") + 1].split(",") if "--tasks" in _av else None
+        tasks, tiers = llm_demo(cache, cp, _chosen)
         r = execute(tasks, tiers, mesh=False)         # mesh on code = synthesizer agent (seam); escalation here
         with open(os.path.join(out_dir, "meshflow_real.json"), "w", encoding="utf-8") as f:
             json.dump({k: v for k, v in r.items() if k != "blackboard"}, f, ensure_ascii=False, indent=2, sort_keys=True)
