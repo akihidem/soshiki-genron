@@ -83,6 +83,23 @@
 - **harness fix**：`make_prompt` を CoT 許可＋`Answer: <letter>` に修正済み（`extract_choice` が末尾を拾う）。
 - **trials=3 で確定**（`mmlu_cot_trials.json`）：haiku=opus=**0.875 で per-task 完全一致**（7687 だけ両方 0/3 落とす唯一の hardcore）。脱相関ゼロを追認＝**mesh 純利得 0.000**、union 天井(1−1/8=0.875)を単一で達成。同系統（Anthropic）は誤りが相関し hardcore を共有＝SWE-bench 結論の QA 再現。opus 非決定の懸念も解消（0.875 安定）。
 
+## 8. judge を外部錨で校正する（自由記述に拡張する前提・2026-06-23）
+
+自由記述を judge で測る前に、judge 自体を陽性/陰性対照で検品した（「known-correct を先に通す」の judge 版）。位置バイアス除去（A/B 入替）込み。
+
+- **easy control（good vs 明白に悪い）**：haiku/sonnet/opus 全員 6/6。「judge は無能でない」を示すだけ＝過信注意（対照が簡単すぎる罠）。
+- **hard control（good vs subtly-worse＝事実誤り1個）**：単発では opus 3/6 に崩れたが、生出力は整形済み・~7s・非空＝TUI 落ちではなく**生成非決定のアーティファクト**。**trials=5 で公平化すると**：
+
+  | judge | resolution | cost |
+  |---|---|---|
+  | sonnet | **1.00** (30/30) | 3.0 |
+  | haiku | **0.97** (29/30) | 1.0 |
+  | opus | **0.83** (25/30) | 15.0 |
+
+- **結論**：**judge には haiku/sonnet、opus は外す**。安い haiku(1.0) が最強 opus(15.0) を judge として上回る＝**市場支配定理が judge 役割にも適用**。**generator 最強 ≠ judge 最強**＝役割別にモデルを配置せよ（組織処方に直結）。opus の弱点＝completeness バイアス（"詳しいが誤り"を高評価、sky は trials でも 0.60）。
+- **judge 選定の作法**：hard calibration（微妙な質差）＋ trials（非決定を均す）＋ correctness-first プロンプト。easy/単発では opus も良く見えるので不可。**単発測定は強モデルを不当に過小評価する**（opus 3/6→trials 0.83）。
+- これで「judge も使い自由記述も」の土台が完成＝信頼できる judge を外部錨で特定。openended の judge confound（+0.83→−0.08）を踏まずに自由記述 mesh へ進める。
+
 ## Sources
 - The 2026 LLM Benchmark Reference: 17 Benchmarks — https://benchmarkingagents.com/benchmarks-list/
 - Knowledge Benchmarks 2026 (GPQA/HLE) — https://benchlm.ai/knowledge

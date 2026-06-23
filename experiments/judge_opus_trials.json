@@ -1,0 +1,24 @@
+{
+  "good_wins": 25,
+  "judge": "opus",
+  "of": 30,
+  "per_task": [
+    {
+      "good_wins": 6,
+      "of": 10,
+      "task": "Explain why the daytime sky is"
+    },
+    {
+      "good_wins": 9,
+      "of": 10,
+      "task": "What causes the seasons on Ear"
+    },
+    {
+      "good_wins": 10,
+      "of": 10,
+      "task": "Explain what a hash table is."
+    }
+  ],
+  "resolution": 0.833,
+  "trials": 5
+}
