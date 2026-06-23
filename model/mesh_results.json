@@ -1,0 +1,185 @@
+{
+  "base": {
+    "best_single": 0.5,
+    "dominates_strong": false,
+    "flat_strong_cost": 1.0,
+    "ignites": true,
+    "mesh_correctness": 0.75,
+    "mesh_cost": 0.6,
+    "mesh_gain": 0.25
+  },
+  "cost_crossover": [
+    {
+      "cost": 2.1,
+      "cost_dominates_strong": false,
+      "n": 7,
+      "rho": 0.0
+    },
+    {
+      "cost": null,
+      "cost_dominates_strong": false,
+      "n": null,
+      "rho": 0.3
+    },
+    {
+      "cost": null,
+      "cost_dominates_strong": false,
+      "n": null,
+      "rho": 0.6
+    },
+    {
+      "cost": null,
+      "cost_dominates_strong": false,
+      "n": null,
+      "rho": 0.9
+    }
+  ],
+  "critical_point": "利得 > 0 ⟺ ρ < 1（脱相関がある）。ρ=1（入れ子/共通 hard core）で利得 0 ＝ 市場支配。",
+  "empirical_regimes": [
+    {
+      "gain": 0.0,
+      "ignites": false,
+      "n": 3,
+      "note": "frontier の errors は入れ子/共通 hard core＝ρ≈1→利得0。5角度すべて不点火＝市場支配。",
+      "regime": "冗長並列 mesh（実測 gain≈0）",
+      "rho": 1.0
+    },
+    {
+      "gain": 0.0,
+      "ignites": false,
+      "n": 4,
+      "note": "framing を変えても hard core は割れず脱相関できない＝ρ≈1。多様性の寄与は負。",
+      "regime": "config 散らし（B−A≈0）",
+      "rho": 1.0
+    },
+    {
+      "gain": 0.375,
+      "ignites": true,
+      "n": 3,
+      "note": "各ティアが*別の部分*を解くよう構成＝ρ=0→union 点火（gain>0）。real でなく構成。",
+      "regime": "meshflow edge demo（構成で相補）",
+      "rho": 0.0
+    }
+  ],
+  "falsifier": "実測 mesh union が p+(1−ρ)(1−p)(1−(1−p)^{n−1}) から系統的に外れる、または ρ<1 を実証しても union が best-single を超えないなら本モデルは偽。",
+  "finding": "mesh の点火は*脱相関*の問題（market.py の escalation はコストの問題）。本リポの実測 gain≈0 は すべて ρ≈1 の点＝errors が共通 hard core を持つから。脱相関(ρ<1)があれば必ず点火するが、weak mesh が strong を*コストで*置き換えるのは稀（正しさ1に届く n·(w+verify) が s を超えやすい）＝mesh の本領は『縁』での補完であって置換でない。",
+  "gain_formula": "mesh 利得 = (1−ρ)·(1−p)·(1 − (1−p)^{n−1})",
+  "n_sweep": [
+    {
+      "gain": 0.0,
+      "n": 1,
+      "union": 0.5
+    },
+    {
+      "gain": 0.25,
+      "n": 2,
+      "union": 0.75
+    },
+    {
+      "gain": 0.375,
+      "n": 3,
+      "union": 0.875
+    },
+    {
+      "gain": 0.4375,
+      "n": 4,
+      "union": 0.9375
+    },
+    {
+      "gain": 0.46875,
+      "n": 5,
+      "union": 0.96875
+    },
+    {
+      "gain": 0.484375,
+      "n": 6,
+      "union": 0.984375
+    },
+    {
+      "gain": 0.492188,
+      "n": 7,
+      "union": 0.992188
+    },
+    {
+      "gain": 0.496094,
+      "n": 8,
+      "union": 0.996094
+    }
+  ],
+  "params": {
+    "n": 2,
+    "p": 0.5,
+    "rho": 0.0,
+    "s": 1.0,
+    "verify": 0.1,
+    "w": 0.2
+  },
+  "rho_sweep": [
+    {
+      "gain": 0.0,
+      "ignites": false,
+      "rho": 1.0,
+      "union": 0.5
+    },
+    {
+      "gain": 0.025,
+      "ignites": true,
+      "rho": 0.9,
+      "union": 0.525
+    },
+    {
+      "gain": 0.05,
+      "ignites": true,
+      "rho": 0.8,
+      "union": 0.55
+    },
+    {
+      "gain": 0.075,
+      "ignites": true,
+      "rho": 0.7,
+      "union": 0.575
+    },
+    {
+      "gain": 0.1,
+      "ignites": true,
+      "rho": 0.6,
+      "union": 0.6
+    },
+    {
+      "gain": 0.125,
+      "ignites": true,
+      "rho": 0.5,
+      "union": 0.625
+    },
+    {
+      "gain": 0.15,
+      "ignites": true,
+      "rho": 0.4,
+      "union": 0.65
+    },
+    {
+      "gain": 0.175,
+      "ignites": true,
+      "rho": 0.3,
+      "union": 0.675
+    },
+    {
+      "gain": 0.2,
+      "ignites": true,
+      "rho": 0.2,
+      "union": 0.7
+    },
+    {
+      "gain": 0.225,
+      "ignites": true,
+      "rho": 0.1,
+      "union": 0.725
+    },
+    {
+      "gain": 0.25,
+      "ignites": true,
+      "rho": 0.0,
+      "union": 0.75
+    }
+  ]
+}
