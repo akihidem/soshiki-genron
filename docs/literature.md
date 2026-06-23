@@ -49,6 +49,22 @@
 
 > メモ: 3件とも本研究と整合。Marschak&Radner が c_comm 軸の数理的土台、Malone が「下げると市場化」の予測元、**Carley が「構造をシミュレーションで測る」方法そのものの正当化**。次は一次精読での係数正当化、または容量制約軸の追加（第三の計測）。
 
+### クラスタ E（近年 LLM マルチエージェント）の一次確認
+
+- **Xu et al. (2025/2026), "TRINITY: An Evolved LLM Coordinator," arXiv:2512.04695 (ICLR 2026)**
+  - 仮定した人間拘束: **固定役割（F2）＋多ターン引き継ぎ（F4）**。Thinker/Worker/Verifier の人間語彙を無批判採用＝本研究の批判対象 (b)「人間語彙をどれだけ借りているか」のケース。
+  - 何を測ったか: 小 coordinator（Qwen3-0.6B＋10K head, CMA-ES 進化）が異種7モデル（GPT-5 / Gemini-2.5-pro / Claude-4-Sonnet＋Gemma-3-27B / DeepSeek-R1-Distill-Qwen-32B / Qwen-3-32B ×2）に役割を割当・多ターン協調。
+    - **異質プール**: Trinity 0.615 vs 最良単一 0.465（+15pt 級）。MoA 0.39・majority@5・5x CTX・5x SR を上回る＝**計算量整合でも勝つ**（gain は単純な more-compute / best-of-N でない）。
+    - **フロンティア収束**: 高難度 V6 では進化が open を捨て **closed 3 モデルに収束**、Trinity 86.2 vs GPT-5 単体 83.8（+2.4pt、ほぼ消える）。
+    - **Verifier は実行非接地**＝ACCEPT/REVISE の言語判定のみ（テスト実走なし）。
+    - ablation: tri-role 除去で MATH500 −6.0 / RLPR −3.9＝役割*構造*は荷重。ただし random-role 対照なし・役割↔モデル特化の分析なし。
+  - AIへ転移するか / 本研究での使い道:
+    - **§5 と整合（方向）**: 異質下で役割構造ルーティングが単一モデルを Pareto 支配。**しかも CMA-ES が独立手法でフロンティア収束（open 切捨て）を再発見＝soshiki の「異質性はフロンティアで払わなくなる／gain≈0」の独立裏取り**。retract した cross-vendor mesh noise と矛盾せず、むしろ境界を支持。
+    - **§9 と衝突（警告）**: TRINITY の "Verifier" は soshiki が*盲目*と実測した model-judgment 検証であって execution-grounded な §5 市場ではない。→ +15pt が verification-routing 由来か critique-diversity 由来か未分離。「§5 の追試」と呼べるのは*構造が flat ensemble（MoA）に勝つ*ところまで。
+    - **F2 反例テスト＝半答**: 役割*構造*は荷重（"pure projection" 説は弱まる）が、*特定の人間役割意味*が効くか（任意の3分化で足りるか）は未証明。
+    - 次に測る: random-role 対照／プールを均質フロンティアに固定したときの gain 消失曲線（soshiki gain≈0 と定量照合）。
+  - 信頼度: **一次（arXiv HTML 全文）／ただし数値は要約モデル経由＝図表 eyeball 未**。特に「open 切捨て収束」「standard の 0.465 vs GPT-5 単体 0.838 の config 差」は PDF の表で確認するまで断定保留。
+
 ## 記録フォーマット（読んだら追記）
 ```
 - <著者 年, タイトル>
