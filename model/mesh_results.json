@@ -36,6 +36,18 @@
   ],
   "critical_point": "利得 > 0 ⟺ ρ < 1（脱相関がある）。ρ=1（入れ子/共通 hard core）で利得 0 ＝ 市場支配。",
   "empirical_real": {
+    "codex×fable pytest-6": {
+      "best_single": 0.6667,
+      "failure_rho": 1.0,
+      "gain": 0.0,
+      "ignites": false,
+      "note": "fable の solve ベクトルは codex と*完全一致*＝failure_rho=1.0(同じ instance で成功し同じ instance で失敗)。別モデル・別世代でも挙動が同一＝脱相関ゼロの極＝mesh 寄与ゼロの教科書例。ρ<1 の cross-vendor(full-24)と対照。ただし ρ=1.0 は *trials=1* の per-instance 値(11125 は非決定 instance)＝厳密な同一性主張には trials>1 が要る。",
+      "per_model": [
+        0.6667,
+        0.6667
+      ],
+      "union": 0.6667
+    },
     "opus×codex full-24 (cross-vendor)": {
       "best_single": 0.75,
       "failure_rho": 0.6124,
@@ -56,6 +68,19 @@
       "note": "ρ≈0.71<1 でも gain 0＝codex が opus を*入れ子*に包む(非対称)。点火には脱相関だけでなく*相互*相補が要る、の実例。",
       "per_model": [
         0.5,
+        0.6667
+      ],
+      "union": 0.6667
+    },
+    "opus×codex×fable pytest-6 (3-way)": {
+      "best_single": 0.6667,
+      "failure_rho": 0.8047,
+      "gain": 0.0,
+      "ignites": false,
+      "note": "第3の frontier(fable)を足しても gain 0(union は codex 単独と同じ 0.667・ρ≈0.80)。fable は opus も codex も落とした hard core(11125/11160)を*同じく*落とし、成功は codex の部分集合＝冗長 mesh は frontier を増やしても点火しない(脱相関が無ければ頭数は無意味)の実測強化＝sonnet を sympy18 に足した n=3 飽和(gain+0.000)の pytest 版レプリカ。*trials=1*(claude-cli-run 非決定 TUI)・pytest-11125 は既知の run-to-run variance instance(§9-11)。単一試行の gain0 は偽陽性リスクの低い null(robust な『同系統は脱相関せず点火せず』の向き)だが厳密化には trials>1。",
+      "per_model": [
+        0.5,
+        0.6667,
         0.6667
       ],
       "union": 0.6667

@@ -1,0 +1,49 @@
+{
+  "models": [
+    "fable"
+  ],
+  "n_solved_cells": 6,
+  "pairs": [],
+  "per_model": {
+    "fable": 0.667
+  },
+  "rounds": 1,
+  "rows": [
+    {
+      "base_p2p_fail": 0,
+      "fable": 0,
+      "file": "src/_pytest/config/__init__.py",
+      "instance": "pytest-dev__pytest-11125"
+    },
+    {
+      "base_p2p_fail": 1000000,
+      "fable": 1,
+      "file": "src/_pytest/assertion/rewrite.py",
+      "instance": "pytest-dev__pytest-11143"
+    },
+    {
+      "base_p2p_fail": 0,
+      "fable": 1,
+      "file": "src/_pytest/pathlib.py",
+      "instance": "pytest-dev__pytest-11148"
+    },
+    {
+      "base_p2p_fail": 0,
+      "fable": 0,
+      "file": "src/_pytest/recwarn.py",
+      "instance": "pytest-dev__pytest-11160"
+    },
+    {
+      "base_p2p_fail": 0,
+      "fable": 1,
+      "file": "src/_pytest/python_api.py",
+      "instance": "pytest-dev__pytest-11178"
+    },
+    {
+      "base_p2p_fail": 0,
+      "fable": 1,
+      "file": "src/_pytest/fixtures.py",
+      "instance": "pytest-dev__pytest-11217"
+    }
+  ]
+}
