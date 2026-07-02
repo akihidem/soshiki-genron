@@ -126,7 +126,8 @@ _SWE24_OPUS = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0,
 _SWE24_CODEX = [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]
 _SWE6_OPUS = [0, 1, 0, 0, 1, 1]                                    # pytest-only 部分集合
 _SWE6_CODEX = [0, 1, 1, 0, 1, 1]
-_SWE6_FABLE = [0, 1, 1, 0, 1, 1]  # 2026-07-02 実測(fable-5・claude-cli-run one-shot)＝codex と同一ベクトル・hard core(11125/11160)を共有
+# fable-5 を pytest6 で試みたが単一試行では非再現(trial1 [0,1,1,0,1,1] vs trial2 [0,0,0,1,1,1]・3/6 flip・
+# 一部は fable が非コード出力を返し parse 不能)＝mesh に載せる値にならない。詳細は SWEBENCH_FABLE_PT6.md・§9-11。
 
 
 def run(prm: "MeshParams | None" = None) -> dict:
@@ -171,17 +172,7 @@ def run(prm: "MeshParams | None" = None) -> dict:
         "opus×codex pytest-6 subset": {**empirical_mesh([_SWE6_OPUS, _SWE6_CODEX]),
             "note": "ρ≈0.71<1 でも gain 0＝codex が opus を*入れ子*に包む(非対称)。"
                     "点火には脱相関だけでなく*相互*相補が要る、の実例。"},
-        "opus×codex×fable pytest-6 (3-way)": {**empirical_mesh([_SWE6_OPUS, _SWE6_CODEX, _SWE6_FABLE]),
-            "note": "第3の frontier(fable)を足しても gain 0(union は codex 単独と同じ 0.667・ρ≈0.80)。"
-                    "fable は opus も codex も落とした hard core(11125/11160)を*同じく*落とし、成功は codex の部分集合＝"
-                    "冗長 mesh は frontier を増やしても点火しない(脱相関が無ければ頭数は無意味)の実測強化＝"
-                    "sonnet を sympy18 に足した n=3 飽和(gain+0.000)の pytest 版レプリカ。"
-                    "*trials=1*(claude-cli-run 非決定 TUI)・pytest-11125 は既知の run-to-run variance instance(§9-11)。"
-                    "単一試行の gain0 は偽陽性リスクの低い null(robust な『同系統は脱相関せず点火せず』の向き)だが厳密化には trials>1。"},
-        "codex×fable pytest-6": {**empirical_mesh([_SWE6_CODEX, _SWE6_FABLE]),
-            "note": "fable の solve ベクトルは codex と*完全一致*＝failure_rho=1.0(同じ instance で成功し同じ instance で失敗)。"
-                    "別モデル・別世代でも挙動が同一＝脱相関ゼロの極＝mesh 寄与ゼロの教科書例。ρ<1 の cross-vendor(full-24)と対照。"
-                    "ただし ρ=1.0 は *trials=1* の per-instance 値(11125 は非決定 instance)＝厳密な同一性主張には trials>1 が要る。"},
+        # fable-5 の 3-way は撤回(2026-07-02): trials=1 で非再現(SWEBENCH_FABLE_PT6.md)。単一試行の値を mesh に載せない。
     }
 
     return {

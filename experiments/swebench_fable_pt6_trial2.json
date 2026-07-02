@@ -1,0 +1,56 @@
+{
+  "pytest-dev__pytest-11125": {
+    "score": 0,
+    "parsed": true,
+    "f2p_ok": false,
+    "p2p_ok": true,
+    "raw_len": 209,
+    "n_SEARCH": 1,
+    "raw_head": "<<<<<<< SEARCH\n        testpaths = namespace.file_or_dir + testpaths_ini\n=======\n        testpaths = namespace.file_or_dir\n        if not testpaths:\n            testpaths = list(testpaths_ini)\n>>>>>>> REPLACE\n"
+  },
+  "pytest-dev__pytest-11143": {
+    "score": 0,
+    "parsed": false,
+    "f2p_ok": null,
+    "p2p_ok": null,
+    "raw_len": 396,
+    "n_SEARCH": 0,
+    "raw_head": "Behold the city of Volta. This ancient city rises from rolling hills. However this city sits between two major valleys. The city spans 2 districts with grand architecture. The river flows through this city's heart during 12 months. An ancient bridge over the river defines this city's spirit. The city has 3 main plazas for gathering. This city will shine in the future.\n\n@@@\nCCRUN_DONE_dd640288\n"
+  },
+  "pytest-dev__pytest-11148": {
+    "score": 0,
+    "parsed": false,
+    "f2p_ok": null,
+    "p2p_ok": null,
+    "raw_len": 409,
+    "n_SEARCH": 0,
+    "raw_head": "Behold the magnificent city of Volta. This ancient city spreads across hills and valleys. However the city rises with splendid towers. The city has one ancient river flowing through it. A stone bridge connects the city to distant lands. The river winds through the city and provides water. The city hosts 3 plazas and 2 palaces with 5 gardens. The city will prosper into the future.\n\n@@@\n\nCCRUN_DONE_d7d23a1b\n"
+  },
+  "pytest-dev__pytest-11160": {
+    "score": 1,
+    "parsed": true,
+    "f2p_ok": true,
+    "p2p_ok": true,
+    "raw_len": 1274,
+    "n_SEARCH": 1,
+    "raw_head": "<<<<<<< SEARCH\n    def pop(self, cls: Type[Warning] = Warning) -> \"warnings.WarningMessage\":\n        \"\"\"Pop the first recorded warning, raise exception if not exists.\"\"\"\n        for i, w in enumerate(self._list):\n            if issubclass(w.category, cls):\n                return self._list.pop(i)\n        __tracebackhide__ = True\n        raise AssertionError(f\"{cls!r} not found in warning list\")\n=======\n    def pop(self, cls: Type[Warning] = Warning) -> \"warnings.WarningMessage\":\n        \"\"\"Pop t"
+  },
+  "pytest-dev__pytest-11178": {
+    "score": 1,
+    "parsed": true,
+    "f2p_ok": true,
+    "p2p_ok": true,
+    "raw_len": 1395,
+    "n_SEARCH": 1,
+    "raw_head": "<<<<<<< SEARCH\n            if approx_value != other_value:\n                max_abs_diff = max(\n                    max_abs_diff, abs(approx_value.expected - other_value)\n                )\n                if approx_value.expected == 0.0:\n                    max_rel_diff = math.inf\n                else:\n                    max_rel_diff = max(\n                        max_rel_diff,\n                        abs(\n                            (approx_value.expected - other_value)\n                        "
+  },
+  "pytest-dev__pytest-11217": {
+    "score": 1,
+    "parsed": true,
+    "f2p_ok": true,
+    "p2p_ok": true,
+    "raw_len": 340,
+    "n_SEARCH": 1,
+    "raw_head": "<<<<<<< SEARCH\n    except TEST_OUTCOME as e:\n        if isinstance(e, skip.Exception) and not fixturefunc.__name__.startswith(\n            \"xunit_setup\"\n        ):\n            e._use_item_location = True\n=======\n    except TEST_OUTCOME as e:\n        if isinstance(e, skip.Exception):\n            e._use_item_location = True\n>>>>>>> REPLACE\n"
+  }
+}
