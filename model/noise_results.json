@@ -1,0 +1,165 @@
+{
+  "fable_pt6": {
+    "disagreement_d": 0.5,
+    "f_eff_by_trials": {
+      "1": 0.5,
+      "3": 0.5,
+      "5": 0.5,
+      "9": 0.5
+    },
+    "flip_f": 0.5,
+    "note": "d=0.5 は対称反転モデルの表現域の縁＝採点が実質コイン投げ。f_eff はどの trials でも 0.5 のまま＝**このハーネスでは fable の per-instance 値は何回回しても確定しない**。SWEBENCH_FABLE_PT6.md の『非コード出力で parse 不能』＝採点器の故障であって、trials を増やして平均する対象ではない（先に harness を直す）。"
+  },
+  "falsifier": "同一条件で trials を増やした時、観測 gain が床を超えたまま安定するなら『床未満は報告しない』は保守的すぎる＝本モデルは偽（床を下げるべき）。",
+  "gate": "観測 gain（タスク数 m）が detection_floor(n, f, trials, α=0.05) 未満なら 『点火』と報告しない。trials=1 は robust_counts が naive に退化する＝床を持てない。",
+  "identity": "mesh gain = min(a, b) / n（a=|A\\B|, b=|B\\A|）⟹ gain>0 ⟺ *相互*相補",
+  "noise_model": "各セルが独立に確率 f で反転。2試行不一致率 d = 2f(1−f) ⟹ f=(1−√(1−2d))/2。trials=t は多数決 → f_eff(f,t)。",
+  "null_hypothesis": "H0: min(a_true, b_true) = 0（真の相互相補ゼロ＝入れ子 or 一致）",
+  "pytest6": {
+    "f_codex": 0.0,
+    "f_opus": 0.0918,
+    "floor_trials1": {
+      "alpha": 0.05,
+      "f_eff_a": 0.091752,
+      "f_eff_b": 0.0,
+      "gain": 0.3333,
+      "m": 2,
+      "n": 6,
+      "p_at_m": 0.000375,
+      "trials": 1
+    },
+    "floor_trials3": {
+      "alpha": 0.05,
+      "f_eff_a": 0.02371,
+      "f_eff_b": 0.0,
+      "gain": 0.1667,
+      "m": 1,
+      "n": 6,
+      "p_at_m": 0.004289,
+      "trials": 3
+    },
+    "robust": {
+      "a_only": 0,
+      "b_only": 0,
+      "common": 3,
+      "gain": 0.0,
+      "n": 6,
+      "neither": 2,
+      "unstable": 1
+    }
+  },
+  "swebench_n24": {
+    "f_sensitivity": [
+      {
+        "f_opus": 0.05,
+        "floor_m_trials1": 2,
+        "floor_m_trials3": 2,
+        "p_false_ignition_trials1": 0.5795
+      },
+      {
+        "f_opus": 0.067,
+        "floor_m_trials1": 3,
+        "floor_m_trials3": 2,
+        "p_false_ignition_trials1": 0.6792
+      },
+      {
+        "f_opus": 0.1,
+        "floor_m_trials1": 3,
+        "floor_m_trials3": 2,
+        "p_false_ignition_trials1": 0.7997
+      },
+      {
+        "f_opus": 0.125,
+        "floor_m_trials1": 3,
+        "floor_m_trials3": 2,
+        "p_false_ignition_trials1": 0.8513
+      }
+    ],
+    "floor_by_trials": [
+      {
+        "floor_gain_A": 0.125,
+        "floor_gain_B": 0.125,
+        "floor_m_A": 3,
+        "floor_m_B": 3,
+        "p_false_ignition_A": 0.6792,
+        "reportable_A": false,
+        "trials": 1
+      },
+      {
+        "floor_gain_A": 0.0833,
+        "floor_gain_B": 0.0833,
+        "floor_m_A": 2,
+        "floor_m_B": 2,
+        "p_false_ignition_A": 0.2053,
+        "reportable_A": false,
+        "trials": 3
+      },
+      {
+        "floor_gain_A": 0.0417,
+        "floor_gain_B": 0.0417,
+        "floor_m_A": 1,
+        "floor_m_B": 1,
+        "p_false_ignition_A": 0.0476,
+        "reportable_A": true,
+        "trials": 5
+      },
+      {
+        "floor_gain_A": 0.0417,
+        "floor_gain_B": 0.0417,
+        "floor_m_A": 1,
+        "floor_m_B": 1,
+        "p_false_ignition_A": 0.0107,
+        "reportable_A": true,
+        "trials": 7
+      }
+    ],
+    "h0_structure_A": {
+      "a_only": 1,
+      "b_only": 0,
+      "common": 18,
+      "neither": 5
+    },
+    "h0_structure_B": {
+      "a_only": 1,
+      "b_only": 0,
+      "common": 15,
+      "neither": 8
+    },
+    "measured_noise": {
+      "codex_disagreement_d": 0.0,
+      "codex_flip_f": 0.0,
+      "note": "同じ N=24 を独立2回（SWEBENCH_TRIALS.md）。codex は完全再現・opus だけ非決定。",
+      "opus_disagreement_d": 0.125,
+      "opus_flip_f": 0.067
+    },
+    "min_trials_for_1_task": 5,
+    "observed_gain_tasks": 1,
+    "p_trial1_gain_under_h0": 0.6792,
+    "robust_trials2": {
+      "a_only": 1,
+      "b_only": 0,
+      "common": 15,
+      "gain": 0.0,
+      "n": 24,
+      "neither": 5,
+      "unstable": 3
+    },
+    "trial1_naive": {
+      "a_only": 1,
+      "b_only": 3,
+      "common": 15,
+      "gain": 0.0417,
+      "n": 24,
+      "neither": 5
+    },
+    "trial2_naive": {
+      "a_only": 1,
+      "b_only": 0,
+      "common": 18,
+      "gain": 0.0,
+      "n": 24,
+      "neither": 5
+    },
+    "verdict": "trial-1 の +0.042 は H0（相互相補ゼロ）＋opus のノイズだけで高確率に生じる。trials=1 の検出床は 3 タスク（gain 0.125）で、観測 1 タスク（0.042）は 3 倍下。**撤回は運でなく、trial-2 を回す前に計算できた。**"
+  }
+}

@@ -20,6 +20,18 @@ comonotone、確率 1−ρ で独立）:
 *Pareto 支配*するには union→1（ρ 小 かつ n 大）かつ n·(w+verify) < s が要る。weak で正しさ 1 に届かせる
 コストが s を超えやすく、**mesh が strong を置き換えるのは稀**（mesh の本領は「縁」での補完であって置換でない）。
 
+──────────────────────────────────────────────────────────────────────────────
+**実測は上の臨界（ρ<1 ⟹ 点火）を反証した。** real frontier（opus×codex・実 SWE-bench N=24・trials=2）は
+ρ≈0.6<1 で脱相関しているのに **robust gain = 0**。実測で効くのは ρ でなく*相互*相補で、恒等式
+    **gain = min(a, b) / n**   （a=|A\B|, b=|B\A|）
+が観測を説明する（a>0 かつ b>0 でなければ 0。入れ子なら ρ<1 でも 0）。詳細は [`noise.py`](noise.py) ①。
+
+さらに **非決定な採点ハーネスは gain>0 をノイズだけで作る**。本リポは一度 trials=1 の +0.042 を
+「real frontier で初の点火」と報告・commit し、trials=2 で 0 に flip して撤回した
+（[`../experiments/SWEBENCH_TRIALS.md`](../experiments/SWEBENCH_TRIALS.md)）。よって本ファイルの実測点は
+**trials=2 の頑健値のみ**を載せ、`ignites` は「gain>0」でなく **gain > 検出床**（noise.py ④）で判定する。
+──────────────────────────────────────────────────────────────────────────────
+
 決定的（解析・stdlib のみ）。 run: python3 -m model.mesh
 """
 
@@ -29,6 +41,15 @@ import dataclasses
 import json
 import os
 from dataclasses import dataclass
+
+# 実測解ベクトルと検出床の正本は noise.py（trial-1/trial-2 の両方を持つ）。
+# 単一試行の値は mesh に載せない ── ignites は「gain>0」でなく「gain > 検出床」で判定する。
+from model.noise import (
+    SWE6_CODEX_T1, SWE6_CODEX_T2, SWE6_OPUS_T1, SWE6_OPUS_T2,
+    SWE24_CODEX_T1, SWE24_CODEX_T2, SWE24_OPUS_T1, SWE24_OPUS_T2,
+    TrueStructure, detection_floor, disagreement_rate, flip_from_disagreement,
+    robust_counts, stable_vector,
+)
 
 
 @dataclass
@@ -120,14 +141,45 @@ def min_agents_to_match_strong(p: float, rho: float, w: float, s: float, verify:
     return {"n": None, "cost": None, "cost_dominates_strong": False}
 
 
-# 実測解ベクトル（experiments/swebench_all_results.json, opus×codex one-shot, 1=resolved）。
-# market.py が §5 の実測レジームをハードコードするのと同じ作法で、mesh の実測点をここに固定する。
-_SWE24_OPUS = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0]
-_SWE24_CODEX = [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0]
-_SWE6_OPUS = [0, 1, 0, 0, 1, 1]                                    # pytest-only 部分集合
-_SWE6_CODEX = [0, 1, 1, 0, 1, 1]
+# 実測解ベクトル（1=resolved・index は experiments/swebench_all_results.json の rows 順）は noise.py が正本。
 # fable-5 を pytest6 で試みたが単一試行では非再現(trial1 [0,1,1,0,1,1] vs trial2 [0,0,0,1,1,1]・3/6 flip・
 # 一部は fable が非コード出力を返し parse 不能)＝mesh に載せる値にならない。詳細は SWEBENCH_FABLE_PT6.md・§9-11。
+
+
+def _grounded_point(name: str, trials_a: list, trials_b: list, note: str) -> dict:
+    """複数試行から**頑健な** mesh 点を作り、noise.py の検出床でゲートする。
+
+    - gain は *安定*セル（全試行で一致）だけで数える（robust_counts）。
+    - `ignites` は「gain>0」ではなく「**gain が検出床を超えた**」ときだけ True。
+      trials=1 のセル不一致率（opus は 3/24）が作る偽の相補を、機械で弾くため。
+    """
+    rb = robust_counts(trials_a, trials_b)
+    fa = flip_from_disagreement(disagreement_rate(trials_a))
+    fb = flip_from_disagreement(disagreement_rate(trials_b))
+    trials = len(trials_a)
+    h0 = TrueStructure(common=rb["common"] + rb["unstable"], a_only=rb["a_only"],
+                       b_only=rb["b_only"], neither=rb["neither"])
+    floor = detection_floor(h0, fa, fb, trials=trials)
+    observed_m = min(rb["a_only"], rb["b_only"])
+
+    # ρ も単一試行では決まらない ── 試行ごとに測って振れ幅を出す（解析モデルが依存する量なのに不安定）。
+    rho_by_trial = [failure_correlation([va, vb]) for va, vb in zip(trials_a, trials_b)]
+    # 頑健 ρ: 両モデルとも全試行で一致したセルだけで測る（割れたセルは相関の証拠に使えない）。
+    sa, sb = stable_vector(trials_a), stable_vector(trials_b)
+    keep = [k for k in range(len(sa)) if sa[k] is not None and sb[k] is not None]
+    rho_stable = (failure_correlation([[sa[k] for k in keep], [sb[k] for k in keep]])
+                  if len(keep) >= 2 else 0.0)
+
+    return {"name": name, "trials": trials,
+            "per_model_by_trial": [[round(sum(v) / len(v), 4) for v in (va, vb)]
+                                   for va, vb in zip(trials_a, trials_b)],
+            "a_only": rb["a_only"], "b_only": rb["b_only"], "unstable_cells": rb["unstable"],
+            "gain": rb["gain"], "gain_tasks": observed_m,
+            "failure_rho_by_trial": rho_by_trial, "failure_rho_stable": rho_stable,
+            "flip_a": round(fa, 4), "flip_b": round(fb, 4),
+            "floor_tasks": floor["m"], "floor_gain": floor["gain"],
+            "ignites": floor["m"] is not None and observed_m >= floor["m"],
+            "note": note}
 
 
 def run(prm: "MeshParams | None" = None) -> dict:
@@ -164,15 +216,27 @@ def run(prm: "MeshParams | None" = None) -> dict:
         rg["gain"] = mesh_gain(p, rg["rho"], rg["n"])
         rg["ignites"] = ignites(p, rg["rho"], rg["n"])
 
-    # ⑤ 実測の crossover（opus×codex・実 SWE-bench）= real frontier で ρ<1 を*見つけた*点
+    # ⑤ 実測（実 SWE-bench・opus×codex）── **trials=2 の頑健値のみ**を載せる。
+    #    単一試行の値は noise.py の検出床を下回るため mesh の点にしない（SWEBENCH_TRIALS.md で撤回済み）。
     empirical_real = {
-        "opus×codex full-24 (cross-vendor)": {**empirical_mesh([_SWE24_OPUS, _SWE24_CODEX]),
-            "note": "cross-vendor は ρ≈0.61<1 で脱相関＝real frontier で初の点火(gain+0.042)。"
-                    "相互相補(codex が opus の落とす 3件・opus が codex の落とす 1件を拾う)。残る hard core 5/24 は両者失敗(ρ の正体)。"},
-        "opus×codex pytest-6 subset": {**empirical_mesh([_SWE6_OPUS, _SWE6_CODEX]),
-            "note": "ρ≈0.71<1 でも gain 0＝codex が opus を*入れ子*に包む(非対称)。"
-                    "点火には脱相関だけでなく*相互*相補が要る、の実例。"},
-        # fable-5 の 3-way は撤回(2026-07-02): trials=1 で非再現(SWEBENCH_FABLE_PT6.md)。単一試行の値を mesh に載せない。
+        "opus×codex full-24 (trials=2, robust)": _grounded_point(
+            "opus×codex full-24", [SWE24_OPUS_T1, SWE24_OPUS_T2], [SWE24_CODEX_T1, SWE24_CODEX_T2],
+            "安定な相互相補ゼロ＝**点火しない**。安定 opus-only は sympy-24443 の1件のみ(*一方向*)・"
+            "安定 codex-only は 0 件。trial-1 で見えた codex-only 3件は全部 opus の run noise(3/24)だった。"),
+        "opus×codex pytest-6 (trials=2, robust)": _grounded_point(
+            "opus×codex pytest-6", [SWE6_OPUS_T1, SWE6_OPUS_T2], [SWE6_CODEX_T1, SWE6_CODEX_T2],
+            "trials=2 で両者の安定解集合は一致（a=b=0）。ただし n=6 の検出床は 2 タスク＝**gain 0.333 未満は"
+            "そもそも検出できない**ので、この『gain 0』は非点火の証拠として弱い（検出力が無い）。"),
+    }
+
+    # 撤回済みの点を*見える形で*残す（本リポの作法）。単一試行で「初の点火」と報告し commit した値。
+    retracted = {
+        "opus×codex full-24 (trial-1 のみ) — RETRACTED": {
+            **empirical_mesh([SWE24_OPUS_T1, SWE24_CODEX_T1]),
+            "trials": 1, "gain_tasks": 1,
+            "note": "2026-06-23 撤回(SWEBENCH_TRIALS.md)。gain +0.042 は 1 タスク分で、trials=1 の"
+                    "**検出床 3 タスク(0.125)の 1/3**。H0(相互相補ゼロ)＋opus の実測ノイズ(f≈0.067)だけで"
+                    "同じ観測が出る確率は **0.68** ＝ ノイズの*期待される*出力。trial-2 を回す前に計算できた。"},
     }
 
     return {
@@ -185,12 +249,21 @@ def run(prm: "MeshParams | None" = None) -> dict:
         "cost_crossover": cost_cross,
         "empirical_regimes": regimes,
         "empirical_real": empirical_real,
+        "retracted": retracted,
+        "gain_identity": "実測では gain = min(a,b)/n（a=|A\\B|, b=|B\\A|）＝**相互**相補がなければ 0（noise.py ①）",
+        "reporting_gate": ("実測の『点火』は gain>0 でなく **gain > 検出床**（noise.py ④）で判定する。"
+                           "非決定な採点ハーネスは gain>0 をノイズだけで作るため（opus は 3/24=12.5% の"
+                           "セル不一致）。trials=1 は頑健推定が naive に退化する＝床を持てない。"),
         "finding": ("mesh の点火は*脱相関*の問題（market.py の escalation はコストの問題）。本リポの実測 gain≈0 は "
-                    "すべて ρ≈1 の点＝errors が共通 hard core を持つから。脱相関(ρ<1)があれば必ず点火するが、"
-                    "weak mesh が strong を*コストで*置き換えるのは稀（正しさ1に届く n·(w+verify) が s を超えやすい）"
-                    "＝mesh の本領は『縁』での補完であって置換でない。"),
+                    "すべて ρ≈1 の点＝errors が共通 hard core を持つから。**解析では**脱相関(ρ<1)があれば必ず"
+                    "点火するが、**実測では ρ<1 でも点火しない**：real frontier(opus×codex・実 SWE-bench N=24・"
+                    "trials=2)は ρ≈0.6<1 なのに*安定な*相互相補がゼロで robust gain=0（一度 +0.042 を「初の点火」と"
+                    "報告して撤回・SWEBENCH_TRIALS.md）。点火に要るのは脱相関でなく**相互相補**（gain=min(a,b)/n）。"
+                    "また weak mesh が strong を*コストで*置き換えるのは稀（正しさ1に届く n·(w+verify) が s を"
+                    "超えやすい）＝mesh の本領は『縁』での補完であって置換でない。"),
         "falsifier": "実測 mesh union が p+(1−ρ)(1−p)(1−(1−p)^{n−1}) から系統的に外れる、または ρ<1 を実証しても "
-                     "union が best-single を超えないなら本モデルは偽。",
+                     "union が best-single を超えないなら本モデルは偽（後者は real frontier で*実際に起きた*→ "
+                     "解析の ρ 版は実測を説明できず、min(a,b) 版へ差し替えた）。",
     }
 
 
@@ -229,23 +302,44 @@ def _md(r: dict) -> str:
           "| レジーム | ρ | n | 利得 | 点火 |", "|---|---|---|---|---|"]
     for rg in r["empirical_regimes"]:
         L.append(f"| {rg['regime']} | {rg['rho']} | {rg['n']} | {rg['gain']} | {'✓' if rg['ignites'] else '—'} |")
-    L += ["", "## ⑤ 実測の crossover（real SWE-bench・opus×codex）── ρ を解ベクトルから*測った*",
-          "| 集合 | per-model | union | best | 利得 | 測定 ρ | 点火 |", "|---|---|---|---|---|---|---|"]
+    L += ["", "## ⑤ 実測（real SWE-bench・opus×codex）── **trials=2 の頑健値のみ**を載せる",
+          "",
+          f"> 実測の恒等式: **{r['gain_identity']}**",
+          "",
+          "| 集合 | trials | a=A-only | b=B-only | 不安定セル | 利得 | 試行ごとの ρ | 安定セルの ρ | 検出床 | 点火 |",
+          "|---|---|---|---|---|---|---|---|---|---|"]
     for name, e in r["empirical_real"].items():
-        L.append(f"| {name} | {e['per_model']} | {e['union']} | {e['best_single']} | "
-                 f"**{e['gain']:+}** | {e['failure_rho']} | {'✓' if e['ignites'] else '—'} |")
+        fl = f"{e['floor_tasks']} タスク ({e['floor_gain']})" if e["floor_tasks"] else "n を超える"
+        L.append(f"| {name} | {e['trials']} | {e['a_only']} | {e['b_only']} | {e['unstable_cells']} | "
+                 f"**{e['gain']:+}** | {e['failure_rho_by_trial']} | {e['failure_rho_stable']} | "
+                 f"{fl} | {'✓' if e['ignites'] else '—'} |")
+    full = r["empirical_real"]["opus×codex full-24 (trials=2, robust)"]
     L += ["",
-          "- **cross-vendor (opus×codex) は ρ≈0.61<1 で脱相関し、real frontier で初めて mesh が点火（gain +0.042）**。"
-          "相互相補（codex が opus の落とす 3件・opus が codex の落とす 1件を拾う）＝非入れ子。残る 5/24 は両者失敗"
-          "（＝ρ の正体＝共通 hard core）。",
-          "- pytest-6 部分集合は ρ≈0.71<1 でも **gain 0**＝codex が opus を*入れ子*に包む（非対称）。"
-          "**点火には脱相関だけでなく*相互*相補（非入れ子）が要る**、の実例。冗長/同系統 mesh は ρ≈1 で論外。",
-          "", "## 含意",
-          "- mesh の点火は **構造でなく脱相関** ── market.py（コスト）と対。冗長 mesh が不点火だったのは ρ≈1"
-          "（errors が共通 hard core）だから。",
-          "- 「超えたところ」を見るには ρ<1 を*作る*しかない（meshflow edge demo＝構成で相補）。real frontier の"
-          "errors は入れ子＝ρ≈1 で、自然には脱相関しない。",
+          f"- **real frontier（opus×codex・N=24・trials=2）は ρ={full['failure_rho_stable']}<1 で脱相関して"
+          "いるのに点火しない。** 安定な opus-only は `sympy-24443` の1件（*一方向*）、安定な codex-only は "
+          "**0 件**。gain = min(a,b)/n = min(1,0)/24 = **0**。",
+          "- **点火に要るのは ρ<1（脱相関）でなく*相互*相補**。解析の ρ 版は「ρ<1 なら必ず点火」と言うが、"
+          "実測はそれを**反証した**（ρ<1 かつ gain 0）。恒等式 min(a,b)/n の方が実測を説明する。",
+          f"- **ρ 自体も単一試行では決まらない**: 同じ N=24 を2回回すと ρ は "
+          f"{full['failure_rho_by_trial'][0]} → {full['failure_rho_by_trial'][1]} と振れる"
+          "（解析モデルが依存する量なのに、非決定な採点の下では不安定）。",
+          "- pytest-6 は n=6 の検出床が 2 タスク＝**gain 0.333 未満はそもそも検出できない**。"
+          "その『gain 0』は非点火の証拠として弱い（検出力が無い）。",
+          ""]
+    L += ["## ⑤' 撤回済みの点（見える形で残す）", "",
+          "| 集合 | trials | 利得 | 測定 ρ | なぜ撤回したか |", "|---|---|---|---|---|"]
+    for name, e in r["retracted"].items():
+        L.append(f"| {name} | {e['trials']} | **{e['gain']:+}** | {e['failure_rho']} | {e['note']} |")
+    L += ["",
+          f"> **報告ゲート**: {r['reporting_gate']} 床の計算は [`NOISE.md`](NOISE.md)。",
+          "",
+          "## 含意",
+          "- mesh の点火は **構造でなく相互相補** ── market.py（コスト）と対。冗長 mesh が不点火だったのは ρ≈1"
+          "（errors が共通 hard core）だが、**ρ<1 でも入れ子なら点火しない**（real frontier がその実例）。",
+          "- 「超えたところ」を見るには相互相補を*作る*しかない（meshflow edge demo＝構成で相補）。real frontier の"
+          "errors は入れ子で、自然には相互相補にならない。",
           "- たとえ点火しても weak mesh が strong を*価格で*置換するのは稀。mesh の本領は『縁』での補完。",
+          "- **非決定な採点ハーネスでは「gain>0」は主張にならない**。床を超えて初めて点火と呼ぶ（NOISE.md）。",
           "",
           "## 反証条件",
           f"- {r['falsifier']}"]
@@ -272,10 +366,16 @@ def main(argv=None) -> int:
     print("\n④ empirical regimes placed on the rho axis (analytical):")
     for rg in r["empirical_regimes"]:
         print(f"  rho={rg['rho']:<4} n={rg['n']} gain={rg['gain']:<8} ignites={str(rg['ignites']):<5} {rg['regime']}")
-    print("\n⑤ MEASURED crossover (real SWE-bench, opus×codex) — ρ measured from solve vectors:")
+    print("\n⑤ MEASURED (real SWE-bench, opus×codex) — trials=2 robust only; gain = min(a,b)/n:")
     for name, e in r["empirical_real"].items():
-        print(f"  {name}: per={e['per_model']} union={e['union']} best={e['best_single']} "
-              f"gain={e['gain']:+} rho_fail={e['failure_rho']} ignites={e['ignites']}")
+        print(f"  {name}: trials={e['trials']} a={e['a_only']} b={e['b_only']} "
+              f"unstable={e['unstable_cells']} gain={e['gain']:+} "
+              f"rho_by_trial={e['failure_rho_by_trial']} rho_stable={e['failure_rho_stable']} "
+              f"floor={e['floor_tasks']} tasks -> ignites={e['ignites']}")
+    print("\n⑤' RETRACTED (kept visible):")
+    for name, e in r["retracted"].items():
+        print(f"  {name}: trials={e['trials']} gain={e['gain']:+} rho_fail={e['failure_rho']}")
+    print(f"\ngate: {r['reporting_gate']}")
     print(f"\nwrote {os.path.join(out_dir, 'mesh_results.json')} and MESH.md")
     return 0
 

@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from model.mesh import (  # noqa: E402
-    MeshParams, mesh_correctness, mesh_gain, ignites, mesh_cost,
+    mesh_correctness, mesh_gain, ignites, mesh_cost,
     dominates_strong, min_agents_to_match_strong, p_all_fail, run,
     failure_correlation, union_solve, empirical_mesh,
 )
@@ -94,16 +94,50 @@ class MeshModelTests(unittest.TestCase):
         self.assertFalse(e2["ignites"])
         self.assertLess(e2["failure_rho"], 1.0)              # 脱相関はしている
 
-    def test_real_swebench_crossover_in_run(self):
-        # 実測接地：opus×codex full-24 は点火(+0.042, ρ≈0.61)、pytest-6 は非対称で gain 0(ρ≈0.71)
+    def test_real_swebench_is_reported_from_trials2_not_trials1(self):
+        """実測点は **trials=2 の頑健値のみ**。単一試行の +0.042 は撤回済みで、点火として載せない。
+
+        この repo は 2026-06-23 に trials=2 で「mesh 点火」を撤回した(SWEBENCH_TRIALS.md)のに、
+        翌日 model/mesh.py に trial-1 のベクトルを入れて「初の点火」を*再*公開してしまい、
+        旧テストが `assertTrue(ignites)` でそれを固定していた。本テストはその再発を防ぐ。
+        """
         er = run()["empirical_real"]
-        full = er["opus×codex full-24 (cross-vendor)"]
-        self.assertTrue(full["ignites"])
-        self.assertAlmostEqual(full["gain"], 0.0417, places=3)
-        self.assertAlmostEqual(full["failure_rho"], 0.612, places=2)
-        sub = er["opus×codex pytest-6 subset"]
-        self.assertFalse(sub["ignites"])                    # ρ<1 でも非対称で点火せず
-        self.assertLess(sub["failure_rho"], 1.0)
+        full = er["opus×codex full-24 (trials=2, robust)"]
+        self.assertEqual(full["trials"], 2)
+        self.assertEqual(full["gain"], 0.0)                  # 安定な相互相補ゼロ
+        self.assertEqual((full["a_only"], full["b_only"]), (1, 0))   # 一方向（sympy-24443 のみ）
+        self.assertEqual(full["unstable_cells"], 3)          # opus の run noise 3/24
+        self.assertFalse(full["ignites"])                    # ← 旧テストはここが True だった
+
+    def test_no_empirical_point_claims_ignition(self):
+        # 実測の点はどれも検出床を超えていない＝「real frontier で mesh が点火した」実測は*無い*
+        for name, e in run()["empirical_real"].items():
+            self.assertFalse(e["ignites"], msg=name)
+            self.assertGreaterEqual(e["trials"], 2, msg=f"{name}: 単一試行の値を載せてはいけない")
+
+    def test_ignition_is_gated_by_the_detection_floor_not_by_gain_gt_zero(self):
+        # 「点火」の判定は gain>0 でなく gain(タスク数) ≥ 検出床。床は noise.py が計算する。
+        for name, e in run()["empirical_real"].items():
+            self.assertIsNotNone(e["floor_tasks"], msg=name)
+            self.assertEqual(e["ignites"], e["gain_tasks"] >= e["floor_tasks"], msg=name)
+
+    def test_retracted_point_is_kept_visible_and_below_floor(self):
+        # 撤回済みの点は消さずに残す（本リポの作法）。ただし点火としては数えない。
+        ret = run()["retracted"]
+        key = "opus×codex full-24 (trial-1 のみ) — RETRACTED"
+        self.assertIn(key, ret)
+        self.assertEqual(ret[key]["trials"], 1)
+        self.assertAlmostEqual(ret[key]["gain"], 0.0417, places=3)   # 当時「初の点火」と報告した値
+        self.assertEqual(ret[key]["gain_tasks"], 1)                  # 1 タスク分（床は 3 タスク）
+
+    def test_rho_itself_is_unstable_across_trials(self):
+        # 解析モデルが依存する ρ すら、単一試行では決まらない（0.61 → 0.89 に振れる）
+        full = run()["empirical_real"]["opus×codex full-24 (trials=2, robust)"]
+        rhos = full["failure_rho_by_trial"]
+        self.assertEqual(len(rhos), 2)
+        self.assertGreater(abs(rhos[0] - rhos[1]), 0.2)
+        self.assertTrue(all(r < 1.0 for r in rhos))          # ρ<1（脱相関）なのに gain 0
+        self.assertEqual(full["gain"], 0.0)                  # ＝解析の「ρ<1 ⟹ 点火」の実測反証
 
     def test_empirical_regimes_and_determinism(self):
         r1 = run()
