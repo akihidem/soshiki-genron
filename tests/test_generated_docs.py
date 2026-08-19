@@ -44,6 +44,8 @@ GENERATORS = [
     ("market",     "market_results.json",     "MARKET.md",      "_md"),
     ("mesh",       "mesh_results.json",       "MESH.md",        "_md"),
     ("noise",      "noise_results.json",      "NOISE.md",       "_md"),
+    ("gap",        "gap_results.json",        "GAP.md",         "_md"),
+    ("replication", "replication_results.json", "REPLICATION.md", "_md"),
 ]
 
 _REGEN_HINT = "再生成: python3 -m model.{name}"

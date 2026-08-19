@@ -1,0 +1,508 @@
+{
+  "falsifier": "本ファイルが偽なら: (a) t=1 からセル反転率 f を推定する手続きが在る（d=2f(1−f) は独立2試行を要するので在り得ない）、または (b) 対応二値で n 対から 2^{1−n} より小さい両側 p を出せる厳密検定が在る（符号検定の帰無分布は Binomial(m,1/2) で m≤n、その最小両側裾は 2·2^{−n}）。",
+  "finding": "実測成果物 52 件のうち複製深度を宣言しているのは 19 件（trials≥2 が 17 件・trials=1 が 2 件）、復元不能が 33 件。処方文書を支える role_division_repair_real.json（trials=1・n=6）の 5 主張は、符号検定を通すと有意 0 件。",
+  "ledger": {
+    "counts": {
+      "REPLICATED": 17,
+      "SINGLE": 2,
+      "UNDECLARED": 33
+    },
+    "debt": [
+      {
+        "depth": 1,
+        "exempt": false,
+        "file": "role_division_repair_real.json",
+        "klass": "SINGLE"
+      }
+    ],
+    "declared_rate": 0.3654,
+    "n_files": 52,
+    "rows": [
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "calibrate_coord_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "config_mesh_loop_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "config_mesh_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "config_mesh_results_partial.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "config_mesh_rich_devstral_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "config_mesh_rich_qwen_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "config_mesh_rich_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "config_mesh_rich_robust122b_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "config_mesh_rich_robust24b_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "config_mesh_rich_robust7b_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "freeform_mesh.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "freeform_mesh_xvs.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "goodhart_curve_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "goodhart_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "judge_calibration.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "judge_calibration_hard.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": 5,
+        "exempt": false,
+        "file": "judge_haiku_sonnet_trials.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 5,
+        "exempt": false,
+        "file": "judge_opus_trials.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "market_calib_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "market_decorr_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "market_ensemble_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "market_external_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "market_gap_hard_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "market_gap_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "market_ladder_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "market_map_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "market_novel_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "market_openended_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "market_xvs_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "meshflow_demo.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "meshflow_real.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": 3,
+        "exempt": false,
+        "file": "mmlu_cot_trials.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "mmlu_decorr_gh.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "mmlu_pro_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "org_sim_hetero_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "org_sim_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "race_game_results.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "race_game_results_neutral.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "race_game_results_safety.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "repair_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": 1,
+        "exempt": true,
+        "file": "role_division_demo.json",
+        "klass": "SINGLE"
+      },
+      {
+        "depth": 2,
+        "exempt": false,
+        "file": "role_division_real.json",
+        "klass": "REPLICATED"
+      },
+      {
+        "depth": 1,
+        "exempt": false,
+        "file": "role_division_repair_real.json",
+        "klass": "SINGLE"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_all_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_fable_pt6_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_fable_pt6_trial2.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_iter_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_sympy_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_sympy_sonnet_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_sympy_t2_results.json",
+        "klass": "UNDECLARED"
+      },
+      {
+        "depth": null,
+        "exempt": false,
+        "file": "swebench_t2_results.json",
+        "klass": "UNDECLARED"
+      }
+    ]
+  },
+  "min_n": 6,
+  "n_ladder": [
+    {
+      "falsifiable": false,
+      "min_p": 0.25,
+      "min_p_str": "0.25",
+      "n": 3
+    },
+    {
+      "falsifiable": false,
+      "min_p": 0.125,
+      "min_p_str": "0.125",
+      "n": 4
+    },
+    {
+      "falsifiable": false,
+      "min_p": 0.0625,
+      "min_p_str": "0.0625",
+      "n": 5
+    },
+    {
+      "falsifiable": true,
+      "min_p": 0.03125,
+      "min_p_str": "0.03125",
+      "n": 6
+    },
+    {
+      "falsifiable": true,
+      "min_p": 0.0078125,
+      "min_p_str": "0.007812",
+      "n": 8
+    },
+    {
+      "falsifiable": true,
+      "min_p": 0.001953125,
+      "min_p_str": "0.001953",
+      "n": 10
+    },
+    {
+      "falsifiable": true,
+      "min_p": 0.00048828125,
+      "min_p_str": "0.0004883",
+      "n": 12
+    },
+    {
+      "falsifiable": true,
+      "min_p": 1.1920928955078125e-07,
+      "min_p_str": "1.2e-07",
+      "n": 24
+    }
+  ],
+  "params": {
+    "alpha": 0.05,
+    "scan_dir": "experiments"
+  },
+  "reaudit": {
+    "groups": [
+      "solo",
+      "role_same",
+      "role_cross",
+      "test_loop"
+    ],
+    "min_attainable_p": 0.03125,
+    "min_attainable_p_str": "0.03125",
+    "n": 6,
+    "n_significant": 0,
+    "rows": [
+      {
+        "a_only": 0,
+        "b_only": 1,
+        "contrast": "role_same − solo",
+        "discordant": 1,
+        "label": "構造利得（役割分業 − solo）",
+        "mean_diff": -0.1667,
+        "p": 1.0,
+        "p_str": "1",
+        "used_for": "「役割を切らない」の根拠 −0.167",
+        "verdict": "UNDECIDED"
+      },
+      {
+        "a_only": 0,
+        "b_only": 0,
+        "contrast": "role_cross − role_same",
+        "discordant": 0,
+        "label": "多様性利得（異モデル役割 − 同モデル役割）",
+        "mean_diff": 0.0,
+        "p": 1.0,
+        "p_str": "1",
+        "used_for": "cross の上乗せ",
+        "verdict": "UNDECIDED"
+      },
+      {
+        "a_only": 0,
+        "b_only": 1,
+        "contrast": "role_cross − solo",
+        "discordant": 1,
+        "label": "総利得（役割分業 − solo）",
+        "mean_diff": -0.1667,
+        "p": 1.0,
+        "p_str": "1",
+        "used_for": "役割分業パイプラインの是非",
+        "verdict": "UNDECIDED"
+      },
+      {
+        "a_only": 2,
+        "b_only": 0,
+        "contrast": "test_loop − solo",
+        "discordant": 2,
+        "label": "test 接地反復 − solo",
+        "mean_diff": 0.3333,
+        "p": 0.5,
+        "p_str": "0.5",
+        "used_for": "「L1 が既定ユニット」の根拠",
+        "verdict": "UNDECIDED"
+      },
+      {
+        "a_only": 3,
+        "b_only": 0,
+        "contrast": "test_loop − role_cross",
+        "discordant": 3,
+        "label": "test 接地反復 − 役割分業",
+        "mean_diff": 0.5,
+        "p": 0.25,
+        "p_str": "0.25",
+        "used_for": "「+0.5 上回る」の根拠",
+        "verdict": "UNDECIDED"
+      }
+    ],
+    "source": "role_division_repair_real.json",
+    "tasks": [
+      "pytest-dev__pytest-11125",
+      "pytest-dev__pytest-11143",
+      "pytest-dev__pytest-11148",
+      "pytest-dev__pytest-11160",
+      "pytest-dev__pytest-11178",
+      "pytest-dev__pytest-11217"
+    ],
+    "trials": 1,
+    "vectors": {
+      "role_cross": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "role_same": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "solo": [
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "test_loop": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  }
+}

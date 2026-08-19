@@ -17,11 +17,18 @@
 | 観測 | 結果 | 配置への含意 | 出典 |
 |---|---|---|---|
 | 冗長並列 mesh | solo 超えず（市場支配） | 同モデル N 並列はしない | 5角度実証・`mesh.py` ρ≈1 |
-| 固定役割分業（Thinker/Worker/Verifier・gold 非開示 verifier） | solo 未満（**−0.167**）・時に悪化 | 役割を切らない | `1513c66` |
-| **テスト接地反復**（単一モデル＋実テスト feedback） | **全解決（+0.333）** | これが既定ユニット | `b69a7d1` |
+| 固定役割分業（Thinker/Worker/Verifier・gold 非開示 verifier） | solo 未満（**−0.167**）・時に悪化 | 役割を切らない（**弱い根拠**・下記⚠） | `1513c66` |
+| **テスト接地反復**（単一モデル＋実テスト feedback） | **全解決（+0.333）** | これが既定ユニット（**弱い根拠**・下記⚠） | `b69a7d1` |
 | model verifier（opus/haiku） | 落ちるコードに LGTM（rubber-stamp） | gate に使わない | §8 / `b69a7d1` |
 | escalation 市場 | 安モデルが p>w/s なら単一最強を Pareto 支配 | コスト層に使う | `market.py` |
-| mesh 点火（実測 opus×codex） | cross-vendor で ρ=0.61・**+0.042** 点火 | 縁で cross-vendor のみ | `d8b28b4` |
+| mesh 点火（実測 opus×codex） | **撤回済み** ── 単一試行の gain +0.042 はノイズ由来の偽陽性で、trials=2 で 0 に flip（`fcbfa5c`） | 縁 mesh に**実証的裏付けは無い** | `SWEBENCH_TRIALS.md` / `MESH.md` |
+
+> ⚠ **役割分業まわりの数値（−0.167 / +0.333 / +0.5）は検出床の下にある。**
+> 出典 `experiments/role_division_repair_real.json` は **trials=1・n=6**。厳密符号検定を通すと
+> 5 主張すべてが p ≥ 0.25（有意 0 件）で、**この標本は差の有無を決められない**
+> （[`../model/REPLICATION.md`](../model/REPLICATION.md) ②）。以下の L0/L1 の処方は、
+> 本リポの他の証拠（§8 judge calibration・market.py・mesh の非点火）と整合するが、
+> **この 1 ファイルだけでは支えられていない**。n≥6 かつ trials≥2 での再測が返済すべき負債。
 
 ## 配置（5 層）
 
@@ -44,9 +51,12 @@
 
 ### L3 — 縁の mesh：cross-vendor のみ・union は外部アンカーで選ぶ
 - 梯子の最上位でも落ちる「縁」で、**別系統モデル（cross-vendor）がある時だけ**並列 union。
-- 🔬 mesh 臨界＝脱相関 **ρ<1 ＋ 相互相補（非入れ子）**。実測 opus×codex で ρ=0.61・gain **+0.042**（点火）。
-  同系統/冗長は ρ≈1 で無駄。**gain は小＝補完用、置換でない**（weak mesh が strong を価格で置換は稀）。
-- 配置則：同モデルの N 並列はしない（市場支配）。cross-vendor を 2〜3、期待は小さな上積み。
+- 🔬 mesh 臨界＝脱相関 **ρ<1 ＋ 相互相補（非入れ子）**。ただし **実測は点火していない**：
+  一度 opus×codex で ρ=0.61・gain +0.042 を「点火」と報告したが、trials=2 で **gain 0 に flip して撤回**
+  （[`../experiments/SWEBENCH_TRIALS.md`](../experiments/SWEBENCH_TRIALS.md)）。安定な相互相補はゼロで、
+  観測された利得は opus 側の run noise（f≈0.067）だった。同系統/冗長は ρ≈1 で無駄。
+- 配置則：同モデルの N 並列はしない（市場支配）。**cross-vendor 並列も、実証された利得は現状ゼロ**
+  ── 理屈（ρ<1 なら点火しうる）で残す層であって、測って勝ったから残す層ではない。
 
 ### L4 — 人間膜：高 stakes × 未解決は黙って ship しない
 - 梯子＋縁でも未解決 ＆ stakes 高 → 人間へエスカレーション。
@@ -59,7 +69,7 @@
 |---|---|
 | 既定（まずこれ） | 単一最強＋アンカー接地ループ（L0+L1） |
 | 安くしたい ＆ 安モデル p>w/s | エスカレーション追加（L2） |
-| 最上位も落ちる縁 ＆ cross-vendor 在り | 縁 mesh（L3・小利得） |
+| 最上位も落ちる縁 ＆ cross-vendor 在り | 縁 mesh（L3・**実証利得ゼロ**・理屈で残す層） |
 | 高 stakes 未解決 | 人間膜（L4） |
 | **やらない** | 役割分業の固定パイプライン／同系統の冗長 mesh／model verifier を gate に |
 

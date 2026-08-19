@@ -93,6 +93,7 @@ canvas は構造を1つ置いて1回走らせるところまでで、構造空�
 - **① 均質（全 sonnet）→ market 最下位**（活かす能力差なし）／**② frontier 異種（haiku/sonnet/opus）→ 勾配ゼロ（全員満点）→ market = flat-haiku**（利得なし）／**③ 大能力差（gemma 2–8B × frontier）→ market が Pareto 支配**（flat-haiku の半額・flat-opus の 1/28 コストで同正しさ）。
 - 機構＝**検証ルーティング型エスカレーション**: 安いモデルで試し、外部 gold で落ちた所だけ上位へ。配分は自己申告でなく *実行検証*（外部錨）。
 - **支配定理**（`model/market.py`）: market が単一モデルを Pareto 支配 ⟺ **p > w/s**（安いティアの完全解率 > コスト比）。実測③（market 0.311）と解析が厳密一致。trials=3 較正で p=0.889（gap の "leap 失敗" はノイズと判明）・3ローカルモデルの支配地図も実測（`--map`）。
+- ⚠️ **支配地図の ✓ は標本誤差の床を通していなかった**（[`model/GAP.md`](model/GAP.md)）。点推定の `p̂ > w/s` は、真に利得ゼロのモデルにも n=6 では **34.5%** の確率で ✓ を立てる。床を通すと **9 ペア中 3 件が「判定不能」**（余裕の小さいセル）。**本節の主結論（③ 大能力差 → market が Pareto 支配・p̂=0.889 ≫ 要 0.667）は床を通しても立つ** ── 崩れたのは地図の周縁セルと、境界に寄るための*計画*の方。
 - → **「AIにとって組織とは何か」への答え: 能力が均質なら flat、能力差があれば *検証ルーティング市場*（＝flat＋検証＋オンデマンド agent の最適な呼び出し方）**。詳細: [`experiments/MARKET_GAP.md`](experiments/MARKET_GAP.md)／[`model/MARKET.md`](model/MARKET.md)。
 
 ### 実証: レース・Goodhart・通信コスト較正
@@ -118,6 +119,9 @@ python3 -m model.alignment     # F7 整合（仕様+検証が能力を上限） 
 python3 -m model.market        # 市場支配定理 p*=w/s（3レジーム統一） → model/MARKET.md
 python3 -m model.mesh          # mesh 点火（相互相補 gain=min(a,b)/n・実測は trials=2） → model/MESH.md
 python3 -m model.noise         # 検出床（非決定な採点の下で報告してよい最小 gain） → model/NOISE.md
+python3 -m model.gap           # 判定分解能の床（境界 p*=w/s に寄るのに要る n）    → model/GAP.md
+python3 -m model.replication   # 複製深度(trials)の台帳＋群間比較の検出床（n の値段）→ model/REPLICATION.md
+python3 -m experiments.market_external --regate  # 支配地図を床で再判定（LLM 呼び出しゼロ）
 python3 -m experiments.oversight.calibrate   # 実測較正: 測った oversight_error を両モデルへ → CALIBRATION.md
 python3 -m experiments.oversight.run         # 実証: 監督スケーリング（mock即時／--backend ollama で実測）
 python3 -m experiments.org_sim --agent claude:sonnet --tasks 3   # 実証: 構造 F3（flat/hierarchy/market・正しさ）
@@ -130,7 +134,7 @@ python3 -m experiments.goodhart --agent claude:sonnet            # 実証: Goodh
 python3 -m experiments.race_game --players claude:haiku,claude:sonnet --framing neutral  # 実証: レース外部性
 python3 -m experiments.calibrate_coord       # 較正: 通信コスト（org_sim → mgr_overhead/c_comm）
 python3 -m experiments.meshflow              # 採用組織図の動く実行系（検証ルーティング→mesh→人間膜・決定的）
-python3 -m unittest discover -s tests -t .   # テスト（215本・決定的mock・全green）
+python3 -m unittest discover -s tests -t .   # テスト（278本・決定的mock・全green）
 ```
 
 ## リポジトリ地図
@@ -140,19 +144,19 @@ python3 -m unittest discover -s tests -t .   # テスト（215本・決定的moc
 - `docs/literature.md` — 文献調査アジェンダ（形式モデル・計算組織論・MAS・近年LLM＝要一次確認）
 - `docs/first-measurement.md` / `docs/second-measurement.md` — 計測の解釈・位置づけ
 - `docs/ai-2027.md` — AI-2027（実存リスクのシナリオ予測）と本研究の対応・レース計測の動機
-- `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）／`market.py`（市場支配定理 p\*=w/s）／`mesh.py`（mesh 点火＝相互相補）／`noise.py`（**検出床**＝非決定な採点の下で報告してよい最小 gain）＋生成 `*.md`
+- `model/` — ② の胚: `coordination.py`+`sweep.py`（構造）／`governance.py`（統治膜）／`capacity.py`（分解粒度）／`design_map.py`（合成）／`joint.py`（構造×膜の結合）／`race.py`（レース外部性）／`alignment.py`（F7 整合）／`market.py`（市場支配定理 p\*=w/s）／`mesh.py`（mesh 点火＝相互相補）／`noise.py`（**検出床**＝非決定な採点の下で報告してよい最小 gain）／`gap.py`（**判定分解能の床**＝境界 p\*=w/s に寄るのに要る標本数 n）＋生成 `*.md`
 - `experiments/oversight/` — 監督スケーリング実証＋ `calibrate.py`（測定値を governance/alignment へ還す実測較正）／`docs/oversight-pilot.md`
 - `experiments/` — 実証ハーネス群: `org_sim.py`（構造 F3・sandbox 正しさ）／`race_game.py`（レース外部性・2フレーミング）／`market_external.py`（市場3レジーム・外部 gold・**異種ベンダ**＝Claude/gemma/**codex**・`--gap`/`--ladder`/`--ensemble`/`--decorr`/`--novel`/`--openended`/`--map`/`--calibrate`）／`goodhart.py`（code-overfitting・`--curve`）／`calibrate_coord.py`（通信コスト較正）＋生成 `*.md`
-- `tests/` — 決定的テスト（215本・全 mock・green）。`test_generated_docs.py` は生成 `*.md`/`*.json` が生成元コードとずれていたら落とす床（散文が数値とずれる事故を機械で防ぐ）
+- `tests/` — 決定的テスト（278本・全 mock・green）。`test_generated_docs.py` は生成 `*.md`/`*.json` が生成元コードとずれていたら落とす床（散文が数値とずれる事故を機械で防ぐ）／`test_suite_integrity.py` は **テスト群そのものの床**（① 正典 runner から見えない test モジュール＝素の pytest 関数だけの module を落とす ② README の本数が実測とずれたら落とす）
 
 ## 到達点（2026-06-21 着手〜）
 - **③ 概念**: 最小定義 + 原始機能 F1–F8 + 拘束系譜 + 2フロンティア（整合の変質 / 統治の残存）+ テーゼ。
 - **第一原理**: モデルと実験による計測を最上位規則化。各主張に反証手段を併記。
 - **① 文献**: 3件を二次確認・記録（Marschak&Radner チーム理論 / Malone 電子市場 / Carley 計算組織論）。
-- **② 解析モデル 9本**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適）／容量→分解粒度／処方マップ／構造×膜の結合／レース外部性＋制度内部化／F7 整合（Goodhart）／**市場支配定理 p\*=w/s**／mesh 点火（相互相補）／**検出床**（noise）。
-- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配）**／Goodhart（損 0.217・指数は閾値的で同定不可）。決定的部分 **215 tests green**。
+- **② 解析モデル 11本**: 通信コスト→構造（交差点≈1.12）／stakes→統治膜（内点最適）／容量→分解粒度／処方マップ／構造×膜の結合／レース外部性＋制度内部化／F7 整合（Goodhart）／**市場支配定理 p\*=w/s**／mesh 点火（相互相補）／**検出床**（noise）／**判定分解能の床**（gap＝境界に寄るのに要る n）。
+- **② 実証 6軸**（実 LLM・無料枠＋local gemma）: 監督スケーリング（recall/precision 接地）／レース（中立で liability 有効）／構造 F3（flat 安く同等品質）／**市場3レジーム（能力差で market が Pareto 支配・床を通しても成立 p̂=0.889≫0.667）**／Goodhart（損 0.217・指数は閾値的で同定不可）／通信コスト較正（mgr_overhead=2コール）。決定的部分 **278 tests green**。
 - **実測較正**: oversight_error・過剰flag・mgr_overhead（=2コール）・市場閾値 p（trials=3）・spec_quality（0.57–0.78）を実エージェントで接地。
-- **方法論**: 計測過程で結論が3度自己修正＋8つの転移可能な教訓（n=1/フレーミング/harness 交絡/自己評価のモデル依存/外部基準の誤り/係数の非同定性…）＝measurement-first が外部錨として機能（PAPER §9）。
+- **方法論**: 計測過程で結論が3度自己修正＋**12 の転移可能な教訓**（n=1/フレーミング/harness 交絡/自己評価のモデル依存/外部基準の誤り/係数の非同定性/**点推定の符号比較を判定に使うな＝境界に寄る前に分解能を計算しろ**…）＝measurement-first が外部錨として機能（PAPER §9）。
 
 ### 統計強化 — n=1 ノイズを prose の caveat でなく**判定器**にした（[`model/NOISE.md`](model/NOISE.md)）
 
@@ -173,12 +177,39 @@ python3 -m unittest discover -s tests -t .   # テスト（215本・決定的moc
   テストが `assertTrue(ignites)` でそれを固定していた。実測点を **trials=2 の頑健値のみ**に差し替え、
   `ignites` を床でゲートした（撤回済みの点は `retracted` として*見える形で*残す）。
 
+### 判定分解能の床 — 「境界に寄せて実測」は *n=6 では原理的に空振り* だった（[`model/GAP.md`](model/GAP.md)）
+
+支配定理 p\*=w/s は**真の p** の話だが、実験が持つのは推定量 p̂ にすぎない。実測側は
+`dominates = (p̂ > w/s)` と**点推定をそのまま二値判定**しており、これは `noise.py` が mesh 軸で
+潰したのと同型の fail-open だった。境界の近傍ではこの符号比較は純ノイズになる ── そして
+「境界に寄せる」とは、定義上その近傍へ行くことである。
+
+- **第一種過誤 0.345**: 真に境界上（市場の利得ゼロ）のモデルにも、現行手続きは n=6 で **3回に1回 ✓ を立てる**。床を通せば 0.017（≤α）。
+- **n=6 では支配の主張が反証不能**: 下側の枝が空で、**p̂=0/6（全問不正解）ですら「非支配」と言えない**（P(X=0 | p=0.2) = 0.262 > α）。より弱いモデルを足すほど判定不能帯の奥へ入るだけ。
+- **trials では買えない**: Var(p̂) = [Var_task(p_i) + E[p_i(1−p_i)]/t] / n。第1項は trials で消えない。per-task が 0/1 に張り付く実測（gemma4:e2b = 1,1,1,0,1,1 ＝ 能力差が*構造的*）では E[p_i(1−p_i)]=0 となり **trials の寄与は厳密にゼロ**。NOISE.md が mesh 軸で出した「trials より先に n」と同じ結論に、別の軸から到達した。
+- **値段**: 反証可能性の発生に **n≥14**、境界から δ=0.10 の分解能に **n=67**、δ=0.05 に **n=224**。
+- 床は厳密二項（正規近似なし）。α 準拠は `verdict()` を通した全観測の列挙＋有理数演算で*独立に*検証（`tests/test_gap.py`）。
+
 ## 次の計測（ranked・externally recorded）
-1. **能力差の連続スイープ** — 市場が前線を支配し始める能力差の閾値を、より弱いモデル/難タスクで境界(p≈w/s)に寄せて実測。
-2. **統計強化の残り** — 床はできた（上）。**残るのは各実証への trials 適用**: `goodhart.py`（「中間圧の非単調は
-   n=1 ノイズ」と自認済み）／`org_sim.py`（正しさ差は trials=1 の単発セル2件に依存）／`repair.py`／
-   `oversight/calibrate.py`（trials=1 を明記）。**pytest-6 級（n=6）は床が 2 タスク＝gain 0.333 未満を
-   原理的に検出できない**ので、trials より先に n を増やす対象を選別する。
+1. ~~**能力差の連続スイープ** — より弱いモデル/難タスクで境界(p≈w/s)に寄せて実測。~~
+   → **この計画は実行前に反証された**（[`model/GAP.md`](model/GAP.md)）。n=6 では境界の近傍が
+   *そもそも判定不能*で、下側の枝が空＝**どんな観測でも「非支配」を言えない**（p̂=0/6 ですら帰無と両立）。
+   弱いモデルを足すほど判定不能帯の奥へ入るだけで、n=6 のままでは空振りが確定していた。
+   **書き換え後の次の一手 = n を増やす**（反証可能性の発生に **n≥14**・境界から δ=0.05 の分解能に **n=224**）。
+   タスク集合を 6 → 24+ に拡張してから弱モデル掃引を回す。
+2. **統計強化の残り** — 床はできた（上）。**「trials>1 を全実証へ」の意味が変わった**
+   （[`model/REPLICATION.md`](model/REPLICATION.md)）: trials が買うのは精度でなく
+   **[`model/NOISE.md`](model/NOISE.md) の床を適用可能にする前提条件**である（セル反転率 f は
+   d=2f(1−f) から推定するので t≥2 が要る ⟹ **t=1 の実測は「床を超えていない」のでなく「床を計算できない」**）。
+   台帳を機械化した結果:
+   - 実測成果物 52 件のうち深度を宣言しているのは **19 件（37%）**。**33 件は復元不能**＝負債かどうかすら判定できない。
+     → 台帳の最初の一手は「trials を増やす」でなく **`trials` を書き出す**こと。
+   - 未免除の trials=1 は **`role_division_repair_real.json` の1件**。これが `docs/deployment-architecture.md` の
+     処方（「役割を切らない」）を単独で支えていた。厳密符号検定を通すと **5 主張すべて p ≥ 0.25・有意 0 件**。
+   - **検出力は n が買う**: 対応二値の符号検定で到達可能な最小 p は 2^(1−n) ⟹ **n≤5 ではどんな観測も有意にならない**。
+     n=3 の `role_division_real.json` は trials=2 を持っていても原理的に空振り。
+   - 残り: `goodhart.py`（「中間圧の非単調は n=1 ノイズ」と自認済み）／`org_sim.py`／`repair.py`／
+     `oversight/calibrate.py`。**n≥6 かつ trials≥2** が再測の最低要件。
 3. **一次精読** — 3文献の本文で cost 係数を正当化／反証（Carley の実験データ較正含む）。
 
 > 計測済み: 容量制約 F1（[`model/CAPACITY.md`](model/CAPACITY.md)）／人間の誤判定（`oversight_error` 軸）／軸の相互作用（[`model/JOINT.md`](model/JOINT.md)・分離可能性は高 stakes で破れる）／**レース外部性**（[`model/RACE.md`](model/RACE.md)）／**F7 整合**（[`model/ALIGNMENT.md`](model/ALIGNMENT.md)・仕様+検証が能力 p\* を上限づけ・超えると Goodhart）／**制度内部化**（[`model/RACE.md`](model/RACE.md)・race gap を賠償責任λ=0.25で82%・規制標準・共有検証で回復＝Race↔Slowdown の定量分岐）／**実測較正**（測った oversight_error 0〜0.5・過剰flag 0.33 を governance/alignment に還元 → 大能力差で膜 0.73→0.50、過剰flag で m\*=0、安全な能力 p\* 2.05→1.61）。
