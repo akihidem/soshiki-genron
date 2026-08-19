@@ -1,0 +1,756 @@
+{
+  "audit": {
+    "alpha": 0.05,
+    "claimed": 9,
+    "retracted": 3,
+    "rows": [
+      {
+        "bracket_stochastic_crit": 0.5,
+        "claimed_dominates": true,
+        "crit_upper": 0.6667,
+        "margin": 0.6333,
+        "n_tasks": 6,
+        "p_hat": 0.8333,
+        "per_task_structural": true,
+        "strong": "haiku",
+        "supported": true,
+        "trials": 2,
+        "verdict": "DOMINATES",
+        "w_over_s": 0.2,
+        "weak": "gemma4:e2b"
+      },
+      {
+        "bracket_stochastic_crit": 0.25,
+        "claimed_dominates": true,
+        "crit_upper": 0.5,
+        "margin": 0.7666,
+        "n_tasks": 6,
+        "p_hat": 0.8333,
+        "per_task_structural": true,
+        "strong": "sonnet",
+        "supported": true,
+        "trials": 2,
+        "verdict": "DOMINATES",
+        "w_over_s": 0.0667,
+        "weak": "gemma4:e2b"
+      },
+      {
+        "bracket_stochastic_crit": 0.1667,
+        "claimed_dominates": true,
+        "crit_upper": 0.3333,
+        "margin": 0.82,
+        "n_tasks": 6,
+        "p_hat": 0.8333,
+        "per_task_structural": true,
+        "strong": "opus",
+        "supported": true,
+        "trials": 2,
+        "verdict": "DOMINATES",
+        "w_over_s": 0.0133,
+        "weak": "gemma4:e2b"
+      },
+      {
+        "bracket_stochastic_crit": 0.5,
+        "claimed_dominates": true,
+        "crit_upper": 0.6667,
+        "margin": 0.3,
+        "n_tasks": 6,
+        "p_hat": 0.5,
+        "per_task_structural": false,
+        "strong": "haiku",
+        "supported": false,
+        "trials": 2,
+        "verdict": "UNDECIDED",
+        "w_over_s": 0.2,
+        "weak": "gemma4:latest"
+      },
+      {
+        "bracket_stochastic_crit": 0.25,
+        "claimed_dominates": true,
+        "crit_upper": 0.5,
+        "margin": 0.4333,
+        "n_tasks": 6,
+        "p_hat": 0.5,
+        "per_task_structural": false,
+        "strong": "sonnet",
+        "supported": true,
+        "trials": 2,
+        "verdict": "DOMINATES",
+        "w_over_s": 0.0667,
+        "weak": "gemma4:latest"
+      },
+      {
+        "bracket_stochastic_crit": 0.1667,
+        "claimed_dominates": true,
+        "crit_upper": 0.3333,
+        "margin": 0.4867,
+        "n_tasks": 6,
+        "p_hat": 0.5,
+        "per_task_structural": false,
+        "strong": "opus",
+        "supported": true,
+        "trials": 2,
+        "verdict": "DOMINATES",
+        "w_over_s": 0.0133,
+        "weak": "gemma4:latest"
+      },
+      {
+        "bracket_stochastic_crit": 0.5,
+        "claimed_dominates": true,
+        "crit_upper": 0.6667,
+        "margin": 0.2167,
+        "n_tasks": 6,
+        "p_hat": 0.4167,
+        "per_task_structural": false,
+        "strong": "haiku",
+        "supported": false,
+        "trials": 2,
+        "verdict": "UNDECIDED",
+        "w_over_s": 0.2,
+        "weak": "gemma4-chat:latest"
+      },
+      {
+        "bracket_stochastic_crit": 0.25,
+        "claimed_dominates": true,
+        "crit_upper": 0.5,
+        "margin": 0.35,
+        "n_tasks": 6,
+        "p_hat": 0.4167,
+        "per_task_structural": false,
+        "strong": "sonnet",
+        "supported": false,
+        "trials": 2,
+        "verdict": "UNDECIDED",
+        "w_over_s": 0.0667,
+        "weak": "gemma4-chat:latest"
+      },
+      {
+        "bracket_stochastic_crit": 0.1667,
+        "claimed_dominates": true,
+        "crit_upper": 0.3333,
+        "margin": 0.4034,
+        "n_tasks": 6,
+        "p_hat": 0.4167,
+        "per_task_structural": false,
+        "strong": "opus",
+        "supported": true,
+        "trials": 2,
+        "verdict": "DOMINATES",
+        "w_over_s": 0.0133,
+        "weak": "gemma4-chat:latest"
+      }
+    ],
+    "supported": 6,
+    "trials": 2
+  },
+  "bands": [
+    {
+      "by_n": [
+        {
+          "blind_half_width": 0.4667,
+          "crit_lower": null,
+          "crit_upper": 0.6667,
+          "n": 6,
+          "p_star": 0.2,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.017,
+            "gated_within_alpha": true,
+            "naive": 0.3446
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.3,
+          "crit_lower": null,
+          "crit_upper": 0.5,
+          "n": 12,
+          "p_star": 0.2,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0194,
+            "gated_within_alpha": true,
+            "naive": 0.4417
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.2286,
+          "crit_lower": 0.0,
+          "crit_upper": 0.4286,
+          "n": 14,
+          "p_star": 0.2,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0439,
+            "gated_within_alpha": true,
+            "naive": 0.5519
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.175,
+          "crit_lower": 0.0417,
+          "crit_upper": 0.375,
+          "n": 24,
+          "p_star": 0.2,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0362,
+            "gated_within_alpha": true,
+            "naive": 0.5401
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.12,
+          "crit_lower": 0.1,
+          "crit_upper": 0.32,
+          "n": 50,
+          "p_star": 0.2,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0308,
+            "gated_within_alpha": true,
+            "naive": 0.4164
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.08,
+          "crit_lower": 0.13,
+          "crit_upper": 0.28,
+          "n": 100,
+          "p_star": 0.2,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0342,
+            "gated_within_alpha": true,
+            "naive": 0.4405
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.05,
+          "crit_lower": 0.15,
+          "crit_upper": 0.25,
+          "n": 200,
+          "p_star": 0.2,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0494,
+            "gated_within_alpha": true,
+            "naive": 0.4578
+          },
+          "w_over_s": 0.2
+        },
+        {
+          "blind_half_width": 0.035,
+          "crit_lower": 0.165,
+          "crit_upper": 0.235,
+          "n": 400,
+          "p_star": 0.2,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0478,
+            "gated_within_alpha": true,
+            "naive": 0.4701
+          },
+          "w_over_s": 0.2
+        }
+      ],
+      "min_n_by_delta": [
+        {
+          "delta": 0.3,
+          "n": 12
+        },
+        {
+          "delta": 0.2,
+          "n": 23
+        },
+        {
+          "delta": 0.1,
+          "n": 67
+        },
+        {
+          "delta": 0.05,
+          "n": 224
+        }
+      ],
+      "min_n_refutable": 14,
+      "strong": "haiku",
+      "w_over_s": 0.2
+    },
+    {
+      "by_n": [
+        {
+          "blind_half_width": 0.4333,
+          "crit_lower": null,
+          "crit_upper": 0.5,
+          "n": 6,
+          "p_star": 0.0667,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0051,
+            "gated_within_alpha": true,
+            "naive": 0.3391
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.1833,
+          "crit_lower": null,
+          "crit_upper": 0.25,
+          "n": 12,
+          "p_star": 0.0667,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0414,
+            "gated_within_alpha": true,
+            "naive": 0.5632
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.219,
+          "crit_lower": null,
+          "crit_upper": 0.2857,
+          "n": 14,
+          "p_star": 0.0667,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0115,
+            "gated_within_alpha": true,
+            "naive": 0.6195
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.1416,
+          "crit_lower": null,
+          "crit_upper": 0.2083,
+          "n": 24,
+          "p_star": 0.0667,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0193,
+            "gated_within_alpha": true,
+            "naive": 0.482
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.0733,
+          "crit_lower": 0.0,
+          "crit_upper": 0.14,
+          "n": 50,
+          "p_star": 0.0667,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0471,
+            "gated_within_alpha": true,
+            "naive": 0.4299
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.0533,
+          "crit_lower": 0.02,
+          "crit_upper": 0.12,
+          "n": 100,
+          "p_star": 0.0667,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0344,
+            "gated_within_alpha": true,
+            "naive": 0.5036
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.0333,
+          "crit_lower": 0.035,
+          "crit_upper": 0.1,
+          "n": 200,
+          "p_star": 0.0667,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0466,
+            "gated_within_alpha": true,
+            "naive": 0.4655
+          },
+          "w_over_s": 0.0667
+        },
+        {
+          "blind_half_width": 0.0233,
+          "crit_lower": 0.045,
+          "crit_upper": 0.09,
+          "n": 400,
+          "p_star": 0.0667,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0431,
+            "gated_within_alpha": true,
+            "naive": 0.5028
+          },
+          "w_over_s": 0.0667
+        }
+      ],
+      "min_n_by_delta": [
+        {
+          "delta": 0.3,
+          "n": 9
+        },
+        {
+          "delta": 0.2,
+          "n": 15
+        },
+        {
+          "delta": 0.1,
+          "n": 42
+        },
+        {
+          "delta": 0.05,
+          "n": 120
+        }
+      ],
+      "min_n_refutable": 44,
+      "strong": "sonnet",
+      "w_over_s": 0.0667
+    },
+    {
+      "by_n": [
+        {
+          "blind_half_width": 0.32,
+          "crit_lower": null,
+          "crit_upper": 0.3333,
+          "n": 6,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0026,
+            "gated_within_alpha": true,
+            "naive": 0.0772
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.1534,
+          "crit_lower": null,
+          "crit_upper": 0.1667,
+          "n": 12,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0107,
+            "gated_within_alpha": true,
+            "naive": 0.1484
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.1296,
+          "crit_lower": null,
+          "crit_upper": 0.1429,
+          "n": 14,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0145,
+            "gated_within_alpha": true,
+            "naive": 0.1709
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.07,
+          "crit_lower": null,
+          "crit_upper": 0.0833,
+          "n": 24,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0402,
+            "gated_within_alpha": true,
+            "naive": 0.2748
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.0467,
+          "crit_lower": null,
+          "crit_upper": 0.06,
+          "n": 50,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.029,
+            "gated_within_alpha": true,
+            "naive": 0.488
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.0267,
+          "crit_lower": null,
+          "crit_upper": 0.04,
+          "n": 100,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.045,
+            "gated_within_alpha": true,
+            "naive": 0.3845
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.0217,
+          "crit_lower": null,
+          "crit_upper": 0.035,
+          "n": 200,
+          "p_star": 0.0133,
+          "refutable": false,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0184,
+            "gated_within_alpha": true,
+            "naive": 0.4976
+          },
+          "w_over_s": 0.0133
+        },
+        {
+          "blind_half_width": 0.0117,
+          "crit_lower": 0.0025,
+          "crit_upper": 0.025,
+          "n": 400,
+          "p_star": 0.0133,
+          "refutable": true,
+          "type_i": {
+            "alpha": 0.05,
+            "gated": 0.0438,
+            "gated_within_alpha": true,
+            "naive": 0.4404
+          },
+          "w_over_s": 0.0133
+        }
+      ],
+      "min_n_by_delta": [
+        {
+          "delta": 0.3,
+          "n": 7
+        },
+        {
+          "delta": 0.2,
+          "n": 10
+        },
+        {
+          "delta": 0.1,
+          "n": 18
+        },
+        {
+          "delta": 0.05,
+          "n": 64
+        }
+      ],
+      "min_n_refutable": 224,
+      "strong": "opus",
+      "w_over_s": 0.0133
+    }
+  ],
+  "falsifier": "床が偽なら: (a) H0 の下で gated 手続きの第一種過誤が α を超える（構成上あり得ない ── `type_i.gated ≤ α` を test が固定）、または (b) 構造的極（Bin(n,·)）が保守側でない、すなわち真の Var(p̂) が p(1−p)/n を*超える*。(b) はタスク間分散が Var_task = p(1−p) を超える時に起こるが、Bernoulli の分散は p(1−p) が上限なので起こり得ない。⟹ 床は保守側であることが証明可能。",
+  "finding": "境界 p≈w/s に届かないのは「ローカルモデルが皆強い」からでなく、**n=6 では境界の近傍がそもそも判定不能**だから。n=6・w/s=0.2 では下側の枝が空＝**どんな観測でも「非支配」を言えない**（p̂=0/6 でも H0 と両立する）。⟹ ロードマップ①の次の一手は「より弱いモデル探し」ではなく **n を増やすこと**。反証可能性の発生は n≥14、境界から δ=0.05 の分解能には n=224。",
+  "floor": "H0: p = w/s。支配は P(Bin(n, w/s) ≥ n·p̂) ≤ α のときだけ、非支配は P(Bin(n, w/s) ≤ n·p̂) ≤ α のときだけ宣言してよい。間は UNDECIDED。",
+  "headline": {
+    "claimed": 9,
+    "min_n_delta05_haiku": 224,
+    "min_n_delta10_haiku": 67,
+    "min_n_refutable_haiku": 14,
+    "n_measured": 6,
+    "refutable_at_measured_n": false,
+    "retracted": 3,
+    "supported": 6,
+    "type_i_gated": 0.017,
+    "type_i_naive": 0.3446
+  },
+  "params": {
+    "alpha": 0.05,
+    "delta_grid": [
+      0.3,
+      0.2,
+      0.1,
+      0.05
+    ],
+    "n_grid": [
+      6,
+      12,
+      14,
+      24,
+      50,
+      100,
+      200,
+      400
+    ],
+    "n_max": 600,
+    "p_grid": [
+      0.0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95,
+      1.0
+    ],
+    "stability_window": 20
+  },
+  "problem": "定理は**真の** p の話だが、実測は推定量 p̂ しか持たない。現行の実測（market_external.calibrate）は p̂ > w/s を*点推定のまま*二値判定しており、境界の近傍では判定が純ノイズになる ── そして「境界に寄せる」とは、その近傍へ行くことである。",
+  "sweep_p_at_measured_n": {
+    "n": 6,
+    "rows": [
+      {
+        "p": 0.0,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.05,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.1,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.15,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.2,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.25,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.3,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.35,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.4,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.45,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.5,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.55,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.6,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.65,
+        "verdict": "UNDECIDED"
+      },
+      {
+        "p": 0.7,
+        "verdict": "DOMINATES"
+      },
+      {
+        "p": 0.75,
+        "verdict": "DOMINATES"
+      },
+      {
+        "p": 0.8,
+        "verdict": "DOMINATES"
+      },
+      {
+        "p": 0.85,
+        "verdict": "DOMINATES"
+      },
+      {
+        "p": 0.9,
+        "verdict": "DOMINATES"
+      },
+      {
+        "p": 0.95,
+        "verdict": "DOMINATES"
+      },
+      {
+        "p": 1.0,
+        "verdict": "DOMINATES"
+      }
+    ],
+    "strong": "haiku",
+    "w_over_s": 0.2
+  },
+  "theorem": "market が flat-strong を Pareto 支配 ⟺ p > w/s（model/market.py）",
+  "tiers": [
+    {
+      "s": 1.0,
+      "strong": "haiku",
+      "w": 0.2,
+      "w_over_s": 0.2
+    },
+    {
+      "s": 3.0,
+      "strong": "sonnet",
+      "w": 0.2,
+      "w_over_s": 0.0667
+    },
+    {
+      "s": 15.0,
+      "strong": "opus",
+      "w": 0.2,
+      "w_over_s": 0.0133
+    }
+  ],
+  "variance_note": "Var(p̂) = [Var_task(p_i) + E[p_i(1−p_i)]/t]/n。第1項は trials で消えない。per-task が 0/1 に張り付く実測（構造的能力差）では E[p_i(1−p_i)]=0 となり Var(p̂)=p(1−p)/n ＝ **trials の寄与は厳密にゼロ**。保守側としてこの極を床に採る。"
+}

@@ -9,6 +9,7 @@
   },
   "empirical_regimes": [
     {
+      "crit_upper": null,
       "dominates": false,
       "market_cost": 1.0,
       "note": "weak=strong(勾配なし)→p*=1→p>1 不可能→市場勝てず（実測: market 最下位）",
@@ -16,9 +17,11 @@
       "p_star": 1.0,
       "regime": "①homogeneous (all sonnet)",
       "s": 1.0,
+      "verdict": "ANALYTIC",
       "w": 1.0
     },
     {
+      "crit_upper": null,
       "dominates": false,
       "market_cost": 1.0,
       "note": "最安 haiku が全解(p=1)→市場=flat-haiku＝最良単一モデルに*厳密な*利得なし（実測一致。素朴に opus を選ぶ flat-opus には勝つが、最良単一モデルは超えない）",
@@ -26,16 +29,20 @@
       "p_star": 1.0,
       "regime": "②frontier-hetero (haiku/sonnet/opus)",
       "s": 1.0,
+      "verdict": "ANALYTIC",
       "w": 1.0
     },
     {
+      "crit_upper": 0.6667,
       "dominates": true,
       "market_cost": 0.3112,
+      "n_tasks": 6,
       "note": "gemma trials=3 較正 p=0.889→市場 0.311<flat-haiku 1.0→Pareto 支配（trials=1 では p=0.667/market 0.533・leap 取りこぼしはノイズと判明）",
       "p": 0.8888,
       "p_star": 0.2,
       "regime": "③large-gap (gemma×haiku)",
       "s": 1.0,
+      "verdict": "DOMINATES",
       "w": 0.2
     }
   ],

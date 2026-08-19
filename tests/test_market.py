@@ -40,6 +40,21 @@ class MarketModelTests(unittest.TestCase):
         self.assertFalse(regimes["②"]["dominates"])         # no gradient -> ties best single model
         self.assertTrue(regimes["③"]["dominates"])          # large gap -> market dominates
 
+    def test_the_measured_regime_carries_the_sampling_floor(self):
+        """③ の p は**実測の推定量 p̂** ── 定理の答えだけでなく床を通した判定も持つこと。
+
+        `dominates` は「与えた p が真なら」の定理の答えであって*実測からの判定*ではない。
+        実測レジームだけ床（GAP.md）を通す。①② は w=s/p=1 が構成上決まる解析点＝床の対象外。
+        """
+        regimes = {rg["regime"][0]: rg for rg in run()["empirical_regimes"]}
+        self.assertEqual(regimes["①"]["verdict"], "ANALYTIC")
+        self.assertEqual(regimes["②"]["verdict"], "ANALYTIC")
+        third = regimes["③"]
+        self.assertEqual(third["n_tasks"], 6)               # 実測は n=6 タスク
+        self.assertEqual(third["crit_upper"], 0.6667)       # 支配に要る p̂
+        self.assertEqual(third["verdict"], "DOMINATES")     # p̂=0.8888 は床を越える
+        self.assertGreaterEqual(third["p"], third["crit_upper"])
+
     def test_run_is_deterministic(self):
         self.assertEqual(run(), run())
 

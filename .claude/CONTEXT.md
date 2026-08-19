@@ -1,5 +1,5 @@
 # Project Context Snapshot
-<!-- Auto-updated by save-project-context.sh — 2026-07-15 03:50 -->
+<!-- Auto-updated by save-project-context.sh — 2026-07-15 03:53 -->
 <!-- セッション開始時はこのファイルを読むだけで OK。詳細は各ファイルを Read すること。 -->
 
 ## Remote
@@ -9,6 +9,7 @@
 - main
 
 ## Recent Commits (last 10)
+- ed1b570 chore: .claude/CONTEXT.md を再生成（HEAD より stale だった snapshot を正す）
 - fc13942 統計強化: n=1 ノイズを caveat でなく「検出床」にし、mesh.py の撤回済み点火(+0.042)を回帰修正
 - b9e57ac README: ② 実験基盤に yoriai を接続（配置と判定の層のみ。スイープは未着手と明記）
 - fcbfa5c retract: fable pytest-6 mesh は trials=1 の noise だった(非再現→撤回)
@@ -18,7 +19,6 @@
 - a05746a docs: evidence-based AI deployment architecture (the prescriptive synthesis of the whole arc)
 - d8b28b4 model/mesh.py: ground the decorrelation threshold in REAL data — cross-vendor mesh ignites (opus×codex, ρ≈0.61, gain +0.042)
 - 02727d1 model/mesh.py: the ignition threshold for consensus mesh is decorrelation (ρ), the dual of market.py's cost threshold
-- b69a7d1 role_division Phase 1.6: the value is test-grounded iteration, not role division (decisive de-confound)
 
 ## Open PRs
 - (none)

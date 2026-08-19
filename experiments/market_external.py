@@ -32,6 +32,7 @@ if _ROOT not in sys.path:
 
 from experiments.org_sim import _PYTEST_SHIM, _UNSHARE, _agent, _extract_code, _mock  # noqa: E402
 from experiments.oversight.overseer import _ollama_generate  # noqa: E402
+from model import gap  # noqa: E402  ── 支配主張に標本誤差の床を通す（model/GAP.md）
 
 
 # Tasks with a model-INDEPENDENT gold suite (objective truth, not self-tests).
@@ -487,6 +488,61 @@ def _md(r: dict) -> str:
 # flaky claude path). Maps the weak->strong pairs onto the dominance plane p > w/s.
 _STRONG_TIERS = (("haiku", 1.0), ("sonnet", 3.0), ("opus", 15.0))
 
+_ALPHA = 0.05
+
+# 判定の表示は**一箇所**で決める（renderer ごとに書くと必ずずれる）。
+_VERDICT_MD = {"DOMINATES": "**支配**", "UNDECIDED": "**判定不能**", "DOES_NOT_DOMINATE": "**非支配**"}
+_VERDICT_SYM = {"DOMINATES": "✓", "UNDECIDED": "**?**", "DOES_NOT_DOMINATE": "✗"}
+
+
+def gate_pairs(p_weak: float, n_tasks: int, pairs: list, alpha: float = _ALPHA) -> list:
+    """支配の主張に**標本誤差の床**を通す（[`../model/GAP.md`](../model/GAP.md)）。**唯一の判定経路**。
+
+    読んでよいのは `verdict` だけ: 帰無 p=w/s を厳密二項で棄却できた時だけ DOMINATES を出し、
+    できなければ UNDECIDED に留める（否定形でなく肯定形の証明・fail-closed）。
+
+    素の算術 p̂ > w/s は `dominates_pointwise` に**改名して**残す（監査用の履歴＝「旧手続きが
+    何を主張していたか」）。**`dominates` というキーはもう存在しない** ── これは意図的である:
+
+        2026-07-15 の codex レビューが、床を `calibrate()` と `_md_map()` にだけ足して
+        `_md_calib()`・CLI 2 経路・`market_calib_results.json` に足し忘れたのを検出した。
+        呼び出し箇所を1つずつ塞ぐ限り、**足し忘れた側から必ず穴が開く**（memory:
+        fix-introduces-asymmetry）。よって「素の値を読める名前」を消した。以後、床を通さずに
+        支配を出力しようとする経路は *silent fail-open ではなく KeyError で落ちる*。
+    """
+    for pr in pairs:
+        ratio = pr["w"] / pr["s"]
+        up = gap.crit_upper(n_tasks, ratio, alpha)
+        pr["dominates_pointwise"] = pr.pop("dominates", p_weak > ratio)   # 旧キーは残さない
+        pr["n_tasks"] = n_tasks
+        pr["crit_upper"] = None if up is None else round(up, 4)
+        pr["verdict"] = gap.verdict(p_weak, n_tasks, ratio, alpha)
+    return pairs
+
+
+def _gatable(o):
+    """results dict の中から「p̂ と pairs を持つノード」を全部拾う（地図・較正の両方の形に効く）。"""
+    if isinstance(o, dict):
+        if isinstance(o.get("pairs"), list) and "p_weak" in o and "per_task" in o:
+            yield o
+        for v in o.values():
+            yield from _gatable(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from _gatable(v)
+
+
+def regate(res: dict, alpha: float = _ALPHA) -> dict:
+    """既存の results に床を通し直す（**LLM 呼び出しゼロ**・純関数・冪等）。
+
+    地図（`--map`）と較正（`--calibrate`）の**両方**の形を辿る ── 片方だけ塞ぐのが
+    まさに codex に指摘された穴だったので、走査は形に依存させない。
+    同じ測定値から判定だけを引き直す（p̂ は測り直さない。測り直すのは n を増やす時である）。
+    """
+    for node in _gatable(res):
+        gate_pairs(float(node["p_weak"]), len(node["per_task"]), node["pairs"], alpha)
+    return res
+
 
 def calibrate(weak_model: str, tasks=_EASY_TASKS + EXT_TASKS, strong=_STRONG_TIERS,
               trials: int = 3, w: float = 0.2, cache_path: str | None = None) -> dict:
@@ -515,6 +571,7 @@ def calibrate(weak_model: str, tasks=_EASY_TASKS + EXT_TASKS, strong=_STRONG_TIE
     pairs = [{"strong": sm, "w": w, "s": s, "w_over_s": round(w / s, 4), "p_weak": p,
               "dominates": p > w / s, "market_cost": round(w + (1 - p) * s, 4), "flat_strong_cost": s}
              for sm, s in strong]
+    gate_pairs(p, len(tasks), pairs)
     return {"weak": weak_model, "trials": trials, "p_weak": p, "per_task": per_task, "pairs": pairs}
 
 
@@ -538,14 +595,31 @@ def _md_map(r: dict) -> str:
          f"支配定理 p\\*=w/s（[`../model/MARKET.md`](../model/MARKET.md)）に対し、ローカル弱モデル群の "
          f"完全解率 p_weak を測り、各 weak→strong ペアが支配領域に入るかを地図化（trials={r['trials']}）。",
          "",
-         "## p_weak と支配（✓ = market が flat-strong を Pareto 支配 ＝ p>w/s）",
+         "## p_weak と支配（**標本誤差の床を通した判定**）",
+         "",
+         "✓=支配（帰無 p=w/s を棄却）／**?**=判定不能（観測は境界上の帰無と両立）／✗=非支配。",
+         "点推定の素の比較 `p̂ > w/s` は、真に利得ゼロのモデルにも n=6 で **34.5%** の確率で ✓ を立てる "
+         "── だから床を通す（[`../model/GAP.md`](../model/GAP.md)）。括弧内は支配に要る最小 p̂。",
+         "",
          "| 弱モデル | p_weak | →haiku (w/s=0.2) | →sonnet (0.067) | →opus (0.013) |",
          "|---|---|---|---|---|"]
     for m in r["models"]:
-        dom = {p["strong"]: p["dominates"] for p in m["pairs"]}
-        L.append(f"| {m['weak']} | **{m['p_weak']}** | {'✓' if dom['haiku'] else '—'} | "
-                 f"{'✓' if dom['sonnet'] else '—'} | {'✓' if dom['opus'] else '—'} |")
-    tasks = list(r["models"][0]["per_task"].keys())
+        by = {p["strong"]: p for p in m["pairs"]}
+
+        def cell(name, by=by):
+            pr = by[name]
+            return f"{_VERDICT_SYM[pr['verdict']]} ({pr['crit_upper']})"
+        L.append(f"| {m['weak']} | **{m['p_weak']}** | {cell('haiku')} | "
+                 f"{cell('sonnet')} | {cell('opus')} |")
+    n_und = sum(1 for m in r["models"] for p in m["pairs"] if p["verdict"] == "UNDECIDED")
+    L += ["",
+          f"**9 ペア中 {n_und} 件は判定不能**（かつては全 9 件に ✓ が立っていた）。"
+          "定理が偽なのではない ── *実測がその主張を支える標本を持っていない*。"]
+    # 列順を dict の挿入順に依存させない: --map は挿入順・--regate は JSON(sort_keys) 順になり、
+    # 同じ測定値から**別の文書**が出てしまう。正典は課題集合の定義順（easy → hard）。
+    _canon = [t["id"] for t in _EASY_TASKS + EXT_TASKS]
+    _present = set(r["models"][0]["per_task"])
+    tasks = [t for t in _canon if t in _present] + sorted(_present - set(_canon))
     L += ["",
           "## per-task solve_rate（1.0 到達率）— どのタスクで能力差が出るか",
           "| 弱モデル | " + " | ".join(tasks) + " |",
@@ -554,8 +628,13 @@ def _md_map(r: dict) -> str:
         L.append(f"| {m['weak']} | " + " | ".join(str(m["per_task"][t]) for t in tasks) + " |")
     L += ["",
           "## 読み",
-          "- 弱モデルが p>w/s（特に最も厳しい →haiku の閾値 0.2）を超える限り、市場は単一モデルを支配。",
-          "- ローカル小型モデルが全て高 p（≫0.2）に固まるなら → 支配は頑健・境界(p≈0.2)は更に難しいタスクでのみ。",
+          "- 余裕（p̂ − w/s）が大きいペアだけが床を越える。gemma4:e2b は3ティア全部で支配、"
+          "gemma4-chat は →opus でしか支配を示せない。",
+          "- **境界(p≈w/s) にこの n=6 のまま寄ることはできない。** 下側の枝が空で、"
+          "p̂=0/6（全問不正解）ですら「非支配」を言えない ── つまり n=6 では支配の主張は**反証不能**。"
+          "境界に寄る唯一の道は n を増やすこと（反証可能性の発生に n≥14・δ=0.05 の分解能に n=224）。",
+          "- **trials では買えない**。per-task が 0/1 に張り付く（gemma4:e2b = 1,1,1,0,1,1 ＝ 能力差が"
+          "*構造的*）限り、trials の分散寄与は厳密にゼロで、効くのは n だけ。",
           "- per-task で 0/1 に割れるタスクが*構造的*な能力差の在処（市場が高ティアを呼ぶ理由）。"]
     return "\n".join(L)
 
@@ -571,21 +650,32 @@ def _md_calib(r: dict) -> str:
          "|---|---|---|---|"]
     for x in r["per_task"]:
         L.append(f"| {x['task']} | {x['solve_rate']} | {x['mean_correctness']} | {x['trials']} |")
+    n_tasks = len(r["per_task"])
     L += ["",
-          "## 支配地図：弱→強ペアが p_weak > w/s に入るか",
-          "| 強ティア | w/s | p_weak | 支配(p>w/s) | market コスト | flat-strong コスト |",
-          "|---|---|---|---|---|---|"]
+          "## 支配地図：弱→強ペアが**標本誤差の床**を越えるか",
+          "",
+          f"判定は点推定の符号比較（p̂ > w/s）ではなく、帰無 p=w/s を厳密二項で棄却できたか"
+          f"（[`../model/GAP.md`](../model/GAP.md)）。n={n_tasks} では素の比較は真に利得ゼロのモデルにも"
+          f"**34.5%** の確率で「支配」を刻む。",
+          "",
+          "| 強ティア | w/s | p_weak | 支配に要る p̂ | **判定** | market コスト | flat-strong コスト |",
+          "|---|---|---|---|---|---|---|"]
     for pr in r["pairs"]:
-        L.append(f"| {pr['strong']} | {pr['w_over_s']} | {pr['p_weak']} | "
-                 f"{'**支配**' if pr['dominates'] else '—'} | {pr['market_cost']} | {pr['flat_strong_cost']} |")
+        L.append(f"| {pr['strong']} | {pr['w_over_s']} | {pr['p_weak']} | {pr['crit_upper']} | "
+                 f"{_VERDICT_MD[pr['verdict']]} | {pr['market_cost']} | {pr['flat_strong_cost']} |")
+    n_und = sum(1 for pr in r["pairs"] if pr["verdict"] == "UNDECIDED")
     L += ["",
           "## 読み",
-          "- p_weak が安定して w/s を超えるペアでは、エスカレーション市場が単一モデルを Pareto 支配（解析と整合）。",
+          f"- 床を越えたペア: **{sum(1 for pr in r['pairs'] if pr['verdict'] == 'DOMINATES')}/{len(r['pairs'])}**"
+          f"（判定不能 {n_und}）。p_weak={r['p_weak']} は最も厳しい →haiku の要求 "
+          f"{r['pairs'][0]['crit_upper']} を{'越える' if r['p_weak'] >= r['pairs'][0]['crit_upper'] else '越えない'}。",
           "- trials で solve_rate が 0/1 に張り付くなら gemma の能力は*構造的*（タスク依存）・中間値ならノイズ。",
+          f"- **trials は境界分解能を買わない**。効くのは n（タスク数）。n={n_tasks} では境界(p≈w/s) の"
+          "近傍は判定不能で、**p̂=0 ですら「非支配」と言えない**（GAP.md）。",
           "",
           "## 妥当性",
           f"- gemma は ollama サンプリング（温度>0）で trials 変動。strong は p=1 既知で解析。w={r['pairs'][0]['w']}・"
-          "コスト比は定価の代理。少標本（trials 小）。"]
+          f"コスト比は定価の代理。**少標本（n={n_tasks} タスク）** ── 判定は床を通したもののみ。"]
     return "\n".join(L)
 
 
@@ -974,6 +1064,8 @@ def main(argv=None) -> int:
                     help="trials>1 calibration of the weak model's full-solve rate p (gemma only)")
     ap.add_argument("--map", action="store_true", dest="domap",
                     help="dominance map over several local weak models (gemma e2b/latest/chat)")
+    ap.add_argument("--regate", action="store_true",
+                    help="re-decide the EXISTING map through the sampling-error floor (no LLM calls)")
     ap.add_argument("--hard", action="store_true",
                     help="use the HARD task set (drives weak p down toward the boundary p*=w/s)")
     ap.add_argument("--ladder", action="store_true", dest="ladder",
@@ -1068,6 +1160,27 @@ def main(argv=None) -> int:
             print(f"  {row['task']:<14} {row['class']:<13} solve_rate={row['solve_rate']}")
         print("\nwrote market_ladder_results.json and MARKET_LADDER.md")
         return 0
+    if args.regate:
+        # 測り直さずに**判定だけ**引き直す。p̂ は同じ、床が違う。
+        # 地図と較正の**両方**を通す（片方だけ塞いだのが codex に指摘された穴）。
+        for jname, mdname, render in (("market_map_results.json", "MARKET_MAP.md", _md_map),
+                                      ("market_calib_results.json", "MARKET_CALIB.md", _md_calib)):
+            path = os.path.join(out_dir, jname)
+            if not os.path.exists(path):
+                continue
+            with open(path, encoding="utf-8") as f:
+                r = regate(json.load(f))
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
+            with open(os.path.join(out_dir, mdname), "w", encoding="utf-8") as f:
+                f.write(render(r) + "\n")
+            for node in _gatable(r):
+                v = {p["strong"]: p["verdict"] for p in node["pairs"]}
+                print(f"  {node.get('weak', '?'):<20} p_weak={node['p_weak']:<7} "
+                      + " ".join(f"{k}={x}" for k, x in v.items()))
+            print(f"  -> regated {jname} + {mdname}")
+        print("\nregated (no LLM calls)")
+        return 0
     if args.domap:
         _CALL = _mock if args.agent == "mock" else _route
         cache = os.path.join(out_dir, "market_calib_artifacts.json")   # shares the calibrate cache
@@ -1077,9 +1190,9 @@ def main(argv=None) -> int:
         with open(os.path.join(out_dir, "MARKET_MAP.md"), "w", encoding="utf-8") as f:
             f.write(_md_map(r) + "\n")
         for m in r["models"]:
-            dom = {p["strong"]: p["dominates"] for p in m["pairs"]}
-            print(f"  {m['weak']:<20} p_weak={m['p_weak']:<7} dominates: "
-                  f"haiku={dom['haiku']} sonnet={dom['sonnet']} opus={dom['opus']}")
+            v = {p["strong"]: p["verdict"] for p in m["pairs"]}   # 床を通した判定のみ表示
+            print(f"  {m['weak']:<20} p_weak={m['p_weak']:<7} "
+                  f"haiku={v['haiku']:<18} sonnet={v['sonnet']:<18} opus={v['opus']}")
         print("\nwrote market_map_results.json and MARKET_MAP.md")
         return 0
     if args.calibrate:
@@ -1090,10 +1203,11 @@ def main(argv=None) -> int:
             json.dump(r, f, ensure_ascii=False, indent=2, sort_keys=True)
         with open(os.path.join(out_dir, "MARKET_CALIB.md"), "w", encoding="utf-8") as f:
             f.write(_md_calib(r) + "\n")
-        print(f"calibrated p_weak({r['weak']}, trials={r['trials']}) = {r['p_weak']}")
+        print(f"calibrated p_weak({r['weak']}, trials={r['trials']}) = {r['p_weak']} "
+              f"(n={len(r['per_task'])} tasks)")
         for pr in r["pairs"]:
-            print(f"  vs {pr['strong']:<7} w/s={pr['w_over_s']:<7} dominates={pr['dominates']} "
-                  f"market={pr['market_cost']}")
+            print(f"  vs {pr['strong']:<7} w/s={pr['w_over_s']:<7} need p>={pr['crit_upper']:<7} "
+                  f"verdict={pr['verdict']:<18} market={pr['market_cost']}")
         print("\nwrote market_calib_results.json and MARKET_CALIB.md")
         return 0
     if args.gap:

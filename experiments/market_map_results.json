@@ -4,32 +4,41 @@
       "p_weak": 0.8333,
       "pairs": [
         {
-          "dominates": true,
+          "crit_upper": 0.6667,
+          "dominates_pointwise": true,
           "flat_strong_cost": 1.0,
           "market_cost": 0.3667,
+          "n_tasks": 6,
           "p_weak": 0.8333,
           "s": 1.0,
           "strong": "haiku",
+          "verdict": "DOMINATES",
           "w": 0.2,
           "w_over_s": 0.2
         },
         {
-          "dominates": true,
+          "crit_upper": 0.5,
+          "dominates_pointwise": true,
           "flat_strong_cost": 3.0,
           "market_cost": 0.7001,
+          "n_tasks": 6,
           "p_weak": 0.8333,
           "s": 3.0,
           "strong": "sonnet",
+          "verdict": "DOMINATES",
           "w": 0.2,
           "w_over_s": 0.0667
         },
         {
-          "dominates": true,
+          "crit_upper": 0.3333,
+          "dominates_pointwise": true,
           "flat_strong_cost": 15.0,
           "market_cost": 2.7005,
+          "n_tasks": 6,
           "p_weak": 0.8333,
           "s": 15.0,
           "strong": "opus",
+          "verdict": "DOMINATES",
           "w": 0.2,
           "w_over_s": 0.0133
         }
@@ -48,32 +57,41 @@
       "p_weak": 0.5,
       "pairs": [
         {
-          "dominates": true,
+          "crit_upper": 0.6667,
+          "dominates_pointwise": true,
           "flat_strong_cost": 1.0,
           "market_cost": 0.7,
+          "n_tasks": 6,
           "p_weak": 0.5,
           "s": 1.0,
           "strong": "haiku",
+          "verdict": "UNDECIDED",
           "w": 0.2,
           "w_over_s": 0.2
         },
         {
-          "dominates": true,
+          "crit_upper": 0.5,
+          "dominates_pointwise": true,
           "flat_strong_cost": 3.0,
           "market_cost": 1.7,
+          "n_tasks": 6,
           "p_weak": 0.5,
           "s": 3.0,
           "strong": "sonnet",
+          "verdict": "DOMINATES",
           "w": 0.2,
           "w_over_s": 0.0667
         },
         {
-          "dominates": true,
+          "crit_upper": 0.3333,
+          "dominates_pointwise": true,
           "flat_strong_cost": 15.0,
           "market_cost": 7.7,
+          "n_tasks": 6,
           "p_weak": 0.5,
           "s": 15.0,
           "strong": "opus",
+          "verdict": "DOMINATES",
           "w": 0.2,
           "w_over_s": 0.0133
         }
@@ -92,32 +110,41 @@
       "p_weak": 0.4167,
       "pairs": [
         {
-          "dominates": true,
+          "crit_upper": 0.6667,
+          "dominates_pointwise": true,
           "flat_strong_cost": 1.0,
           "market_cost": 0.7833,
+          "n_tasks": 6,
           "p_weak": 0.4167,
           "s": 1.0,
           "strong": "haiku",
+          "verdict": "UNDECIDED",
           "w": 0.2,
           "w_over_s": 0.2
         },
         {
-          "dominates": true,
+          "crit_upper": 0.5,
+          "dominates_pointwise": true,
           "flat_strong_cost": 3.0,
           "market_cost": 1.9499,
+          "n_tasks": 6,
           "p_weak": 0.4167,
           "s": 3.0,
           "strong": "sonnet",
+          "verdict": "UNDECIDED",
           "w": 0.2,
           "w_over_s": 0.0667
         },
         {
-          "dominates": true,
+          "crit_upper": 0.3333,
+          "dominates_pointwise": true,
           "flat_strong_cost": 15.0,
           "market_cost": 8.9495,
+          "n_tasks": 6,
           "p_weak": 0.4167,
           "s": 15.0,
           "strong": "opus",
+          "verdict": "DOMINATES",
           "w": 0.2,
           "w_over_s": 0.0133
         }

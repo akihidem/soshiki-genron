@@ -2,32 +2,41 @@
   "p_weak": 0.8888,
   "pairs": [
     {
-      "dominates": true,
+      "crit_upper": 0.6667,
+      "dominates_pointwise": true,
       "flat_strong_cost": 1.0,
       "market_cost": 0.3112,
+      "n_tasks": 6,
       "p_weak": 0.8888,
       "s": 1.0,
       "strong": "haiku",
+      "verdict": "DOMINATES",
       "w": 0.2,
       "w_over_s": 0.2
     },
     {
-      "dominates": true,
+      "crit_upper": 0.5,
+      "dominates_pointwise": true,
       "flat_strong_cost": 3.0,
       "market_cost": 0.5336,
+      "n_tasks": 6,
       "p_weak": 0.8888,
       "s": 3.0,
       "strong": "sonnet",
+      "verdict": "DOMINATES",
       "w": 0.2,
       "w_over_s": 0.0667
     },
     {
-      "dominates": true,
+      "crit_upper": 0.3333,
+      "dominates_pointwise": true,
       "flat_strong_cost": 15.0,
       "market_cost": 1.868,
+      "n_tasks": 6,
       "p_weak": 0.8888,
       "s": 15.0,
       "strong": "opus",
+      "verdict": "DOMINATES",
       "w": 0.2,
       "w_over_s": 0.0133
     }

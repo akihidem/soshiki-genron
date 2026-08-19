@@ -25,6 +25,8 @@ import json
 import os
 from dataclasses import dataclass
 
+from model import gap  # 実測 p̂ から支配を主張する時に通す標本誤差の床（GAP.md）
+
 
 @dataclass
 class MarketParams:
@@ -83,10 +85,22 @@ def run(prm: "MarketParams | None" = None) -> dict:
          "note": "gemma trials=3 較正 p=0.889→市場 0.311<flat-haiku 1.0→Pareto 支配"
                  "（trials=1 では p=0.667/market 0.533・leap 取りこぼしはノイズと判明）"},
     ]
+    # ③ だけが**実測 p̂**（gemma・n=6 タスク・trials=3）。①② は解析上の理想点（w=s / p=1 が構成上
+    # 決まっており、p は推定量でない）。**実測から支配を主張する以上、標本誤差の床を通す**
+    # （[`gap.py`](gap.py)・GAP.md）。`dominates` は「与えた p が真だとした時の定理の答え」であって、
+    # *実測からの判定*ではない ── その区別を artifact に書き込む。
+    regimes[2]["n_tasks"] = 6
     for rg in regimes:
         rg["market_cost"] = escalation_cost(rg["w"], rg["s"], rg["p"])
         rg["p_star"] = p_star(rg["w"], rg["s"])
-        rg["dominates"] = dominates(rg["w"], rg["s"], rg["p"])
+        rg["dominates"] = dominates(rg["w"], rg["s"], rg["p"])       # 定理（真の p を仮定した時の答え）
+        n = rg.get("n_tasks")
+        if n:                                                        # 実測レジームだけ床を通す
+            up = gap.crit_upper(n, rg["w"] / rg["s"])
+            rg["crit_upper"] = None if up is None else round(up, 4)
+            rg["verdict"] = gap.verdict(rg["p"], n, rg["w"] / rg["s"])
+        else:
+            rg["crit_upper"], rg["verdict"] = None, "ANALYTIC"       # 推定量でない＝床の対象外
 
     gap_ladder = ladder([(0.2, 0.8888), (1.0, 1.0), (15.0, 1.0)])   # full gemma->haiku->opus (trials=3)
 
@@ -131,11 +145,21 @@ def _md(r: dict) -> str:
                  f"{cell(0.8)} | {cell(1.0)} |")
     L += ["", "（セルはコスト C・✓ は flat-strong(コスト=1) を支配＝C<1。p\\* を超えると ✓ が立つ）", "",
           "## 3レジームの統一（実測 §5 と照合）",
-          "| レジーム | w | s | p | 閾値 p\\* | market コスト | 支配 |",
-          "|---|---|---|---|---|---|---|"]
+          "",
+          "「定理」列は *与えた p が真だとした時の* 答え。③ の p だけは**実測の推定量 p̂**"
+          "（gemma・n=6・trials=3）なので、そこからの主張には**標本誤差の床**を通す"
+          "（[`GAP.md`](GAP.md)）── ①② は w=s / p=1 が構成上決まる解析点で、推定量ではない。",
+          "",
+          "| レジーム | w | s | p | 閾値 p\\* | market コスト | 定理 | 実測からの判定（床） |",
+          "|---|---|---|---|---|---|---|---|"]
+    _V = {"DOMINATES": "**支配**", "UNDECIDED": "**判定不能**",
+          "DOES_NOT_DOMINATE": "**非支配**", "ANALYTIC": "—（解析点）"}
     for rg in r["empirical_regimes"]:
+        gate = _V[rg["verdict"]]
+        if rg["verdict"] != "ANALYTIC":
+            gate += f"（要 p̂≥{rg['crit_upper']}）"
         L.append(f"| {rg['regime']} | {rg['w']} | {rg['s']} | {rg['p']} | {rg['p_star']} | "
-                 f"{rg['market_cost']} | {'**支配**' if rg['dominates'] else '—'} |")
+                 f"{rg['market_cost']} | {'**支配**' if rg['dominates'] else '—'} | {gate} |")
     gl = r["gap_ladder_3tier"]
     L += ["",
           f"3ティア梯子（gemma→haiku→opus, trials=3 較正 p=0.889）: コスト **{gl['cost']}**・正しさ "
